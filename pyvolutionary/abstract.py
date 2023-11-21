@@ -47,6 +47,19 @@ class OptimizationAbstract(ABC, Generic[T]):
     def after_initialization(self):
         pass
 
+    @property
+    def configuration(self) -> BaseOptimizationConfig:
+        """
+        This property returns the configuration of the optimization algorithm.
+        :return: the configuration
+        :rtype: BaseOptimizationConfig
+        """
+        return self._config
+
+    @property
+    def name(self):
+        return self.__class__.__name__.lower()
+
     def _fcn(self, x: list[float] | np.ndarray) -> float | list[float]:
         """
         This method evaluates the objective function.

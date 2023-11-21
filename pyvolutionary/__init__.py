@@ -71,6 +71,7 @@ from .whales import *
 from .wildebeest_herd import *
 from .wind_driven import *
 from .zebra import *
+from .classes import GridSearchCV
 from .enums import TaskType
 from .models import (
     OptimizationResult,
