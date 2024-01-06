@@ -1,0 +1,8 @@
+[run]
+source =
+        pyvolutionary
+omit =
+        **/__init__.py
+        **/tests/*
+        **/models.py
+parallel = True

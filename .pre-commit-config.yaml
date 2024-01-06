@@ -1,0 +1,12 @@
+default_stages: [commit, push]
+repos:
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        args: [--line-length=120, -vvv]
+        language: python
+        types: [ 'python' ]
+        exclude: ^(docs\/|.pytest_cache\/).+$
+        stages: [ commit ]
+        fail_fast: true

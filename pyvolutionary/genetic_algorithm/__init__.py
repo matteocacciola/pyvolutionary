@@ -1,0 +1,2 @@
+from .models import Gene, GeneticAlgorithmOptimizationConfig
+from .genetic_algorithm_optimization import GeneticAlgorithmOptimization
