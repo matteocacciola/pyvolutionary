@@ -139,7 +139,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         :param x: the position to evaluate
         """
         return self._task.objective_function(x) \
-            if self._task.minmax == TaskType.MIN else -self._task.objective_function(x)
+            if self._task.minmax == TaskType.MIN else -1 * self._task.objective_function(x)
 
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Agent:
         """

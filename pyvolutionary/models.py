@@ -114,6 +114,10 @@ class Task(BaseModel, ABC):
     def __init__(self, **data: Any):
         variables = data.get("variables", [])
         data["space_dimension"] = len(variables)
+        tt = data.get("minmax", TaskType.MIN)
+        if tt not in TaskType:
+            raise ValueError(f"Invalid task type: {tt}")
+        data["minmax"] = TaskType(tt)
         super().__init__(**data)
 
     @abstractmethod

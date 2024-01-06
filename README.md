@@ -191,7 +191,7 @@ It returns a list of the cost values of the agent at each iteration.
 
 ## Practical example
 With **pyVolutionary**, you can solve a wide range of problems. In the following, we provide some examples of how to
-optimize the hyper-parameters of a Machine Learning model, specifically a Support Vector Classifier (SVC), by using the
+optimize the hyperparameters of a Machine Learning model, specifically a Support Vector Classifier (SVC), by using the
 Particle Swarm Optimization (PSO).
 
 You can replace the PSO with any other algorithm implemented in the library.
@@ -209,7 +209,6 @@ from pyvolutionary import (
     ParticleSwarmOptimization,
     ParticleSwarmOptimizationConfig,
     Task,
-    TaskType,
 )
 
 # Load the data set; In this example, the breast cancer dataset is loaded.
@@ -242,7 +241,7 @@ task = SvmOptimizedProblem(
         DiscreteVariable(choices=[*range(1, 6)], name="degree"),
         DiscreteVariable(choices=['scale', 'auto', 0.01, 0.05, 0.1, 0.5, 1.0], name="gamma"),
     ],
-    minmax=TaskType.MAX,
+    minmax="max",
 )
 
 configuration = ParticleSwarmOptimizationConfig(
