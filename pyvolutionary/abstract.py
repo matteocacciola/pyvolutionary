@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Any
+from typing import Generic
 import numpy as np
 import concurrent.futures as parallel
 
@@ -51,10 +51,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         :return: the lower and upper bounds
         :rtype: tuple[np.ndarray, np.ndarray]
         """
-        lb, ub = zip(*[
-            (v.lower_bound, v.upper_bound) if isinstance(v, ContinuousVariable) else (0, 0)
-            for v in self._task.variables
-        ])
+        lb, ub = zip(*[v.get_bounds() for v in self._task.variables])
         return np.array(lb), np.array(ub)
 
     def _init_position(self, position: list[float] | np.ndarray | None = None) -> list[float]:
@@ -217,7 +214,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         agent_copy = agent.model_copy()
         return new_agent if new_agent.cost < agent_copy.cost else agent_copy
 
-    def _correct_position(self, position: list[float] | np.ndarray) -> list[Any]:
+    def _correct_position(self, position: list[float | int] | np.ndarray) -> list[float | int]:
         """
         Correct the solution if it is outside the bounds by setting the solution to the closest bound. This function is
         used to correct the solution after the position update.
@@ -225,12 +222,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         :return: the corrected position
         :rtype: list[Any]
         """
-        variables = self._task.variables
-        return [
-            np.clip(p, variables[idx].lower_bound, variables[idx].upper_bound)
-            if isinstance(variables[idx], ContinuousVariable) else p
-            for idx, p in enumerate(position)
-        ]
+        return [v.get_value(c) for c, v in zip(position, self._task.variables)]
 
     def _extend_and_trim_population(self, new_population: list[T]):
         """

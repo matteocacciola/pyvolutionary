@@ -81,6 +81,14 @@ class Variable(BaseModel, ABC):
     def randomize(self) -> None:
         pass
 
+    @abstractmethod
+    def get_bounds(self) -> tuple[float | int, float | int]:
+        pass
+
+    @abstractmethod
+    def get_value(self, value: float | int) -> float | int:
+        pass
+
 
 class ContinuousVariable(Variable):
     lower_bound: float
@@ -96,6 +104,13 @@ class ContinuousVariable(Variable):
         self.value = np.random.uniform(self.lower_bound, self.upper_bound)
         return self.value
 
+    def get_bounds(self) -> tuple[float, float]:
+        return self.lower_bound, self.upper_bound
+
+    def get_value(self, value: float | int) -> float:
+        self.value = value
+        return float(np.clip(self.value, self.lower_bound, self.upper_bound))
+
 
 class DiscreteVariable(Variable):
     choices: list[Any]
@@ -103,6 +118,13 @@ class DiscreteVariable(Variable):
     def randomize(self) -> int:
         self.value = np.random.choice(range(0, len(self.choices)))
         return self.value
+
+    def get_bounds(self) -> tuple[int, int]:
+        return 0, len(self.choices) - 1
+
+    def get_value(self, value: float | int) -> int:
+        self.value = value
+        return int(np.clip(self.value, 0, len(self.choices) - 1))
 
 
 class Task(BaseModel, ABC):
@@ -112,8 +134,7 @@ class Task(BaseModel, ABC):
     minmax: TaskType = TaskType.MIN
 
     def __init__(self, **data: Any):
-        variables = data.get("variables", [])
-        data["space_dimension"] = len(variables)
+        data["space_dimension"] = len(data.get("variables", []))
         tt = data.get("minmax", TaskType.MIN)
         if tt not in TaskType:
             raise ValueError(f"Invalid task type: {tt}")
