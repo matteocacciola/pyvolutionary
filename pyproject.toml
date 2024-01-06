@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "pyvolutionary"
-version = "1.0.0"
-description = ""
+name = "pyVolutionary"
+version = "1.0.1"
+description = "pyVolutionary is a package collecting metaheuristic algorithms, available for free usage and able to solve a wide range of optimization problems."
 authors = ["Matteo Cacciola <matteo.cacciola@gmail.com>"]
 readme = "README.md"
 
