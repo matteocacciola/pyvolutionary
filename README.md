@@ -1,6 +1,6 @@
 # pyVolutionary
 
-[![GitHub release](https://img.shields.io/badge/release-1.0.5-yellow.svg)](https://github.com/matteocacciola/pyvolutionary/releases/tag/v1.0.5)
+[![GitHub release](https://img.shields.io/badge/release-1.0.6-yellow.svg)](https://github.com/matteocacciola/pyvolutionary/releases/tag/v1.0.6)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyvolutionary.svg)
 ![PyPI - Status](https://img.shields.io/pypi/status/pyvolutionary.svg)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pyvolutionary.svg)
@@ -56,7 +56,7 @@ currently implemented in the library.
 | Continuous    | `ContinuousVariable`  | A continuous variable | `ContinuousVariable(name="x0", lower_bound=-100.0, upper_bound=100.0)`           |
 | Discrete      | `DiscreteVariable`    | A discrete variable   | `DiscreteVariable(choices=["scale", "auto", 0.01, 0.1, 0.5, 1.0], name="gamma")` |
 
-### Continous problems
+### Continuous problems
 For example, let us inspect how you can solve the continuous _sphere_ problem with the Particle Swarm Optimization algorithm.
 
 ```python
