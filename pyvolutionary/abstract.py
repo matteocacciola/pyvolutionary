@@ -230,8 +230,18 @@ class OptimizationAbstract(ABC, Generic[T]):
         size is exceeded. The population is sorted by cost in ascending order.
         :param new_population: the new population
         """
+        if len(new_population) == 0:
+            return
         self._population.extend(new_population)
         self._population = sort_and_trim(self._population, self._config.population_size)
+
+    def _replace_and_trim_population(self, new_population: list[T]):
+        """
+        Extend the population with the new population and trim the population to the population size if the population
+        size is exceeded. The population is sorted by cost in ascending order.
+        :param new_population: the new population
+        """
+        self._population = sort_and_trim(new_population, self._config.population_size)
 
     def optimize(self, task: Task, mode: str | None = None, workers: int | None = None) -> OptimizationResult:
         """

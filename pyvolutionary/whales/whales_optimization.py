@@ -15,7 +15,8 @@ class WhalesOptimization(OptimizationAbstract):
 
     Bibliography
     ----------
-    [1] https://doi.org/10.1016/j.advengsoft.2016.01.008
+    [1] Seyedali Mirjalili, Andrew Lewis, The Whale Optimization Algorithm, Advances in Engineering Software, Volume 95,
+        2016, Pages 51-67, ISSN 0965-9978, https://doi.org/10.1016/j.advengsoft.2016.01.008.
     """
     def __init__(self, config: WhalesOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)

@@ -13,10 +13,12 @@ from .elephant_herd import *
 from .firefly_swarm import *
 from .fireworks import *
 from .fish_school_search import *
+from .firehawk import *
 from .flower_pollination_algorithm import *
 from .forest_algorithm import *
 from .fox import *
 from .genetic_algorithm import *
+from .giza_pyramid_construction import *
 from .grasshopper import *
 from .grey_wolf import *
 from .harmony_search import *

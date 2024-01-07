@@ -15,7 +15,7 @@ class OspreyOptimization(OptimizationAbstract):
 
     Bibliography
     ----------
-    [1] Trojovský, P., & Dehghani, M. Osprey Optimization Algorithm: A new bio-inspired metaheuristic algorithm
+    [1] Trojovský, P., & Dehghani, M. Osprey (2023) Optimization Algorithm: A new bio-inspired metaheuristic algorithm
         for solving engineering optimization problems. Frontiers in Mechanical Engineering, 8, 136.
     """
     def __init__(self, config: OspreyOptimizationConfig, debug: bool | None = False):

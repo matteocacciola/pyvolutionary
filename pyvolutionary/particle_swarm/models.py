@@ -1,4 +1,4 @@
-from pydantic import model_validator, conlist, field_validator
+from pydantic import conlist, field_validator
 
 from ..models import Agent, BaseOptimizationConfig
 
@@ -33,6 +33,8 @@ class ParticleSwarmOptimizationConfig(BaseOptimizationConfig):
     @field_validator("w")
     def correct_weights(cls, v):
         w_min, w_max = v
+        if not w_min < w_max:
+            raise ValueError(f"\"w[0]\" must be less than \"w[1]\". Got {w_min} and {w_max}")
         if not 0 < w_min < 0.5:
             raise ValueError(f"\"w[0]\" must be a float in (0, 0.5). Got {w_min}")
         if not 0.5 < w_max < 2:

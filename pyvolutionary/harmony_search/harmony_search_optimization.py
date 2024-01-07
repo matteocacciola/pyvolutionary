@@ -15,7 +15,8 @@ class HarmonySearchOptimization(OptimizationAbstract):
 
     Bibliography
     ----------
-    [1] https://doi.org/10.1177/003754970107600201
+    [1] Zong Woo Geem, Joong Hoon Kim, Loganathan GV. A New Heuristic Optimization Algorithm: Harmony Search.
+        SIMULATION. 2001;76(2):60-68. doi:10.1177/003754970107600201
     """
     def __init__(self, config: HarmonySearchOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
