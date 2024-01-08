@@ -1,8 +1,9 @@
 import numpy as np
-import concurrent.futures as parallel
 
 from ..enums import ModeSolver
 from ..helpers import (
+    get_pool_executor,
+    get_pool_results,
     roulette_wheel_index,
     parse_obj_doc,  # type: ignore
 )
@@ -72,14 +73,11 @@ class AntColonyOptimization(OptimizationAbstract):
                 list(map(generate_coordinate, range(0, self._task.space_dimension)))
             ).model_dump()) for _ in range(0, self._config.archive_size)]
 
-        pop = []
-        pool = parallel.ThreadPoolExecutor if self._mode == ModeSolver.THREAD else parallel.ProcessPoolExecutor
-        with pool(self._workers) as executor:
+        with get_pool_executor(self._mode, self._workers) as executor:
             executors = [executor.submit(
                 self._init_agent, list(map(generate_coordinate, range(0, self._task.space_dimension)))
             ) for _ in range(0, self._config.archive_size)]
-            for i in parallel.as_completed(executors):
-                pop.append(i.result())
+            pop = get_pool_results(executors)
         return pop
 
     def optimization_step(self):

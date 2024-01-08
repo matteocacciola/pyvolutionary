@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Generic
 import numpy as np
-import concurrent.futures as parallel
 
 from .enums import ModeSolver
 from .helpers import (
@@ -10,6 +9,8 @@ from .helpers import (
     sort_and_trim,
     sort_by_cost,
     special_agents,
+    get_pool_executor,
+    get_pool_results,
 )
 from .models import OptimizationResult, Population, T, BaseOptimizationConfig, Task, TaskType, Agent, ContinuousVariable
 
@@ -146,24 +147,26 @@ class OptimizationAbstract(ABC, Generic[T]):
         position = self._init_position(position)
         cost = self._fcn(position)
         return Agent(position=position, cost=cost, fitness=calculate_fitness(cost, self._task.minmax))
+    
+    def _generate_agents(self, n_agents: int) -> list[Agent]:
+        """
+        This method initializes a number of agents of the optimization algorithm.
+        """
+        # Serial mode
+        if self._mode == ModeSolver.SERIAL:
+            return [self._init_agent() for _ in range(0, n_agents)]
+
+        # Parallel mode
+        with get_pool_executor(self._mode, self._workers) as executor:
+            executors = [executor.submit(self._init_agent) for _ in range(0, n_agents)]
+            pop = get_pool_results(executors)
+        return pop
 
     def _init_population(self):
         """
         This method initializes the population of the optimization algorithm.
         """
-        # Serial mode
-        if self._mode == ModeSolver.SERIAL:
-            self._population = [self._init_agent() for _ in range(0, self._config.population_size)]
-            return
-
-        # Parallel mode
-        pop = []
-        pool = parallel.ThreadPoolExecutor if self._mode == ModeSolver.THREAD else parallel.ProcessPoolExecutor
-        with pool(self._workers) as executor:
-            executors = [executor.submit(self._init_agent) for _ in range(0, self._config.population_size)]
-            for i in parallel.as_completed(executors):
-                pop.append(i.result())
-        self._population = pop
+        self._population = self._generate_agents(self._config.population_size)
 
     def _is_valid_position(self, position: list[float] | np.ndarray) -> bool:
         """
@@ -193,15 +196,11 @@ class OptimizationAbstract(ABC, Generic[T]):
             return
 
         # Parallel mode
-        pop = []
-        pool = parallel.ThreadPoolExecutor if self._mode == ModeSolver.THREAD else parallel.ProcessPoolExecutor
-        with pool(self._workers) as executor:
+        with get_pool_executor(self._mode, self._workers) as executor:
             executors = [executor.submit(
                 self._greedy_select_agent, agent, new_population[idx]
             ) for idx, agent in enumerate(self._population)]
-            for i in parallel.as_completed(executors):
-                pop.append(i.result())
-        self._population = pop
+            self._population = get_pool_results(executors)
 
     def _greedy_select_agent(self, agent: T, new_agent: T) -> T:
         """
@@ -255,12 +254,9 @@ class OptimizationAbstract(ABC, Generic[T]):
         if self._mode == ModeSolver.SERIAL:
             return [fnc(idx, agent, *args) for idx, agent in enumerate(self._population)]
 
-        pop = []
-        pool = parallel.ThreadPoolExecutor if self._mode == ModeSolver.THREAD else parallel.ProcessPoolExecutor
-        with pool(self._workers) as executor:
+        with get_pool_executor(self._mode, self._workers) as executor:
             executors = [executor.submit(fnc, idx, agent, *args) for idx, agent in enumerate(self._population)]
-            for i in parallel.as_completed(executors):
-                pop.append(i.result())
+            pop = get_pool_results(executors)
         return pop
 
     def optimize(self, task: Task, mode: str | None = None, workers: int | None = None) -> OptimizationResult:

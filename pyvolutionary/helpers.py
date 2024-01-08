@@ -2,7 +2,9 @@ import math
 import random
 import numpy as np
 from pydantic import BaseModel
+import concurrent.futures as parallel
 
+from .enums import ModeSolver
 from .models import T, TaskType
 
 
@@ -217,8 +219,7 @@ def roulette_wheel_index(probabilities: np.ndarray) -> int:
     l = len(probabilities)
     if all(final_probabilities == 0):
         return int(np.random.choice(range(0, l)))
-    prob = final_probabilities / np.sum(final_probabilities)
-    return int(np.random.choice(range(0, len(probabilities)), p=prob))
+    return int(np.random.choice(range(0, l), p=final_probabilities / np.sum(final_probabilities)))
 
 
 def random_selection(p: list | np.ndarray) -> int:
@@ -288,3 +289,29 @@ def generate_group_population(population: list[T], n_groups: int, n_agents: int)
     if residual != 0:
         groups.append([agent.model_copy() for agent in population[-residual:]])
     return groups
+
+
+def get_pool_executor(mode: ModeSolver, n_workers: int = None) -> parallel.Executor:
+    """
+    Get the executor of the provided mode.
+    :param mode: the mode
+    :param n_workers: the number of workers
+    :return: the executor
+    :rtype: parallel.Executor
+    """
+    return (
+        parallel.ThreadPoolExecutor(n_workers) if mode == ModeSolver.THREAD else parallel.ProcessPoolExecutor(n_workers)
+    )
+
+
+def get_pool_results(executors: list[parallel.Future]) -> list:
+    """
+    Get the results of the provided executors.
+    :param executors: the executors
+    :return: the results
+    :rtype: list
+    """
+    res = []
+    for i in parallel.as_completed(executors):
+        res.append(i.result())
+    return res

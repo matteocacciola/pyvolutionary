@@ -1,5 +1,4 @@
 import numpy as np
-import concurrent.futures as parallel
 
 from ..enums import ModeSolver
 from ..models import ContinuousVariable
@@ -35,9 +34,7 @@ class ParticleSwarmOptimization(OptimizationAbstract):
         self.__v = 0.2 * self._bandwidth()
 
     def _init_agent(
-        self,
-        position: list[float] | np.ndarray | None = None,
-        velocity: list[float] | np.ndarray | None = None
+        self, position: list[float] | np.ndarray | None = None, velocity: list[float] | np.ndarray | None = None
     ) -> Particle:
         agent = super()._init_agent(position=position)
 

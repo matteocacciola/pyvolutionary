@@ -5,6 +5,7 @@ from .bacterial_foraging import *
 from .bat import *
 from .bee_colony import *
 from .camel_caravan import *
+from .cat_swarm import *
 from .cuckoo_search import *
 from .coral_reef import *
 from .coyotes import *
@@ -43,5 +44,14 @@ from .wildebeest_herd import *
 from .zebra import *
 from .enums import TaskType
 from .models import OptimizationResult, Population, Agent, Task, ContinuousVariable, DiscreteVariable
-from .helpers import best_agent, worst_agent, best_agents, worst_agents, special_agents, get_levy_flight_step
+from .helpers import (
+    best_agent,
+    worst_agent,
+    best_agents,
+    worst_agents,
+    special_agents,
+    get_levy_flight_step,
+    get_pool_executor,
+    get_pool_results,
+)
 from .utils import plot, animate, agent_trend, best_agent_trend
