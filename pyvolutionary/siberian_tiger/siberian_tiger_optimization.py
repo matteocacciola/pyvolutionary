@@ -42,12 +42,12 @@ class SiberianTigerOptimization(OptimizationAbstract):
             sf = self.__sf__(siberian_tiger)
             r1 = np.random.randint(1, 3)
             pos_new = pos + np.random.random() * (sf - r1 * pos)  # Eq. 5
-            agent = self._init_agent(self._correct_position(pos_new))
+            agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
 
             siberian_tiger = self._greedy_select_agent(siberian_tiger, agent)
 
             # phase 2: exploitation
             pos_new = self._increase_position(siberian_tiger.position, self._cycles)  # Eq. 7
-            agent = self._init_agent(self._correct_position(pos_new))
+            agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
 
             self._population[idx] = self._greedy_select_agent(siberian_tiger, agent)

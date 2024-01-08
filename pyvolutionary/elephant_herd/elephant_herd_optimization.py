@@ -31,23 +31,23 @@ class ElephantHerdOptimization(OptimizationAbstract):
         super()._init_population()
         self.__groups = generate_group_population(self._population, self._config.n_clans, self.__n_individuals)
 
-    def optimization_step(self):
+    def __evolve__(self, idx: int, elephant: Elephant) -> Elephant:
         n_individuals = self.__n_individuals
+        clan_idx = int(idx / n_individuals)
+        pos_group = [np.array(elephant.position) for elephant in self.__groups[clan_idx]]
 
-        for idx in range(0, self._config.population_size):
-            clan_idx = int(idx / n_individuals)
-            pos_group = [np.array(elephant.position) for elephant in self.__groups[clan_idx]]
+        # pos_clan_idx == 0 means the best in clan, because all clans are sorted based on cost
+        pos_clan_idx = int(idx % n_individuals)
+        pos_new = self._config.beta * np.mean(pos_group, axis=0) if pos_clan_idx == 0 else (
+            pos_group[pos_clan_idx] + self._config.alpha * np.random.random() * (pos_group[0] - pos_group[pos_clan_idx])
+        )
+        agent = Elephant(**self._init_agent(pos_new).model_dump())
+        return self._greedy_select_agent(elephant, agent)
 
-            # pos_clan_idx == 0 means the best in clan, because all clans are sorted based on cost
-            pos_clan_idx = int(idx % n_individuals)
-            pos_new = self._config.beta * np.mean(pos_group, axis=0) if pos_clan_idx == 0 else (
-                pos_group[pos_clan_idx] + self._config.alpha * np.random.random() * (
-                    pos_group[0] - pos_group[pos_clan_idx]
-                )
-            )
-            self._population[idx] = self._greedy_select_agent(self._population[idx], self._init_agent(pos_new))
+    def optimization_step(self):
+        self._population = self._solve_mode_process(self.__evolve__)
 
-        self.__groups = generate_group_population(self._population, self._config.n_clans, n_individuals)
+        self.__groups = generate_group_population(self._population, self._config.n_clans, self.__n_individuals)
 
         # Separating operator
         for idx in range(0, self._config.n_clans):

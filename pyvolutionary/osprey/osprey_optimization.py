@@ -43,12 +43,12 @@ class OspreyOptimization(OptimizationAbstract):
             sf = self.__sf__(osprey)
             r1 = np.random.randint(1, 3)
             pos_new = pos + np.random.normal(0, 1) * (sf - r1 * pos)  # Eq. 5
-            agent = self._init_agent(self._correct_position(pos_new))
+            agent = self._init_agent(pos_new)
 
             osprey = self._greedy_select_agent(osprey, agent)
 
             # phase 2: carrying the fish to a suitable position (exploitation)
             pos_new = self._increase_position(osprey.position)  # Eq. 7
-            agent = self._init_agent(self._correct_position(pos_new))
+            agent = self._init_agent(pos_new)
 
             self._population[idx] = self._greedy_select_agent(osprey, agent)

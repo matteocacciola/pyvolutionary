@@ -1,5 +1,7 @@
 import numpy as np
+import concurrent.futures as parallel
 
+from ..enums import ModeSolver
 from ..helpers import (
     roulette_wheel_index,
     parse_obj_doc,  # type: ignore
@@ -28,7 +30,7 @@ class AntColonyOptimization(OptimizationAbstract):
     def __selection_probability__(self) -> np.ndarray:
         """
         Compute the selection probability of each ant in the population.
-        :return: a numpy array of the selection probability of each ant in the population.
+        :return: a numpy array of the selection probability of each ant in the population
         :rtype: np.ndarray
         """
         ranks = np.array([idx for idx in range(1, self._config.population_size + 1)])
@@ -45,7 +47,7 @@ class AntColonyOptimization(OptimizationAbstract):
             x_j: the position of the j-th ant.\n
             zeta: the zeta parameter of the colony.\n
             N: the population size.
-        :return: a numpy array of the sigmas of each ant in the population.
+        :return: a numpy array of the sigmas of each ant in the population
         :rtype: np.ndarray
         """
         positions = np.array([ant.position for ant in self._population])
@@ -65,9 +67,20 @@ class AntColonyOptimization(OptimizationAbstract):
             return float(self._population[rdx].position[j] + np.random.normal() * sigmas[rdx, j])
 
         # Generate Samples
-        return [Ant(**self._init_agent(
-            list(map(generate_coordinate, range(0, self._task.space_dimension)))
-        ).model_dump()) for _ in range(0, self._config.archive_size)]
+        if self._mode == ModeSolver.SERIAL:
+            return [Ant(**self._init_agent(
+                list(map(generate_coordinate, range(0, self._task.space_dimension)))
+            ).model_dump()) for _ in range(0, self._config.archive_size)]
+
+        pop = []
+        pool = parallel.ThreadPoolExecutor if self._mode == ModeSolver.THREAD else parallel.ProcessPoolExecutor
+        with pool(self._workers) as executor:
+            executors = [executor.submit(
+                self._init_agent, list(map(generate_coordinate, range(0, self._task.space_dimension)))
+            ) for _ in range(0, self._config.archive_size)]
+            for i in parallel.as_completed(executors):
+                pop.append(i.result())
+        return pop
 
     def optimization_step(self):
         weights = self.__selection_probability__()
@@ -77,4 +90,3 @@ class AntColonyOptimization(OptimizationAbstract):
         new_ants = self.__generate_new_ants__(weights, sigmas)
 
         self._extend_and_trim_population(new_ants)
-

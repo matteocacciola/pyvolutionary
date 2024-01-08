@@ -1,3 +1,4 @@
+from itertools import chain
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -22,7 +23,7 @@ class GizaPyramidConstructionOptimization(OptimizationAbstract):
     def __init__(self, config: GizaPyramidConstructionOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 
-    def optimization_step(self):
+    def __evolve__(self, idx: int, worker: Worker) -> list[Worker]:
         mu1, mu2 = self._config.friction
         g = 2 * self._config.gravity
         theta = np.deg2rad(self._config.theta)
@@ -33,26 +34,31 @@ class GizaPyramidConstructionOptimization(OptimizationAbstract):
         dims = list(range(0, dim))
 
         candidates = []
-        for worker in self._population:
-            pos = np.array(worker.position)
 
-            v0 = np.random.random() ** 2
-            mu = np.random.uniform(mu1, mu2)
-            d = v0 / (g * (sin_theta + (mu * cos_theta)))  # stone destination
-            x = v0 / (g * sin_theta)  # worker movement
+        pos = np.array(worker.position)
 
-            new_pos = self._uniform_position() * x * (pos + d)
+        v0 = np.random.random() ** 2
+        mu = np.random.uniform(mu1, mu2)
+        d = v0 / (g * (sin_theta + (mu * cos_theta)))  # stone destination
+        x = v0 / (g * sin_theta)  # worker movement
 
-            # substitution
-            first_condition = dims == np.repeat(np.random.randint(0, dim), dim)
-            second_condition = np.random.random(dim) <= pss
-            new_pos = self._correct_position(
-                np.where(np.logical_or(first_condition, second_condition), new_pos, pos)
-            )
+        new_pos = self._uniform_position() * x * (pos + d)
 
-            new_agent = Worker(**self._init_agent(new_pos).model_dump())
+        # substitution
+        first_condition = dims == np.repeat(np.random.randint(0, dim), dim)
+        second_condition = np.random.random(dim) <= pss
+        new_pos = self._correct_position(
+            np.where(np.logical_or(first_condition, second_condition), new_pos, pos)
+        )
 
-            if new_agent.cost < worker.cost:
-                candidates.append(new_agent)
+        new_agent = Worker(**self._init_agent(new_pos).model_dump())
 
-        self._extend_and_trim_population(candidates)
+        if new_agent.cost < worker.cost:
+            candidates.append(new_agent)
+
+        return candidates
+
+    def optimization_step(self):
+        pop_new = list(chain.from_iterable(self._solve_mode_process(self.__evolve__)))
+
+        self._extend_and_trim_population(pop_new)

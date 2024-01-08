@@ -61,27 +61,30 @@ class AfricanVultureOptimization(OptimizationAbstract):
         s2 = np.random.random() * position * np.sin(position)
         return rand_pos * (1 - ((s1 + s2) / (2 * np.pi)))
 
-    def optimization_step(self):
+    def __evolve__(self, idx: int, vulture: AfricanVulture, best_list: list[AfricanVulture]) -> AfricanVulture:
         cycle_ratio = self._cycles / self._config.max_cycles
-        alpha = self._config.alpha
 
-        a = np.random.uniform(-2, 2) * (
+        ppp = (2 * np.random.random() + 1) * (1 - cycle_ratio) + np.random.uniform(-2, 2) * (
             (np.sin((np.pi / 2) * cycle_ratio) ** self._config.gamma) + np.cos((np.pi / 2) * cycle_ratio) - 1
         )
-        ppp = (2 * np.random.random() + 1) * (1 - cycle_ratio) + a
-        best_list = best_agents(self._population, n_best=2)
 
-        for idx in range(0, self._config.population_size):
-            position = np.array(self._population[idx].position)
+        alpha = self._config.alpha
 
-            F = ppp * (2 * np.random.random() - 1)
-            rand_pos = np.array(best_list[np.random.choice([0, 1], p=[alpha, 1 - alpha])].position)
+        position = np.array(vulture.position)
 
-            if np.abs(F) >= 1:  # Exploration
-                pos_new = self.__exploration_position__(rand_pos, position, F)
-            elif np.abs(F) < 0.5:  # Exploitation Phase 1
-                pos_new = self.__exploration_position_phase1__(best_list, rand_pos, position, F)
-            else:  # Exploitation Phase 2
-                pos_new = self.__exploration_position_phase2__(rand_pos, position, F)
+        F = ppp * (2 * np.random.random() - 1)
+        rand_pos = np.array(best_list[np.random.choice([0, 1], p=[alpha, 1 - alpha])].position)
 
-            self._population[idx] = self._greedy_select_agent(self._population[idx], self._init_agent(pos_new))
+        if np.abs(F) >= 1:  # Exploration
+            pos_new = self.__exploration_position__(rand_pos, position, F)
+        elif np.abs(F) < 0.5:  # Exploitation Phase 1
+            pos_new = self.__exploration_position_phase1__(best_list, rand_pos, position, F)
+        else:  # Exploitation Phase 2
+            pos_new = self.__exploration_position_phase2__(rand_pos, position, F)
+
+        return self._greedy_select_agent(
+            vulture, AfricanVulture(**self._init_agent(pos_new).model_dump())
+        )
+
+    def optimization_step(self):
+        self._population = self._solve_mode_process(self.__evolve__, best_agents(self._population, n_best=2))

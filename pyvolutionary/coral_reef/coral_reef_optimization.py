@@ -43,7 +43,7 @@ class CoralReefOptimization(OptimizationAbstract):
         selected. The corals that are going to broadcast spawning are selected randomly from the occupied corals. The
         corals that are going to brooding are selected randomly from the occupied corals that are not selected for
         broadcast spawning.
-        :return: the list of larvae.
+        :return: the list of larvae
         :rtype: list[Coral]
         """
         def gaussian_mutation(position):
@@ -78,12 +78,12 @@ class CoralReefOptimization(OptimizationAbstract):
             selected_corals = np.delete(selected_corals, [id1, id2])
         return larvae
 
-    def __larvae_setting__(self, larvae: list[Coral]):
+    def __larvae_setting__(self, larvae: list[Coral]) -> None:
         """
         Larvae setting process. This process is done in two steps: 2a and 2b. In step 2a, the larvae are evaluated and
         the larvae that are going to be settled are selected. In step 2b, the larvae that are going to be settled are
         placed in the occupied corals.
-        :param larvae: the list of larvae.
+        :param larvae: the list of larvae
         """
         def find_available_slot(lc: Coral) -> tuple[int | None, bool]:
             for i in range(self._config.n_trials):
@@ -106,7 +106,7 @@ class CoralReefOptimization(OptimizationAbstract):
             if pdx is not None:
                 update(pdx, upd_occupied, larvae[idx])
 
-    def __reef_cost__(self, idx):
+    def __reef_cost__(self, idx) -> float:
         return self._population[idx].cost
 
     def optimization_step(self):

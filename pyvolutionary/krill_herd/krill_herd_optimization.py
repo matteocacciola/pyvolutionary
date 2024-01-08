@@ -54,7 +54,7 @@ class KrillHerdOptimization(OptimizationAbstract):
     def __get_food_location__(self) -> list[float]:
         """
         Get food location for krill heard.
-        :return: food location.
+        :return: food location
         :rtype: list[float]
         """
         costs = np.array([krill.cost for krill in self._population])
@@ -67,9 +67,9 @@ class KrillHerdOptimization(OptimizationAbstract):
     def __get_x__(self, x: Krill, y: Krill) -> np.ndarray:
         """
         Get x values.
-        :param x: First krill/individual.
-        :param y: Second krill/individual.
-        :return: X values.
+        :param x: First krill/individual
+        :param y: Second krill/individual
+        :return: X values
         :rtype: np.ndarray
         """
         return (
@@ -79,11 +79,11 @@ class KrillHerdOptimization(OptimizationAbstract):
     def __get_k__(self, x: Krill, y: Krill, best: Krill, worst: Krill) -> float:
         """
         Get k values.
-        :param x: First krill/individual.
-        :param y: Second krill/individual.
-        :param best: Best krill/individual.
-        :param worst: Worst krill/individual.
-        :return: K values.
+        :param x: First krill/individual
+        :param y: Second krill/individual
+        :param best: Best krill/individual
+        :param worst: Worst krill/individual
+        :return: K values
         :rtype: float
         """
         return (x.cost - y.cost + self.EPS) / (worst.cost - best.cost + self.EPS)
@@ -91,11 +91,11 @@ class KrillHerdOptimization(OptimizationAbstract):
     def __induce_neighbours_motion__(self, idx: int, krill: Krill, best: Krill, worst: Krill) -> np.ndarray:
         """
         Induced neighbours motion operator.
-        :param idx: Index of current krill being operated.
-        :param krill: Krill being operated.
-        :param best: Best krill in heard.
-        :param worst: Worst krill in heard.
-        :return: Induced speed.
+        :param idx: Index of current krill being operated
+        :param krill: Krill being operated
+        :param best: Best krill in herd
+        :param worst: Worst krill in herd
+        :return: Induced speed
         :rtype: np.ndarray
         """
         # calculate sense range for selected individual
@@ -121,15 +121,15 @@ class KrillHerdOptimization(OptimizationAbstract):
         return self._config.n_max * (alpha_l + alpha_t) + self.__w_neighbour * krill.induced_speed
 
     def __induce_foraging_motion__(
-            self, krill: Krill, pos_food: list[float], g_best: Krill, g_worst: Krill
+        self, krill: Krill, pos_food: list[float], g_best: Krill, g_worst: Krill
     ) -> np.ndarray:
         """
         Induced foraging motion operator.
-        :param krill: Krill being operated.
-        :param pos_food: Food position.
-        :param g_best: Best krill/individual.
-        :param g_worst: Worst krill/individual.
-        :return: Foraging speed.
+        :param krill: Krill being operated
+        :param pos_food: Food position
+        :param g_best: Best krill/individual
+        :param g_worst: Worst krill/individual
+        :return: Foraging speed
         :rtype: np.ndarray
         """
         temp_krill = self._init_agent(position=pos_food)

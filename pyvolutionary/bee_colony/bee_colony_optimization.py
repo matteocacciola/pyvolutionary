@@ -48,7 +48,6 @@ class BeeColonyOptimization(OptimizationAbstract):
     def __send_employed_bees__(self) -> None:
         """
         Send employed bees to search for food sources. Each employed bee will dance on a food source.
-        :return:
         """
         for i, bee in enumerate(self._population):
             self.__food_source_dance__(i, bee)
@@ -58,9 +57,8 @@ class BeeColonyOptimization(OptimizationAbstract):
         Perform a food source dance. The dance is performed by generating a mutant solution and evaluating it. If the
         mutant solution is better than the current solution, the current solution is replaced with the mutant solution.
         Otherwise, the trial counter of the current solution is increased by one.
-        :param index:
-        :param bee:
-        :return:
+        :param index: the index of the bee to consider
+        :param bee: the bee to consider
         """
         # a randomly chosen solution is used in producing a mutant solution of the i-th solution
         # randomly selected solution must be different from the i-th solution
@@ -82,7 +80,6 @@ class BeeColonyOptimization(OptimizationAbstract):
         where p_i is the probability of the i-th food source, and cost_i is the cost of the i-th food source. The
         probability of each food source is calculated using the costs of the employed bees. The onlooker bees will use a
         roulette wheel selection to select a food source.
-        :return:
         """
         # Calculate the probabilities of each employed bee
         employed_costs = np.array([agent.cost for agent in self._population])

@@ -53,6 +53,6 @@ class ElectromagneticFieldOptimization(OptimizationAbstract):
                 pos_new[np.random.randint(0, n_dims)] = self._uniform_coordinates(np.random.randint(0, n_dims))
 
             # checking whether the generated number is inside boundary or not
-            agent = self._init_agent(self._correct_position(pos_new))
+            agent = Electromagnet(**self._init_agent(pos_new).model_dump())
 
             self._population[idx] = self._greedy_select_agent(electromagnet, agent)

@@ -39,8 +39,8 @@ class BacterialForagingOptimization(OptimizationAbstract):
         Update the step size of the cell. The step size is computed as follows:\n
         s / cell.nutrients if cell.nutrients > 0 else s, where:\n
         s = C_s - (C_s - C_e) * cell.cost / total_costs\n
-        :param cell: the cell to update the step size.
-        :return: the step size.
+        :param cell: the cell to update the step size
+        :return: the step size
         :rtype: float
         """
         total_costs = np.sum([agent.cost for agent in self._population])
@@ -53,9 +53,9 @@ class BacterialForagingOptimization(OptimizationAbstract):
         new_position = cell.position + step_size * delta_i / delta, where:\n
         delta_i = (best_agent.position - cell.position) + (cell.local_best - cell.position)\n
         delta = sqrt(delta_i * delta_i.T)\n
-        :param cell: the cell to tumble.
-        :param step_size: the step size.
-        :return: the new cell.
+        :param cell: the cell to tumble
+        :param step_size: the step size
+        :return: the new cell
         :rtype: Cell
         """
         position = np.array(cell.position)
@@ -65,14 +65,14 @@ class BacterialForagingOptimization(OptimizationAbstract):
             delta_i = np.random.uniform(-1.0, 1.0, self._task.space_dimension)
             delta = np.sqrt(np.dot(delta_i, delta_i.T))
 
-        return self._init_agent(self._correct_position(cell.position + step_size * delta_i / delta))
+        return self._init_agent(cell.position + step_size * delta_i / delta)
 
     def __swim__(self, cell: Cell, step_size: float) -> Cell:
         """
         Swim the cell. The cell will swim to a new cell or tumble some every time interval.
-        :param cell: the cell to swim.
-        :param step_size: the step size.
-        :return: the cell after swimming.
+        :param cell: the cell to swim
+        :param step_size: the step size
+        :return: the cell after swimming
         :rtype: Cell
         """
         for m in range(self._config.Ns):
@@ -120,30 +120,40 @@ class BacterialForagingOptimization(OptimizationAbstract):
             for idx in sorted(list_idx_removed, reverse=True):
                 self._population.pop(idx)
 
+    def __evolve__(self, idx: int, cell: Cell) -> Cell:
+        """
+        Evolve the cell. This method is called within each optimization step.
+        :param idx: the index of the cell to evolve
+        :param cell: the cell to evolve
+        :return: the new population
+        :rtype: list[Cell]
+        """
+        step_size = self.__update_step_size__(cell)
+        cell = self.__swim__(cell, step_size)
+
+        m = max(self._config.N_split, self._config.N_split + (
+            len(self._population) - self._config.population_size
+        ) / self._config.N_adapt)
+
+        pos = np.array(cell.position)
+
+        if cell.nutrients > m:
+            tt = np.random.normal(0, 1, self._task.space_dimension)
+            agent = self._init_agent(
+                self._correct_position(tt * pos + (1 - tt) * (np.array(self._best_agent.position) - pos))
+            )
+            self._population.append(agent)
+        nut_min = min(self._config.N_adapt, self._config.N_adapt + (
+            len(self._population) - self._config.population_size
+        ) / self._config.N_adapt)
+
+        if cell.nutrients < nut_min and np.random.random() < self._config.Ped:
+            cell = self._init_agent()
+
+        return cell
+
     def optimization_step(self):
-        for idx, cell in enumerate(self._population):
-            step_size = self.__update_step_size__(cell)
-            cell = self.__swim__(cell, step_size)
-
-            m = max(self._config.N_split, self._config.N_split + (
-                len(self._population) - self._config.population_size
-            ) / self._config.N_adapt)
-
-            pos = np.array(cell.position)
-
-            if cell.nutrients > m:
-                tt = np.random.normal(0, 1, self._task.space_dimension)
-                agent = self._init_agent(
-                    self._correct_position(tt * pos + (1 - tt) * (np.array(self._best_agent.position) - pos))
-                )
-                self._population.append(agent)
-            nut_min = min(self._config.N_adapt, self._config.N_adapt + (
-                len(self._population) - self._config.population_size
-            ) / self._config.N_adapt)
-
-            self._population[idx] = cell
-            if cell.nutrients < nut_min and np.random.random() < self._config.Ped:
-                self._population[idx] = self._init_agent()
+        self._population = self._solve_mode_process(self.__evolve__)
 
         # make sure the population does not have duplicates
         self.__clean_population__()

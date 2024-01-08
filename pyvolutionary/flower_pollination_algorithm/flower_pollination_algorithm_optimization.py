@@ -5,7 +5,7 @@ from ..helpers import (
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
-from .models import FlowerPollinationAlgorithmOptimizationConfig
+from .models import Pollinator, FlowerPollinationAlgorithmOptimizationConfig
 
 
 class FlowerPollinationAlgorithmOptimization(OptimizationAbstract):
@@ -41,6 +41,5 @@ class FlowerPollinationAlgorithmOptimization(OptimizationAbstract):
                 pos_new = position + np.random.uniform() * (
                     np.array(self._population[id1].position) - np.array(self._population[id2].position)
                 )
-            self._population[idx] = self._greedy_select_agent(
-                self._init_agent(self._correct_position(pos_new)), pollinator
-            )
+            agent = Pollinator(**self._init_agent(pos_new).model_dump())
+            self._population[idx] = self._greedy_select_agent(agent, pollinator)

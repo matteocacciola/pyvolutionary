@@ -5,7 +5,7 @@ from ..helpers import (
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
-from .models import VirusColonySearchOptimizationConfig
+from .models import VirusColonySearchOptimizationConfig, Virus
 
 
 class VirusColonySearchOptimization(OptimizationAbstract):
@@ -25,21 +25,27 @@ class VirusColonySearchOptimization(OptimizationAbstract):
         super().__init__(config, debug)
         self.__n_best = int(self._config.lamda * self._config.population_size)
 
-    def __viruses_diffusion__(self):
+    def __virus_diffusion__(self, idx: int, virus: Virus, best_position: list[float]) -> Virus:
         """
-        Viruses diffusion step.
+        Virus diffusion step.
+        :param idx: the index of the virus to consider
+        :param virus: the virus to consider
+        :param best_position: the position of the best agent
+        :return: the updated virus
+        :rtype: Virus
         """
+        best_position = np.array(best_position)
+
         max_cycles = self._config.max_cycles
         cycle = self._cycles
-        best_position = np.array(self._best_agent.position)
 
-        for idx in range(0, self._config.population_size):
-            position = np.array(self._population[idx].position)
-            sigma = (np.log1p(cycle) / max_cycles) * (position - best_position)
-            gauss = np.random.normal(np.random.normal(best_position, np.abs(sigma)))
-            position_new = gauss + np.random.uniform() * best_position - np.random.uniform() * position
+        position = np.array(virus.position)
+        sigma = (np.log1p(cycle) / max_cycles) * (position - best_position)
+        gauss = np.random.normal(np.random.normal(best_position, np.abs(sigma)))
+        position_new = gauss + np.random.uniform() * best_position - np.random.uniform() * position
+        agent = Virus(**self._init_agent(position_new).model_dump())
 
-            self._population[idx] = self._greedy_select_agent(self._population[idx], self._init_agent(position_new))
+        return self._greedy_select_agent(virus, agent)
 
     def __calculate_x_mean__(self, n_best: int) -> list[float]:
         """
@@ -58,17 +64,20 @@ class VirusColonySearchOptimization(OptimizationAbstract):
         x_mean = weight * np.sum(positions, axis=0)
         return x_mean
 
-    def __host_cell_infection__(self):
+    def __host_cell_infection__(self, idx: int, virus: Virus, x_mean: list[float]) -> Virus:
         """
         Host cell infection step.
+        :param idx: the index of the virus to consider
+        :param virus: the virus to consider
+        :param x_mean: the mean position of list of solutions (population)
+        :return: the updated virus
+        :rtype: Virus
         """
-        x_mean = self.__calculate_x_mean__(self.__n_best)
         sigma = self._config.sigma * (1 - self._cycles / self._config.max_cycles)
-        for idx in range(0, self._config.population_size):
-            self._population[idx] = self._greedy_select_agent(
-                self._population[idx],
-                self._init_agent(x_mean + sigma * np.random.normal(0, 1, self._task.space_dimension))
-            )
+        agent = Virus(**self._init_agent(
+            np.array(x_mean) + sigma * np.random.normal(0, 1, self._task.space_dimension)
+        ).model_dump())
+        return self._greedy_select_agent(virus, agent)
 
     def __immune_response__(self):
         """
@@ -90,10 +99,11 @@ class VirusColonySearchOptimization(OptimizationAbstract):
 
     def optimization_step(self):
         # viruses diffusion
-        self.__viruses_diffusion__()
+        self._population = self._solve_mode_process(self.__virus_diffusion__, self._best_agent.position)
 
         # host cells infection
-        self.__host_cell_infection__()
+        x_mean = self.__calculate_x_mean__(self.__n_best)
+        self._population = self._solve_mode_process(self.__host_cell_infection__, x_mean)
 
         # immune response
         self.__immune_response__()

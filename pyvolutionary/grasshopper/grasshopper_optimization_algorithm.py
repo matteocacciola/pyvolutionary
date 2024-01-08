@@ -6,7 +6,7 @@ from ..helpers import (
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
-from .models import GrasshopperOptimizationConfig
+from .models import Grasshopper, GrasshopperOptimizationConfig
 
 
 class GrasshopperOptimization(OptimizationAbstract):
@@ -41,10 +41,10 @@ class GrasshopperOptimization(OptimizationAbstract):
         the current grasshopper and the position of each other grasshopper. The position of the current grasshopper is
         the position of the current grasshopper in the current iteration. The position of each other grasshopper is the
         position of each other grasshopper in the current iteration.
-        :param position: the position of the current grasshopper in the current iteration.
-        :param ran: a random vector.
+        :param position: the position of the current grasshopper in the current iteration
+        :param ran: a random vector
         :return: the sum of the attraction forces between the current grasshopper and the other grasshoppers in the
-            population.
+        population
         :rtype: np.ndarray
         """
         def f(r_vector: np.ndarray):
@@ -55,19 +55,21 @@ class GrasshopperOptimization(OptimizationAbstract):
             for jdx, g in enumerate(self._population)
         ], axis=0)
 
-    def optimization_step(self):
+    def __evolve__(self, idx: int, grasshopper: Grasshopper, best_pos: list[float]) -> Grasshopper:
+        best_pos = np.array(best_pos)
+
         # Eq.(2.8)
         c = self._config.c_max - self._cycles * ((self._config.c_max - self._config.c_min) / self._config.max_cycles)
         ran = (c / 2) * self._bandwidth()
 
-        best_pos = np.array(self._best_agent.position)
-        for idx, grasshopper in enumerate(self._population):
-            sum_grass = self.__s_function__(grasshopper.position, ran)
+        sum_grass = self.__s_function__(grasshopper.position, ran)
 
-            # Eq. (2.7)
-            self._population[idx] = self._greedy_select_agent(
-                self._init_agent(self._correct_position(
-                    c * np.random.normal(0, 1, self._task.space_dimension) * sum_grass + best_pos
-                )),
-                grasshopper
-            )
+        # Eq. (2.7)
+        agent = Grasshopper(**self._init_agent(
+            c * np.random.normal(0, 1, self._task.space_dimension) * sum_grass + best_pos
+        ).model_dump())
+        return self._greedy_select_agent(agent, grasshopper)
+
+    def optimization_step(self):
+        best_pos = np.array(self._best_agent.position)
+        self._population = self._solve_mode_process(self.__evolve__, best_pos)

@@ -2,7 +2,7 @@ import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
-from .models import SeagullOptimizationConfig
+from .models import SeagullOptimizationConfig, Seagull
 
 
 class SeagullOptimization(OptimizationAbstract):
@@ -21,23 +21,25 @@ class SeagullOptimization(OptimizationAbstract):
     def __init__(self, config: SeagullOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 
-    def optimization_step(self):
+    def __evolve__(self, idx: int, seagull: Seagull, best_position: list[float]) -> Seagull:
+        best_position = np.array(best_position)
+
         A = self._config.fc - self._cycles * self._config.fc / self._config.max_cycles  # Eq. 6
         uu = vv = 1
 
-        best_pos = np.array(self._best_agent.position)
-        for idx, seagull in enumerate(self._population):
-            pos = np.array(seagull.position)
+        pos = np.array(seagull.position)
 
-            B = 2 * A ** 2 * np.random.random()  # Eq. 8
-            M = B * (best_pos - pos)  # Eq. 7
-            C = A * pos  # Eq. 5
-            D = np.abs(C + M)  # Eq. 9
-            k = np.random.uniform(0, 2 * np.pi)
-            r = uu * np.exp(k * vv)
+        B = 2 * A ** 2 * np.random.random()  # Eq. 8
+        M = B * (best_position - pos)  # Eq. 7
+        C = A * pos  # Eq. 5
+        D = np.abs(C + M)  # Eq. 9
+        k = np.random.uniform(0, 2 * np.pi)
+        r = uu * np.exp(k * vv)
 
-            pos_new = r * np.cos(k) * r * np.sin(k) * r * k * D + np.random.normal(0, 1) * best_pos  # Eq. 14
-            pos_new = self._correct_position(pos_new)
-            agent = self._init_agent(pos_new)
+        pos_new = r * np.cos(k) * r * np.sin(k) * r * k * D + np.random.normal(0, 1) * best_position  # Eq. 14
+        agent = Seagull(**self._init_agent(pos_new).model_dump())
 
-            self._population[idx] = self._greedy_select_agent(agent, seagull)
+        return self._greedy_select_agent(agent, seagull)
+
+    def optimization_step(self):
+        self._population = self._solve_mode_process(self.__evolve__, self._best_agent.position)

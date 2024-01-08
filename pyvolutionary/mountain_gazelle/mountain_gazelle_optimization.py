@@ -26,7 +26,7 @@ class MountainGazelleOptimization(OptimizationAbstract):
         """
         Random solution. It is used to generate a new solution. It is a random combination of the best solution and the
         mean of the positions of the best solutions.
-        :return: random solution.
+        :return: random solution
         :rtype: np.ndarray
         """
         pop_size = self._config.population_size
@@ -46,9 +46,9 @@ class MountainGazelleOptimization(OptimizationAbstract):
     def __coefficient_vectors__(self, epoch: int, position: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Calculate the coefficient vectors. They are calculated according to [1].
-        :param epoch: the current epoch.
-        :param position: the position of the current agent.
-        :return: the coefficient vectors.
+        :param epoch: the current epoch
+        :param position: the position of the current agent
+        :return: the coefficient vectors
         :rtype: tuple[np.ndarray, np.ndarray, np.ndarray]
         """
         n_dims = self._task.space_dimension
@@ -72,12 +72,12 @@ class MountainGazelleOptimization(OptimizationAbstract):
         """
         Implement the candidate positions. It is used to generate a new solution. It is a random combination of the
         best solution and the mean of the positions of the best solutions.
-        :param cofi: the coefficient vector.
-        :param A: the coefficient vector.
-        :param D: the coefficient vector.
-        :param M: the random solution.
-        :param position: the position of the current agent.
-        :return: the candidate positions.
+        :param cofi: the coefficient vector
+        :param A: the coefficient vector
+        :param D: the coefficient vector
+        :param M: the random solution
+        :param position: the position of the current agent
+        :return: the candidate positions
         :rtype: list[np.ndarray]
         """
         best_position = np.array(self._best_agent.position)

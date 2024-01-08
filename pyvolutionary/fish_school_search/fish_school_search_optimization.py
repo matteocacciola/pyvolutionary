@@ -92,9 +92,7 @@ class FishSchoolSearchOptimization(OptimizationAbstract):
             fish.delta_cost = 0
             return fish
 
-        self._population = [move(
-            fish, self._task.space_dimension, self.__step_individual
-        ) for fish in self._population]
+        self._population = [move(fish, self._task.space_dimension, self.__step_individual) for fish in self._population]
 
     def __collective_instinctive_movement__(self):
         """

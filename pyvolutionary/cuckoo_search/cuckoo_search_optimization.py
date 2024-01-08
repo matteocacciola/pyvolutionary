@@ -26,20 +26,19 @@ class CuckooSearchOptimization(OptimizationAbstract):
         super().__init__(config, debug)
         self.__n_cut = int(self._config.p_a * self._config.population_size)
 
-    def optimization_step(self):
+    def __evolve__(self, idx: int, cuckoo: Cuckoo, best_pos: list[float]) -> None:
         epoch = self._cycles
-        best_pos = np.array(self._best_agent.position)
-        for idx, cuckoo in enumerate(self._population):
-            pos = np.array(cuckoo.position)
+        pos = np.array(cuckoo.position)
 
-            levy_step = get_levy_flight_step(multiplier=0.001, case=-1)
-            new_agent = self._init_agent(
-                self._correct_position(
-                    pos + 1.0 / np.sqrt(epoch) * np.sign(np.random.random() - 0.5) * levy_step * (pos - best_pos)
-                )
-            )
+        levy_step = get_levy_flight_step(multiplier=0.001, case=-1)
+        new_agent = Cuckoo(**self._init_agent(
+            pos + 1.0 / np.sqrt(epoch) * np.sign(np.random.random() - 0.5) * levy_step * (pos - best_pos)
+        ).model_dump())
 
-            self._population[idx] = self._greedy_select_agent(new_agent, cuckoo)
+        return self._greedy_select_agent(new_agent, cuckoo)
+
+    def optimization_step(self):
+        self._population = self._solve_mode_process(self.__evolve__, self._best_agent.position)
 
         # abandoned some worst nests
         pop = sort_and_trim(self._population, self._config.population_size)

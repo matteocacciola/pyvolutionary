@@ -2,7 +2,7 @@ import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
-from .models import WalrusOptimizationConfig
+from .models import WalrusOptimizationConfig, Walrus
 
 
 class WalrusOptimization(OptimizationAbstract):
@@ -33,11 +33,11 @@ class WalrusOptimization(OptimizationAbstract):
                 np.array(agent_kk.position) - np.random.randint(1, 3) * pos
             ) if agent_kk.cost < walrus.cost else pos + np.random.random() * (pos - np.array(agent_kk.position))
 
-            agent = self._init_agent(self._correct_position(pos_new))
+            agent = Walrus(**self._init_agent(pos_new).model_dump())
             walrus = self._greedy_select_agent(walrus, agent)
 
             # phase 2 Exploitation
             pos_new = self._increase_position(walrus.position, self._cycles)  # Eq. 7
-            agent = self._init_agent(self._correct_position(pos_new))
+            agent = Walrus(**self._init_agent(pos_new).model_dump())
 
             self._population[idx] = self._greedy_select_agent(walrus, agent)

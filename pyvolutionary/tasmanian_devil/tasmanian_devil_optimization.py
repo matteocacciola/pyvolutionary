@@ -41,7 +41,7 @@ class TasmanianDevilOptimization(OptimizationAbstract):
         ) if self._population[kk].cost < tasmanian_devil.cost else pos + np.random.random(n_dims) * (
             pos - np.array(self._population[kk].position)
         )
-        agent = self._init_agent(self._correct_position(pos_new))
+        agent = TasmanianDevil(**self._init_agent(pos_new).model_dump())
         return self._greedy_select_agent(tasmanian_devil, agent)
 
     def optimization_step(self):
@@ -50,20 +50,21 @@ class TasmanianDevilOptimization(OptimizationAbstract):
         n_dims = self._task.space_dimension
 
         for idx, tasmanian_devil in enumerate(self._population):
+            agent = self.__strategy__(idx, tasmanian_devil)
+
             # phase 1: hunting feeding
             if np.random.random() > 0.5:
                 # strategy 1: feeding by eating carrion (exploration phase)
                 # carrion selection using (3)
-                self._population[idx] = self.__strategy__(idx, tasmanian_devil)
+                self._population[idx] = agent
             else:
                 # strategy 2: feeding by eating prey (exploitation phase)
                 # stage 1: prey selection and attack it
-                agent = self.__strategy__(idx, tasmanian_devil)
                 pos = np.array(agent.position)
 
                 # phase 2: prey chasing
                 rr = 0.01 * (1 - epoch / epochs)  # Calculating the neighborhood radius using(9)
                 pos_new = pos + (-rr + 2 * rr * np.random.random(n_dims)) * pos
-                agent = self._init_agent(self._correct_position(pos_new))
+                agent = TasmanianDevil(**self._init_agent(pos_new).model_dump())
 
                 self._population[idx] = self._greedy_select_agent(tasmanian_devil, agent)

@@ -29,9 +29,9 @@ class AquilaOptimization(OptimizationAbstract):
         """
         Move the agent to a new position. This method is called by the optimization step. It is not intended to be
         called directly.
-        :param idx: the index of the agent in the population.
-        :param pos: the current position of the agent.
-        :return: the new position of the agent.
+        :param idx: the index of the agent in the population
+        :param pos: the current position of the agent
+        :return: the new position of the agent
         :rtype: np.ndarray
         """
         alpha = delta = 0.1
@@ -71,5 +71,5 @@ class AquilaOptimization(OptimizationAbstract):
 
     def optimization_step(self):
         for idx, aquila in enumerate(self._population):
-            agent = self._init_agent(self._correct_position(self.__move__(idx, aquila.position)))
+            agent = self._init_agent(self.__move__(idx, aquila.position))
             self._population[idx] = self._greedy_select_agent(agent, aquila)

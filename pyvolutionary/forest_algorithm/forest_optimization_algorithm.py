@@ -40,7 +40,7 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
         changing the position of a tree, i.e. by randomly seeding a tree around it. The number of changes is defined by
         the local_seeding_changes parameter. Finally, the age of each tree is increased by one and the seeded trees are
         added to the population.
-        :return: list of seeded trees.
+        :return: list of seeded trees
         :rtype: list[Tree]
         """
         def update_position(position: np.ndarray) -> np.ndarray:
@@ -68,8 +68,8 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
         the global_seeding_changes parameter. The difference between this method and the local_seeding method is that
         this method is performed on trees that are dying, i.e. that are going to be removed.
         :param candidates: list of trees that are dying, i.e. that are going to be removed.
-        :param size: number of seeds to be generated.
-        :return: list of seeded trees.
+        :param size: number of seeds to be generated
+        :return: list of seeded trees
         """
         def update_position(position: np.ndarray) -> np.ndarray:
             indices = np.random.choice(self._task.space_dimension, self._config.global_seeding_changes, replace=False)
@@ -83,7 +83,7 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
     def __remove_lifetime_exceeded__(self) -> list[Tree]:
         """
         Remove trees that exceeded their lifetime. The lifetime of a tree is defined by the lifetime parameter.
-        :return: list of trees that exceeded their lifetime.
+        :return: list of trees that exceeded their lifetime
         :rtype: list[Tree]
         """
         candidates = [tree for tree in self._population if tree.age > self._config.lifetime]
@@ -95,7 +95,7 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
         """
         Survival of the fittest stage. It is performed by removing the trees with the highest cost function value.
         :param candidates: list of trees that are dying, i.e. that are going to be removed.
-        :return: candidates to be removed.
+        :return: candidates to be removed
         :rtype: list[Tree]
         """
         sort_by_cost(self._population)

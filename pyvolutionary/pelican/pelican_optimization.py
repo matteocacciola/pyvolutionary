@@ -2,7 +2,7 @@ import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
-from .models import PelicanOptimizationConfig
+from .models import PelicanOptimizationConfig, Pelican
 
 
 class PelicanOptimization(OptimizationAbstract):
@@ -34,7 +34,7 @@ class PelicanOptimization(OptimizationAbstract):
             pos_new = pos + np.random.random() * (
                 pos_kk - np.random.randint(1, 3) * pos
             ) if self._population[kk].cost < pelican.cost else pos + np.random.random() * (pos - pos_kk)
-            agent = self._init_agent(self._correct_position(pos_new))
+            agent = Pelican(**self._init_agent(pos_new).model_dump())
 
             pelican = self._greedy_select_agent(pelican, agent)
 
@@ -42,5 +42,5 @@ class PelicanOptimization(OptimizationAbstract):
             pos_new = np.array(pelican.position) + 0.2 * (1 - self._cycles / self._config.max_cycles) * (
                 2 * np.random.random(n_dims) - 1
             ) * np.array(pelican.position)
-            agent = self._init_agent(self._correct_position(pos_new))
+            agent = Pelican(**self._init_agent(pos_new).model_dump())
             self._population[idx] = self._greedy_select_agent(pelican, agent)

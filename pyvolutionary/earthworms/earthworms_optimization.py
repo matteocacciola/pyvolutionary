@@ -35,7 +35,6 @@ class EarthwormsOptimization(OptimizationAbstract):
         to improve the individuals. The reproduction operators are: (1) the first way of reproducing, and (2) the
         second way of reproducing. The mutation operator is: Cauchy's mutation (CM). The reproduction operators and
         the mutation operator are applied to all individuals in the population.
-        :return:
         """
         alpha = self._config.alpha
         beta = self.__dyn_beta

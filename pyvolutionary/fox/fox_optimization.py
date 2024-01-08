@@ -2,7 +2,7 @@ import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
-from .models import FoxOptimizationConfig
+from .models import Fox, FoxOptimizationConfig
 
 
 class FoxOptimization(OptimizationAbstract):
@@ -22,22 +22,24 @@ class FoxOptimization(OptimizationAbstract):
         super().__init__(config, debug)
         self.__mint = np.inf
 
-    def optimization_step(self):
+    def __evolve__(self, idx: int, fox: Fox, best_position: list[float]) -> Fox:
         a = 2 * (1 - (1.0 / self._cycles))
-        best_position = np.array(self._best_agent.position)
-        
-        for idx, fox in enumerate(self._population):
-            if np.random.random() >= 0.5:
-                time1 = np.random.random(self._task.space_dimension)
-                sps = best_position / time1
-                travel_distance = 0.5 * sps * time1
-                tt = np.mean(time1)
-                jump = 0.5 * 9.81 * (tt / 2) ** 2
-                pos_new = travel_distance * jump * (self._config.c1 if np.random.random() > 0.18 else self._config.c2)
-                if self.__mint > tt:
-                    self.__mint = tt
-            else:
-                pos_new = best_position + np.random.standard_normal(self._task.space_dimension) * (self.__mint * a)
-            agent = self._init_agent(self._correct_position(pos_new))
+        best_position = np.array(best_position)
 
-            self._population[idx] = self._greedy_select_agent(fox, agent)
+        if np.random.random() >= 0.5:
+            time1 = np.random.random(self._task.space_dimension)
+            sps = best_position / time1
+            travel_distance = 0.5 * sps * time1
+            tt = np.mean(time1)
+            jump = 0.5 * 9.81 * (tt / 2) ** 2
+            pos_new = travel_distance * jump * (self._config.c1 if np.random.random() > 0.18 else self._config.c2)
+            if self.__mint > tt:
+                self.__mint = tt
+        else:
+            pos_new = best_position + np.random.standard_normal(self._task.space_dimension) * (self.__mint * a)
+
+        agent = Fox(**self._init_agent(pos_new).model_dump())
+        return self._greedy_select_agent(fox, agent)
+
+    def optimization_step(self):
+        self._population = self._solve_mode_process(self.__evolve__, self._best_agent.position)

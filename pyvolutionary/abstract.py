@@ -243,6 +243,26 @@ class OptimizationAbstract(ABC, Generic[T]):
         """
         self._population = sort_and_trim(new_population, self._config.population_size)
 
+    def _solve_mode_process(self, fnc: callable, *args) -> list:
+        """
+        This function is able to solve the specified `fnc` process, with the picked `mode` specified in the `optimize`
+        method. `fnc` is applied over each element of the population. Therefore, `fnc` must have an int representing
+        the position of the agent and the agent itself as its first and second input arguments, respectively.
+        :param fnc: the function to call
+        :return: a list obtained by applying `fnc` to each element of the population
+        :rtype: list
+        """
+        if self._mode == ModeSolver.SERIAL:
+            return [fnc(idx, agent, *args) for idx, agent in enumerate(self._population)]
+
+        pop = []
+        pool = parallel.ThreadPoolExecutor if self._mode == ModeSolver.THREAD else parallel.ProcessPoolExecutor
+        with pool(self._workers) as executor:
+            executors = [executor.submit(fnc, idx, agent, *args) for idx, agent in enumerate(self._population)]
+            for i in parallel.as_completed(executors):
+                pop.append(i.result())
+        return pop
+
     def optimize(self, task: Task, mode: str | None = None, workers: int | None = None) -> OptimizationResult:
         """
         This method optimizes the given objective function. At the beginning, a random population is generated and then

@@ -35,7 +35,7 @@ class MonarchButterflyOptimization(OptimizationAbstract):
         The best habitats are selected according to the cost value of the agents. The number of elite agents is defined
         by the keep parameter. The keep parameter is defined in the configuration class. The keep parameter must be
         between 2 and population_size / 2. If the keep parameter is not defined, the default value is 2.
-        :return: a list of elite agents.
+        :return: a list of elite agents
         :rtype: list[MonarchButterfly]
         """
         sort_by_cost(self._population)
@@ -46,7 +46,7 @@ class MonarchButterflyOptimization(OptimizationAbstract):
         Apply the migration operator. This operator is applied to the best habitats of the current generation. The best
         habitats are selected according to the cost value of the agents. The result of this operator is a new population
         of agents.
-        :return: a new population of agents.
+        :return: a new population of agents
         :rtype: list[MonarchButterfly]
         """
         r1 = np.random.random(size=self.__np1) * self._config.period
@@ -64,7 +64,7 @@ class MonarchButterflyOptimization(OptimizationAbstract):
         Apply the adjusting operator. This operator is applied to the worst habitats of the current generation. The
         worst habitats are selected according to the cost value of the agents. The result of this operator is a new
         population of agents.
-        :return: a new population of agents.
+        :return: a new population of agents
         :rtype: list[MonarchButterfly]
         """
         scale = 1.0 / ((self._cycles + 1) ** 2)
