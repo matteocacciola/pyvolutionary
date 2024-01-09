@@ -124,7 +124,8 @@ class DiscreteVariable(Variable):
 
     def get_value(self, value: float | int) -> int:
         self.value = value
-        return int(np.clip(self.value, 0, len(self.choices) - 1))
+        lb, ub = self.get_bounds()
+        return int(np.clip(self.value, lb, ub))
 
 
 class Task(BaseModel, ABC):

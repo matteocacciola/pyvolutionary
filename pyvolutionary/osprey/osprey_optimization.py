@@ -35,20 +35,22 @@ class OspreyOptimization(OptimizationAbstract):
         kk = np.random.permutation(idxs)[0]
         return np.array(self._population[kk].position)
 
+    def __evolve__(self, osprey: Osprey) -> Osprey:
+        pos = np.array(osprey.position)
+
+        # phase 1: position identification and fish hunting (exploration)
+        sf = self.__sf__(osprey)
+        r1 = np.random.randint(1, 3)
+        pos_new = pos + np.random.normal(0, 1) * (sf - r1 * pos)  # Eq. 5
+        agent = Osprey(**self._init_agent(pos_new).model_dump())
+
+        osprey = self._greedy_select_agent(osprey, agent)
+
+        # phase 2: carrying the fish to a suitable position (exploitation)
+        pos_new = self._increase_position(osprey.position)  # Eq. 7
+        agent = Osprey(**self._init_agent(pos_new).model_dump())
+
+        return self._greedy_select_agent(osprey, agent)
+
     def optimization_step(self):
-        for idx, osprey in enumerate(self._population):
-            pos = np.array(osprey.position)
-
-            # phase 1: position identification and fish hunting (exploration)
-            sf = self.__sf__(osprey)
-            r1 = np.random.randint(1, 3)
-            pos_new = pos + np.random.normal(0, 1) * (sf - r1 * pos)  # Eq. 5
-            agent = self._init_agent(pos_new)
-
-            osprey = self._greedy_select_agent(osprey, agent)
-
-            # phase 2: carrying the fish to a suitable position (exploitation)
-            pos_new = self._increase_position(osprey.position)  # Eq. 7
-            agent = self._init_agent(pos_new)
-
-            self._population[idx] = self._greedy_select_agent(osprey, agent)
+        self._population = [self.__evolve__(osprey) for osprey in self._population]

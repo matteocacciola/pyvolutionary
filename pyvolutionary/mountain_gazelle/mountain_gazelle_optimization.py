@@ -1,8 +1,9 @@
+from itertools import chain
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
-from .models import MountainGazelleOptimizationConfig
+from .models import MountainGazelleOptimizationConfig, MountainGazelle
 
 
 class MountainGazelleOptimization(OptimizationAbstract):
@@ -100,19 +101,18 @@ class MountainGazelleOptimization(OptimizationAbstract):
         return [x1, x2, x3, x4]
 
     def optimization_step(self):
-        pop_new = []
-        for index in range(0, self._config.population_size):
-            current_position = np.array(self._population[index].position)
+        def new_population(gazelle: MountainGazelle) -> list[MountainGazelle]:
+            current_position = np.array(gazelle.position)
 
             # get a new random solution
             M = self.__random_solution__()
 
             # calculate the vector of coefficients
             cofi, A, D = self.__coefficient_vectors__(self._cycles, current_position)
+            candidates = self.__implement_candidate_positions__(cofi, A, D, M, current_position)
 
             # update the new population for the next generation with the calculated candidate positions
-            pop_new += [
-                self._init_agent(x) for x in self.__implement_candidate_positions__(cofi, A, D, M, current_position)
-            ]
+            return [MountainGazelle(**self._init_agent(x).model_dump()) for x in candidates]
 
+        pop_new = list(chain.from_iterable([new_population(gazelle) for gazelle in self._population]))
         self._extend_and_trim_population(pop_new)

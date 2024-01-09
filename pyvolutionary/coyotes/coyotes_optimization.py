@@ -38,49 +38,49 @@ class CoyotesOptimization(OptimizationAbstract):
         agent = super()._init_agent(position)
         return Coyote(**agent.model_dump(), age=age if age is not None else 0)
 
+    def __evolve_pack__(self, pack: list[Coyote]) -> list[Coyote]:
+        def evolve_coyote(idx: int, coyote: Coyote, tend: np.ndarray) -> Coyote:
+            rc1, rc2 = np.random.choice(list(set(range(0, self._config.num_coyotes)) - {idx}), 2, replace=False)
+
+            # try to update the social condition according to the alpha and the pack tendency (Eq. 12)
+            pos_new = np.array(coyote.position) + np.random.random() * (
+                np.array(pack[0].position) - np.array(pack[rc1].position)
+            ) + np.random.random() * (tend - np.array(pack[rc2].position))
+
+            # keep the coyotes in the search space (optimization problem constraint) and evaluate the new position
+            # it means to evaluate the new social condition (Eq. 13) and apply the adaptation (Eq. 14)
+            return self._greedy_select_agent(coyote, Coyote(**self._init_agent(pos_new, coyote.age).model_dump()))
+
+        # get the coyotes that belong to each pack and compute the social tendency of the pack (Eq. 6)
+        sort_by_cost(pack)
+        tendency = np.mean(np.array([coyote.position for coyote in pack]), axis=0)
+
+        # update social condition of coyotes (Eq. 8)
+        pack = [evolve_coyote(idx, coyote, tendency) for idx, coyote in enumerate(pack)]
+
+        # birth of a new coyote from random parents (Eq. 7 and Alg. 1)
+        id_parent1, id_parent2 = np.random.choice(list(range(0, self._config.num_coyotes)), 2, replace=False)
+        # generate the coyote considering intrinsic and extrinsic influence, with eventual noise
+        pup_pos = np.array(np.where(
+            np.random.random(self._task.space_dimension) < (1. - self.__ps) / 2.,
+            pack[id_parent1].position,
+            pack[id_parent2].position
+        )) * np.random.normal(0, 1)
+        pup = Coyote(**self._init_agent(pup_pos.tolist()).model_dump())
+
+        # Verify if the pup will survive
+        sort_by_cost(pack)
+        # find index of element has cost larger than new child: if existing, new child is good
+        if pup.cost < pack[-1].cost:
+            # replace the worst element by new child, New born child with age = 0
+            pack = sorted(pack, key=lambda x: x.age)
+            pack[-1] = pup
+
+        return pack
+
     def optimization_step(self):
         self.__packs = generate_group_population(self._population, self.__n_packs, self._config.num_coyotes)
-
-        for p in range(self.__n_packs):
-            pack = self.__packs[p]
-
-            # get the coyotes that belong to each pack and compute the social tendency of the pack (Eq. 6)
-            sort_by_cost(pack)
-            tendency = np.mean(np.array([coyote.position for coyote in pack]), axis=0)
-
-            # update social condition of coyotes (Eq. 8)
-            for i, coyote in enumerate(pack):
-                rc1, rc2 = np.random.choice(list(set(range(0, self._config.num_coyotes)) - {i}), 2, replace=False)
-
-                # try to update the social condition according to the alpha and the pack tendency (Eq. 12)
-                pos_new = np.array(coyote.position) + np.random.random() * (
-                    np.array(pack[0].position) - np.array(pack[rc1].position)
-                ) + np.random.random() * (tendency - np.array(pack[rc2].position))
-
-                # keep the coyotes in the search space (optimization problem constraint) and evaluate the new position
-                # it means to evaluate the new social condition (Eq. 13) and apply the adaptation (Eq. 14)
-                pack[i] = self._greedy_select_agent(
-                    coyote, self._init_agent(pos_new, coyote.age)
-                )
-
-            # birth of a new coyote from random parents (Eq. 7 and Alg. 1)
-            id_parent1, id_parent2 = np.random.choice(list(range(0, self._config.num_coyotes)), 2, replace=False)
-            # generate the coyote considering intrinsic and extrinsic influence, with eventual noise
-            pup_pos = np.array(np.where(
-                np.random.random(self._task.space_dimension) < (1. - self.__ps) / 2.,
-                pack[id_parent1].position,
-                pack[id_parent2].position
-            )) * np.random.normal(0, 1)
-            pup = self._init_agent(pup_pos.tolist())
-
-            # Verify if the pup will survive
-            sort_by_cost(pack)
-            # find index of element has cost larger than new child: if existing, new child is good
-            if pup.cost < pack[-1].cost:
-                # replace the worst element by new child, New born child with age = 0
-                pack = sorted(pack, key=lambda x: x.age)
-                pack[-1] = pup
-                self.__packs[p] = [coyote.model_copy() for coyote in pack]
+        self.__packs = [self.__evolve_pack__(self.__packs[p]) for p in range(self.__n_packs)]
 
         # a coyote can leave a pack and enter to another pack (Eq. 4)
         if self.__n_packs > 1 and np.random.random() < self.__p_leave:

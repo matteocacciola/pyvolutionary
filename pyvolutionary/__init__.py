@@ -4,14 +4,17 @@ from .aquila import *
 from .bacterial_foraging import *
 from .bat import *
 from .bee_colony import *
+from .brown_bear import *
 from .camel_caravan import *
 from .cat_swarm import *
+from .chernobyl_disaster import *
 from .cuckoo_search import *
 from .coral_reef import *
 from .coyotes import *
 from .earthworms import *
 from .electromagnetic_field import *
 from .elephant_herd import *
+from .energy_valley import *
 from .firefly_swarm import *
 from .fireworks import *
 from .fish_school_search import *

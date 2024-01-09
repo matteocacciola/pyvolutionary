@@ -79,23 +79,28 @@ class VirusColonySearchOptimization(OptimizationAbstract):
         ).model_dump())
         return self._greedy_select_agent(virus, agent)
 
-    def __immune_response__(self):
+    def __immune_response__(self, idx: int, virus: Virus) -> Virus:
         """
         Immune response step.
+        :param idx: the index of the virus to consider
+        :param virus: the virus to consider
+        :return: the updated virus
+        :rtype: Virus
         """
         n_dims = self._task.space_dimension
         pop_size = self._config.population_size
-        for idx in range(0, self._config.population_size):
-            position = np.array(self._population[idx].position)
 
-            pr = (n_dims - idx + 1) / n_dims
-            id1, id2 = np.random.choice(list(set(range(0, pop_size)) - {idx}), 2, replace=False)
+        position = np.array(virus.position)
 
-            temp = np.array(self._population[id1].position) - np.random.uniform() * (
-                np.array(self._population[id2].position) - position
-            )
-            position_new = np.where(np.random.random(n_dims) < pr, position, temp)
-            self._population[idx] = self._greedy_select_agent(self._population[idx], self._init_agent(position_new))
+        pr = (n_dims - idx + 1) / n_dims
+        id1, id2 = np.random.choice(list(set(range(0, pop_size)) - {idx}), 2, replace=False)
+
+        temp = np.array(self._population[id1].position) - np.random.uniform() * (
+            np.array(self._population[id2].position) - position
+        )
+        position_new = np.where(np.random.random(n_dims) < pr, position, temp)
+        agent = Virus(**self._init_agent(position_new).model_dump())
+        return self._greedy_select_agent(self._population[idx], agent)
 
     def optimization_step(self):
         # viruses diffusion
@@ -106,4 +111,4 @@ class VirusColonySearchOptimization(OptimizationAbstract):
         self._population = self._solve_mode_process(self.__host_cell_infection__, x_mean)
 
         # immune response
-        self.__immune_response__()
+        self._population = [self.__immune_response__(idx, virus) for idx, virus in enumerate(self._population)]

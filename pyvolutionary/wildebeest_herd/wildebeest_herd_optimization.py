@@ -50,26 +50,26 @@ class WildebeestHerdOptimization(OptimizationAbstract):
         ).model_dump())
         return self._greedy_select_agent(wildebeest, agent)
 
-    def __herd_instinct__(self) -> tuple[Wildebeest, Wildebeest]:
+    def __herd_instinct__(self, wildebeest: Wildebeest) -> Wildebeest:
         """
         Herd instinct of wildebeest herd optimization algorithm (Herd behaviour)
-        :return: tuple of best and worst wildebeest
-        :rtype: tuple[Wildebeest, Wildebeest]
+        :param wildebeest: the Wildebeest to consider
+        :return: the updated Wildebeest
         """
         pop_size = self._config.population_size
         phi = self._config.phi
         global_alpha, global_beta = self._config.global_alpha, self._config.global_beta
-        for idx, wildebeest in enumerate(self._population):
-            idr = np.random.choice(range(0, pop_size))
-            picked_wildebeest = self._population[idr]
-            if picked_wildebeest.cost < wildebeest.cost and np.random.random() < phi:
-                self._population[idx] = self._greedy_select_agent(wildebeest, self._init_agent(
-                    global_alpha * np.array(wildebeest.position) + global_beta * np.array(picked_wildebeest.position)
-                ))
 
-        (g_best, ), (g_worst, ) = special_agents(self._population, n_best=1, n_worst=1)
+        idr = np.random.choice(range(0, pop_size))
+        picked_wildebeest = self._population[idr]
+        if picked_wildebeest.cost >= wildebeest.cost or np.random.random() >= phi:
+            return wildebeest
 
-        return g_best, g_worst
+        agent = Wildebeest(**self._init_agent(
+            global_alpha * np.array(wildebeest.position) + global_beta * np.array(picked_wildebeest.position)
+        ).model_dump())
+
+        return self._greedy_select_agent(wildebeest, agent)
 
     def __starvation_avoidance__(
         self, children: list[Wildebeest], wildebeest: Wildebeest, g_worst: Wildebeest
@@ -114,18 +114,15 @@ class WildebeestHerdOptimization(OptimizationAbstract):
         return children
 
     def __herd_social_memory__(self, g_best: Wildebeest) -> list[Wildebeest]:
-        wildebeest_list = []
-        for jdx in range(0, self._config.n_exploit_step):
-            wildebeest_list.append(Wildebeest(
-                **self._init_agent(np.array(g_best.position) + 0.1 * self._uniform_position()).model_dump()
-            ))
-
-        return wildebeest_list
+        return [Wildebeest(
+            **self._init_agent(np.array(g_best.position) + 0.1 * self._uniform_position()).model_dump()
+        ) for _ in range(0, self._config.n_exploit_step)]
 
     def optimization_step(self):
         self._population = self._solve_mode_process(self.__local_movement__)
 
-        g_best, g_worst = self.__herd_instinct__()
+        self._population = [self.__herd_instinct__(wildebeest) for wildebeest in self._population]
+        (g_best, ), (g_worst, ) = special_agents(self._population, n_best=1, n_worst=1)
 
         children = []
         for wildebeest in self._population:

@@ -37,7 +37,7 @@ class FireflySwarmOptimization(OptimizationAbstract):
         delta = 1.0 - (10.0 ** -4.0 / 0.9) ** (1.0 / self._cycles)
         self._config.alpha *= (1 - delta) * self._config.alpha
 
-    def __update_population__(self):
+    def __update_firefly__(self, idx: int, firefly: Firefly) -> Firefly:
         """
         Update the population of fireflies. This method is called at each iteration of the algorithm. It updates the
         position of each firefly based on the position of the other fireflies. The fireflies with the best fitness
@@ -45,6 +45,10 @@ class FireflySwarmOptimization(OptimizationAbstract):
         other fireflies. The fireflies with the best fitness values will move towards the fireflies with the worst
         fitness values. The fireflies with the worst fitness values will move away from the fireflies with the best
         fitness values.
+        :param idx: index of the firefly
+        :param firefly: a firefly
+        :return: a firefly
+        :rtype: Firefly
         """
         alpha = self._config.alpha
         beta_min = self._config.beta_min
@@ -52,25 +56,25 @@ class FireflySwarmOptimization(OptimizationAbstract):
 
         n_dims = self._task.space_dimension
         pop_size = self._config.population_size
-        for idx in range(0, self._config.population_size):
-            position = self._population[idx].position
-            cost = self._population[idx].cost
-            weighted_pos = [np.array(position) + beta_min * np.exp(
-                -gamma * distance(position, firefly.position) / np.sqrt(n_dims)
-            ) * np.matmul(
-                np.array(firefly.position) - np.array(position), np.random.uniform(0, 1, (n_dims, n_dims))
-            ) + alpha * np.random.uniform(0, 1, n_dims)
-                for firefly in self._population[idx+1:] if firefly.cost < cost]
 
-            new_agents = (
-                [self._init_agent(position) for position in weighted_pos] +
-                [self._init_agent() for _ in range(0, pop_size - len(weighted_pos) + 1)]
-            )
-            self._population[idx] = best_agent(new_agents)
+        position = firefly.position
+        cost = firefly.cost
+        weighted_pos = [np.array(position) + beta_min * np.exp(
+            -gamma * distance(position, firefly.position) / np.sqrt(n_dims)
+        ) * np.matmul(
+            np.array(firefly.position) - np.array(position), np.random.uniform(0, 1, (n_dims, n_dims))
+        ) + alpha * np.random.uniform(0, 1, n_dims)
+            for firefly in self._population[idx+1:] if firefly.cost < cost]
+
+        new_agents = (
+            [self._init_agent(position) for position in weighted_pos] +
+            [self._init_agent() for _ in range(0, pop_size - len(weighted_pos) + 1)]
+        )
+        return Firefly(**best_agent(new_agents).model_dump())
 
     def optimization_step(self):
         # update alpha
         self.__update_alpha__()
 
         # replace old population
-        self.__update_population__()
+        self._population = [self.__update_firefly__(idx, firefly) for idx, firefly in enumerate(self._population)]

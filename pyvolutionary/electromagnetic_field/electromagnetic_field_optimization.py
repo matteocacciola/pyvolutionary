@@ -23,8 +23,10 @@ class ElectromagneticFieldOptimization(OptimizationAbstract):
         super().__init__(config, debug)
         self.__phi = (1 + np.sqrt(5)) / 2  # golden ratio
 
-    def optimization_step(self):
+    def __evolve__(self, electromagnet: Electromagnet, best_position: list[float]) -> Electromagnet:
         pop_size = self._config.population_size
+        best_position = np.array(best_position)
+
         n_field = int(pop_size * (1 - self._config.n_field))
         n_field1 = int(pop_size * self._config.p_field + 1)
         p_field = int(pop_size * self._config.p_field)
@@ -34,25 +36,28 @@ class ElectromagneticFieldOptimization(OptimizationAbstract):
         r_rate = self._config.r_rate
         n_dims = self._task.space_dimension
 
-        best_pos = np.array(self._best_agent.position)
-        for idx, electromagnet in enumerate(self._population):
-            if np.random.random() < ps_rate:
-                r_idx1 = np.random.randint(0, p_field)  # top
-                r_idx2 = np.random.randint(n_field, pop_size)  # bottom
-                r_idx3 = np.random.randint(n_field1, n_field)  # middle
+        if np.random.random() < ps_rate:
+            r_idx1 = np.random.randint(0, p_field)  # top
+            r_idx2 = np.random.randint(n_field, pop_size)  # bottom
+            r_idx3 = np.random.randint(n_field1, n_field)  # middle
 
-                pos_new = np.array(self._population[r_idx1].position) + phi * np.random.random() * (
-                    best_pos - np.array(self._population[r_idx3].position)
-                ) + np.random.random() * (best_pos - np.array(self._population[r_idx2].position))
-            else:
-                pos_new = self._init_position()
+            pos_new = np.array(self._population[r_idx1].position) + phi * np.random.random() * (
+                best_position - np.array(self._population[r_idx3].position)
+            ) + np.random.random() * (best_position - np.array(self._population[r_idx2].position))
+        else:
+            pos_new = self._init_position()
 
-            # replacement of one electromagnet of generated particle with a random number
-            # (only for some generated particles) to bring diversity to the population
-            if np.random.random() < r_rate:
-                pos_new[np.random.randint(0, n_dims)] = self._uniform_coordinates(np.random.randint(0, n_dims))
+        # replacement of one electromagnet of generated particle with a random number
+        # (only for some generated particles) to bring diversity to the population
+        if np.random.random() < r_rate:
+            pos_new[np.random.randint(0, n_dims)] = self._uniform_coordinates(np.random.randint(0, n_dims))
 
-            # checking whether the generated number is inside boundary or not
-            agent = Electromagnet(**self._init_agent(pos_new).model_dump())
+        # checking whether the generated number is inside boundary or not
+        agent = Electromagnet(**self._init_agent(pos_new).model_dump())
 
-            self._population[idx] = self._greedy_select_agent(electromagnet, agent)
+        return self._greedy_select_agent(electromagnet, agent)
+
+    def optimization_step(self):
+        self._population = [
+            self.__evolve__(electromagnet, self._best_agent.position) for electromagnet in self._population
+        ]

@@ -28,54 +28,56 @@ class EarthwormsOptimization(OptimizationAbstract):
         self.__chrome_keep: list[Earthworm] = []
         self.__dyn_beta = self._config.beta
 
-    def __evolve__(self):
+    def __evolve__(self, idx: int, earthworm: Earthworm) -> Earthworm:
         """
         The earthworm optimization algorithm process. It is composed of two reproduction operators and a mutation
         operator. The reproduction operators are used to generate new individuals, and the mutation operator is used
         to improve the individuals. The reproduction operators are: (1) the first way of reproducing, and (2) the
         second way of reproducing. The mutation operator is: Cauchy's mutation (CM). The reproduction operators and
         the mutation operator are applied to all individuals in the population.
+        :param idx: the index of the current individual
+        :param earthworm: the current individual
+        :return: the evolved individual
         """
         alpha = self._config.alpha
         beta = self.__dyn_beta
 
         n_chromes = self._config.population_size
         keep = self._config.keep
-        for idx in range(0, self._config.population_size):
-            position = np.array(self._population[idx].position)
 
-            # reproduction 1: the first way of reproducing
-            x_t1 = self._sum_bounds() - alpha * np.array(position)
+        position = np.array(earthworm.position)
 
-            # reproduction 2: the second way of reproducing
-            x_child = self._population[np.random.randint(0, n_chromes - 1)].position
-            if idx >= keep:  # select two parents to mate and create two children
-                # 80% parents selected from best population
-                rng = range(0, int(n_chromes * 0.2)) if np.random.uniform(0, 1) < 0.5 else range(idx, n_chromes)
-                idx1, idx2 = np.random.choice(rng, 2, replace=len(rng) < 2)
-                r = np.random.rand()
-                x_child = (
-                    r * np.array(self._population[idx2].position) + (1 - r) * np.array(self._population[idx1].position)
-                )
+        # reproduction 1: the first way of reproducing
+        x_t1 = self._sum_bounds() - alpha * np.array(position)
 
-            self._population[idx] = self._init_agent(beta * np.array(x_t1) + (1 - beta) * np.array(x_child))
-        self.__dyn_beta *= self._config.gamma
+        # reproduction 2: the second way of reproducing
+        x_child = self._population[np.random.randint(0, n_chromes - 1)].position
+        if idx >= keep:  # select two parents to mate and create two children
+            # 80% parents selected from best population
+            rng = range(0, int(n_chromes * 0.2)) if np.random.uniform(0, 1) < 0.5 else range(idx, n_chromes)
+            idx1, idx2 = np.random.choice(rng, 2, replace=len(rng) < 2)
+            r = np.random.rand()
+            x_child = (
+                r * np.array(self._population[idx2].position) + (1 - r) * np.array(self._population[idx1].position)
+            )
 
-    def __cauchy_mutation__(self):
+        return Earthworm(**self._init_agent(beta * np.array(x_t1) + (1 - beta) * np.array(x_child)).model_dump())
+
+    def __cauchy_mutation__(self) -> Earthworm:
         """
         Cauchy's mutation (CM): make sure each individual is legal
+        :return: the Cauchy's mutated individual
+        :rtype: Earthworm
         """
-        keep = self._config.keep
-
         pos_list = np.array([agent.position for agent in self._population])
         x_mean = np.mean(pos_list, axis=0)
         cauchy_w = self._best_agent.position
-        for idx in range(keep, self._config.population_size):
-            # Cauchy's mutation (CM)
-            cauchy_w = np.where(np.random.rand() < self._config.prob_mutate, x_mean, cauchy_w)
-            x_t1 = (cauchy_w + self._best_agent.position) / 2
-            # make sure each individual is legal
-            self._population[idx] = self._init_agent(x_t1)
+
+        # Cauchy's mutation (CM)
+        cauchy_w = np.where(np.random.rand() < self._config.prob_mutate, x_mean, cauchy_w)
+        x_t1 = (cauchy_w + self._best_agent.position) / 2
+        # make sure each individual is legal
+        return Earthworm(**self._init_agent(x_t1).model_dump())
 
     def __clear_duplicates__(self):
         """
@@ -90,9 +92,9 @@ class EarthwormsOptimization(OptimizationAbstract):
             )]
             for jdx in jdx_list:
                 dimension_to_change = np.random.randint(0, self._task.space_dimension - 1)
-                position_jdx = self._population[jdx].position
+                position_jdx = np.array(self._population[jdx].position)
                 position_jdx[dimension_to_change] = self._uniform_coordinates(dimension_to_change)
-                self._population[jdx] = self._init_agent(position_jdx)
+                self._population[jdx] = Earthworm(**self._init_agent(position_jdx).model_dump())
 
     def __elitism__(self, agents: list[Earthworm], keep: int):
         """
@@ -111,13 +113,18 @@ class EarthwormsOptimization(OptimizationAbstract):
         self.__chrome_keep = best_agents(self._population, self._config.keep)
 
         # the earthworm optimization algorithm process
-        self.__evolve__()
+        self._population = [self.__evolve__(idx, earthworm) for idx, earthworm in enumerate(self._population)]
+
+        self.__dyn_beta *= self._config.gamma
 
         # Cauchy's mutation (CM): make sure each individual is legal and doesn't have duplicates
-        self.__cauchy_mutation__()
+        keep = self._config.keep
+        self._population = self._population[:keep] + [
+            self.__cauchy_mutation__() for _ in range(keep, self._config.population_size)
+        ]
 
         # elitism strategy: save the best earthworms in a temporary array
-        self.__elitism__(self.__chrome_keep, self._config.keep)
+        self.__elitism__(self.__chrome_keep, keep)
 
         # clear duplicates in the population
         self.__clear_duplicates__()

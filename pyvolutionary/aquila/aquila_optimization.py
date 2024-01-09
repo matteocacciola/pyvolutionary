@@ -70,6 +70,6 @@ class AquilaOptimization(OptimizationAbstract):
         ) - g2 * levy_step + np.random.random() * g1  # Eq. 13, 14
 
     def optimization_step(self):
-        for idx, aquila in enumerate(self._population):
-            agent = self._init_agent(self.__move__(idx, aquila.position))
-            self._population[idx] = self._greedy_select_agent(agent, aquila)
+        self._population = [self._greedy_select_agent(
+            self._init_agent(self.__move__(idx, aquila.position)), aquila
+        ) for idx, aquila in enumerate(self._population)]

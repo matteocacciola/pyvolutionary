@@ -67,7 +67,7 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
         task_type = self._task.minmax
         self._population = [Transformer.transform(empire, task_type) for empire in self.__empires]
 
-    def __assimilate(self):
+    def __assimilate__(self):
         """
         Assimilate colonies into empires. The assimilation rate is defined by the user. The assimilation is done by
         replacing the representation of the colony with the representation of the empire.
@@ -84,7 +84,7 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
                     [r if i in candidates else colony.representation[i] for i, r in enumerate(empire_representation)]
                 ))
 
-    def __revolution(self):
+    def __revolution__(self):
         """
         Revolution is a process that is applied to a colony. The revolution rate is defined by the user. The revolution
         is done by exchanging the representation of the colony with the representation of another colony.
@@ -120,7 +120,7 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
                     if new_colony.cost < old_cost:
                         empire.replace_colony(i, new_colony)
 
-    def __inter_empire_war(self):
+    def __inter_empire_war__(self):
         """
         Inter-empire competition is a process that is applied to empires. The weakest empire is selected and a war is
         held between the weakest empire and the other empires. The probability of winning the war is proportional to
@@ -168,7 +168,7 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
             winning_empire.add_colony(weakest_empire.emperor)
             del self.__empires[self.__empires.index(weakest_empire)]
 
-    def __intra_empire_war(self):
+    def __intra_empire_war__(self):
         """
         Intra-empire competition is a process that is applied to empires. It replaces a weakest emperor with the
         strongest colony in case of internal war. The probability of winning the war is proportional to the cost of the
@@ -183,16 +183,16 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
 
     def optimization_step(self):
         # assimilation
-        self.__assimilate()
+        self.__assimilate__()
 
         # revolution
-        self.__revolution()
+        self.__revolution__()
 
         # Intra - empire competition
-        self.__intra_empire_war()
+        self.__intra_empire_war__()
 
         # Inter - empire competition
-        self.__inter_empire_war()
+        self.__inter_empire_war__()
 
         task_type = self._task.minmax
         self._population = [Transformer.transform(empire, task_type) for empire in self.__empires]

@@ -5,7 +5,7 @@ from ..helpers import (
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
-from .models import PathfinderAlgorithmOptimizationConfig
+from .models import PathfinderAlgorithmOptimizationConfig, Pathfinder
 
 
 class PathfinderAlgorithmOptimization(OptimizationAbstract):
@@ -25,6 +25,20 @@ class PathfinderAlgorithmOptimization(OptimizationAbstract):
         super().__init__(config, debug)
 
     def optimization_step(self):
+        def evolve(idx: int, pathfinder: Pathfinder) -> Pathfinder:
+            pathfinder_position = np.array(pathfinder.position)
+            pos_new = pathfinder_position.copy().astype(float)
+
+            dist = distance(new_pathfinder.position, pathfinder_position.tolist()) / self._task.space_dimension
+            pos_new += alpha * np.random.uniform() * (best_position - pathfinder_position) + (
+                beta * np.random.uniform() * (self._population[idx - 1].position - pathfinder_position)
+            ) + np.random.uniform() * t * (dist / space)
+
+            pos_new = self._correct_position(pos_new)
+            agent = Pathfinder(**self._init_agent(pos_new).model_dump())
+
+            return self._greedy_select_agent(agent, pathfinder)
+
         alpha, beta = np.random.uniform(1, 2, 2)
         best_position = np.array(self._best_agent.position)
 
@@ -38,19 +52,7 @@ class PathfinderAlgorithmOptimization(OptimizationAbstract):
         ) + A)
 
         # update positions of members, check the bound and calculate new fitness
-        for idx in range(1, self._config.population_size):
-            pathfinder_position = np.array(self._population[idx].position)
-            pos_new = pathfinder_position.copy().astype(float)
-
-            dist = distance(new_pathfinder.position, pathfinder_position.tolist()) / self._task.space_dimension
-            pos_new += alpha * np.random.uniform() * (best_position - pathfinder_position) + (
-                beta * np.random.uniform() * (self._population[idx - 1].position - pathfinder_position)
-            ) + np.random.uniform() * t * (dist / space)
-
-            pos_new = self._correct_position(pos_new)
-            agent = self._init_agent(pos_new)
-
-            self._population[idx] = self._greedy_select_agent(agent, self._population[idx])
-
-        # update the position of the pathfinder
-        self._population[0] = self._greedy_select_agent(new_pathfinder, self._population[0])
+        self._population = [
+            self._greedy_select_agent(new_pathfinder, pathfinder) if idx == 0 else evolve(idx, pathfinder)
+            for idx, pathfinder in enumerate(self._population)
+        ]

@@ -64,9 +64,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         :rtype: list[float]
         """
         position = position.tolist() if isinstance(position, np.ndarray) else position
-        position = self._correct_position(position if position is not None else self._uniform_position())
-
-        return position
+        return self._correct_position(position if position is not None else self._uniform_position())
 
     def _uniform_position(self) -> np.ndarray:
         """

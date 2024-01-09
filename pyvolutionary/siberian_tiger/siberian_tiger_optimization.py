@@ -34,20 +34,22 @@ class SiberianTigerOptimization(OptimizationAbstract):
         kk = np.random.permutation(idxs)[0]
         return np.array(self._population[kk].position)
 
+    def __evolve__(self, siberian_tiger: SiberianTiger) -> SiberianTiger:
+        pos = np.array(siberian_tiger.position)
+
+        # phase 1: hunting (exploration)
+        sf = self.__sf__(siberian_tiger)
+        r1 = np.random.randint(1, 3)
+        pos_new = pos + np.random.random() * (sf - r1 * pos)  # Eq. 5
+        agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
+
+        siberian_tiger = self._greedy_select_agent(siberian_tiger, agent)
+
+        # phase 2: exploitation
+        pos_new = self._increase_position(siberian_tiger.position, self._cycles)  # Eq. 7
+        agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
+
+        return self._greedy_select_agent(siberian_tiger, agent)
+
     def optimization_step(self):
-        for idx, siberian_tiger in enumerate(self._population):
-            pos = np.array(siberian_tiger.position)
-
-            # phase 1: hunting (exploration)
-            sf = self.__sf__(siberian_tiger)
-            r1 = np.random.randint(1, 3)
-            pos_new = pos + np.random.random() * (sf - r1 * pos)  # Eq. 5
-            agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
-
-            siberian_tiger = self._greedy_select_agent(siberian_tiger, agent)
-
-            # phase 2: exploitation
-            pos_new = self._increase_position(siberian_tiger.position, self._cycles)  # Eq. 7
-            agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
-
-            self._population[idx] = self._greedy_select_agent(siberian_tiger, agent)
+        self._population = [self.__evolve__(siberian_tiger) for siberian_tiger in self._population]

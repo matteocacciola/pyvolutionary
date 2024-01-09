@@ -45,26 +45,28 @@ class TasmanianDevilOptimization(OptimizationAbstract):
         return self._greedy_select_agent(tasmanian_devil, agent)
 
     def optimization_step(self):
-        epoch = self._cycles
-        epochs = self._config.max_cycles
-        n_dims = self._task.space_dimension
-
-        for idx, tasmanian_devil in enumerate(self._population):
+        def evolve(idx: int, tasmanian_devil: TasmanianDevil) -> TasmanianDevil:
             agent = self.__strategy__(idx, tasmanian_devil)
 
             # phase 1: hunting feeding
             if np.random.random() > 0.5:
                 # strategy 1: feeding by eating carrion (exploration phase)
                 # carrion selection using (3)
-                self._population[idx] = agent
-            else:
-                # strategy 2: feeding by eating prey (exploitation phase)
-                # stage 1: prey selection and attack it
-                pos = np.array(agent.position)
+                return agent
 
-                # phase 2: prey chasing
-                rr = 0.01 * (1 - epoch / epochs)  # Calculating the neighborhood radius using(9)
-                pos_new = pos + (-rr + 2 * rr * np.random.random(n_dims)) * pos
-                agent = TasmanianDevil(**self._init_agent(pos_new).model_dump())
+            # strategy 2: feeding by eating prey (exploitation phase)
+            # stage 1: prey selection and attack it
+            pos = np.array(agent.position)
 
-                self._population[idx] = self._greedy_select_agent(tasmanian_devil, agent)
+            # phase 2: prey chasing
+            rr = 0.01 * (1 - epoch / epochs)  # Calculating the neighborhood radius using(9)
+            pos_new = pos + (-rr + 2 * rr * np.random.random(n_dims)) * pos
+            agent = TasmanianDevil(**self._init_agent(pos_new).model_dump())
+
+            return self._greedy_select_agent(tasmanian_devil, agent)
+
+        epoch = self._cycles
+        epochs = self._config.max_cycles
+        n_dims = self._task.space_dimension
+
+        self._population = [evolve(idx, tasmanian_devil) for idx, tasmanian_devil in enumerate(self._population)]

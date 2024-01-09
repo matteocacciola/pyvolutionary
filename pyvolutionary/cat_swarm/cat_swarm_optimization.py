@@ -11,7 +11,7 @@ from .models import Cat, CatSwarmOptimizationConfig
 
 class CatSwarmOptimization(OptimizationAbstract):
     """
-    Implementation of the Particle Swarm Optimization algorithm.
+    Implementation of the Cat Swarm Optimization algorithm.
 
     Args:
         config (CatSwarmOptimizationConfig): an instance of CatSwarmOptimization class.
@@ -45,17 +45,16 @@ class CatSwarmOptimization(OptimizationAbstract):
             n_dims = self._task.space_dimension
             srd = self._config.srd
             pos = np.array(c.position)
-            idx = np.random.choice(range(0, n_dims), 1, replace=False)
+            jdx = np.random.choice(range(0, n_dims), int(self._config.cdc * n_dims), replace=False)
             pos_new = np.where(np.random.random(n_dims) < 0.5, pos * (1 + srd), pos * (1 - srd))
-            pos_new[idx] = pos[idx]
+            pos_new[jdx] = pos[jdx]
             return self._init_agent(pos_new, c.velocity, c.flag)
 
-        cloned = self._generate_agents(self._config.smp)
-        candidates = []
-        if self._config.spc:
-            cloned = [cat.model_copy() for _ in range(self._config.smp - 1)]
-            candidates = [cat.model_copy()]
-        candidates += [seeking_clone(Cat(**c.model_dump())) for c in cloned]
+        cloned = [
+            cat.model_copy() for _ in range(self._config.smp - 1)
+        ] if self._config.spc else self._generate_agents(self._config.smp)
+        candidates = [cat.model_copy()] if self._config.spc else []
+        candidates += [seeking_clone(Cat(**cat.model_dump())) for cat in cloned]
 
         if self._config.selected_strategy == 0:  # best fitness-self
             return best_agent(candidates).position
@@ -75,7 +74,7 @@ class CatSwarmOptimization(OptimizationAbstract):
 
     def __evolve__(self, idx: int, cat: Cat, best_position: list[float]) -> Cat:
         w_min, w_max = self._config.w
-        w = np.clip((self._config.max_cycles - self._cycles) / self._config.max_cycles, w_min, w_max)
+        w = (self._config.max_cycles - self._cycles) / self._config.max_cycles * (w_max - w_min) + w_min
         best_position = np.array(best_position)
 
         pos = np.array(cat.position)
@@ -83,8 +82,7 @@ class CatSwarmOptimization(OptimizationAbstract):
             pos + w * np.array(cat.velocity) + np.random.uniform() * self._config.c1 * (best_position - pos) if cat.flag
             else self.__seeking_mode__(cat)
         )
-        return self._init_agent(pos_new)
+        return self._init_agent(pos_new, cat.velocity)
 
     def optimization_step(self):
-        best_position = best_agent(self._population).position
-        self._population = self._solve_mode_process(self.__evolve__, best_position)
+        self._population = self._solve_mode_process(self.__evolve__, self._best_agent.position)

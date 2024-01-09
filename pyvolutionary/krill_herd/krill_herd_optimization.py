@@ -140,11 +140,7 @@ class KrillHerdOptimization(OptimizationAbstract):
         return self._config.foraging_speed * (beta_f + beta_b) + self.__w_foraging * krill.foraging_speed
 
     def optimization_step(self):
-        (g_best, ), (g_worst, ) = special_agents(self._population, n_best=1, n_worst=1)
-        pos_food = self.__get_food_location__()
-
-        new_pop = []
-        for idx, krill in enumerate(self._population):
+        def new_population(idx: int, krill: Krill) -> Krill:
             pos = krill.position
 
             induced_speed = self.__induce_neighbours_motion__(idx, krill, g_best, g_worst)
@@ -174,6 +170,9 @@ class KrillHerdOptimization(OptimizationAbstract):
                 g_best.position + np.random.random(self._task.space_dimension)
             )
 
-            new_pop.append(self._init_agent(new_pos, induced_speed.tolist(), foraging_speed.tolist()))
+            return self._init_agent(new_pos, induced_speed.tolist(), foraging_speed.tolist())
 
-        self._greedy_select_population(new_pop)
+        (g_best, ), (g_worst, ) = special_agents(self._population, n_best=1, n_worst=1)
+        pos_food = self.__get_food_location__()
+
+        self._greedy_select_population([new_population(idx, krill) for idx, krill in enumerate(self._population)])

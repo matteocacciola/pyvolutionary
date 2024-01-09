@@ -2,7 +2,7 @@ import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
-from .models import WhalesOptimizationConfig
+from .models import WhalesOptimizationConfig, Whale
 
 
 class WhalesOptimization(OptimizationAbstract):
@@ -22,16 +22,10 @@ class WhalesOptimization(OptimizationAbstract):
         super().__init__(config, debug)
 
     def optimization_step(self):
-        # a decreases linearly from 2 to 0 in Eq. (2.3)
-        a = 2 - 2 * self._cycles / self._config.max_cycles
+        def evolve(whale: Whale) -> Whale:
+            size = self._config.population_size
 
-        # a2 linearly decreases from -1 to -2 to calculate t in Eq. (3.12)
-        a2 = -1 - self._cycles / self._config.max_cycles
-
-        # Update the Position of search agents
-        size = self._config.population_size
-        for idx in range(0, size):
-            position = np.array(self._population[idx].position)
+            position = np.array(whale.position)
 
             r1 = np.random.rand()  # r1 is a random number in [0,1]
             r2 = np.random.rand()  # r2 is a random number in [0,1]
@@ -41,7 +35,6 @@ class WhalesOptimization(OptimizationAbstract):
 
             l = (a2 - 1) * np.random.rand() + 1  # parameters in Eq. (2.5)
 
-            leader_position = np.array(self._best_agent.position)
             if np.random.uniform() < 0.5:
                 if np.abs(A) >= 1:
                     pos_rand = np.array(self._population[np.random.randint(0, size)].position)
@@ -54,4 +47,16 @@ class WhalesOptimization(OptimizationAbstract):
                 distance_to_leader = np.abs(leader_position - position)  # Eq. (2.5)
                 position = distance_to_leader * np.exp(l) * np.cos(l * 2 * np.pi) + leader_position
 
-            self._population[idx] = self._greedy_select_agent(self._population[idx], self._init_agent(position))
+            agent = Whale(**self._init_agent(position).model_dump())
+            return self._greedy_select_agent(whale, agent)
+
+        # a decreases linearly from 2 to 0 in Eq. (2.3)
+        a = 2 - 2 * self._cycles / self._config.max_cycles
+
+        # a2 linearly decreases from -1 to -2 to calculate t in Eq. (3.12)
+        a2 = -1 - self._cycles / self._config.max_cycles
+
+        # Update the Position of search agents
+        leader_position = np.array(self._best_agent.position)
+
+        self._population = [evolve(whale) for whale in self._population]
