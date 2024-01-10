@@ -60,7 +60,8 @@ class CatSwarmOptimization(OptimizationAbstract):
                 cats_k_way = [candidates[_] for _ in idx]
                 return best_agent(cats_k_way).position
             if selected_strategy == 2:  # roulette wheel selection
-                idx = roulette_wheel_index(np.array([c.cost for c in candidates]))
+                costs = np.array([c.cost for c in candidates])
+                idx = roulette_wheel_index(costs / np.sum(costs))
                 return candidates[idx].position
             idx = np.random.choice(range(0, len(candidates)))  # random
             return candidates[idx].position

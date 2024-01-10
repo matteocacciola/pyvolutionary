@@ -1,5 +1,6 @@
 from .african_vulture import *
 from .ant_colony import *
+from .ant_lion import *
 from .aquila import *
 from .bacterial_foraging import *
 from .bat import *
@@ -12,6 +13,7 @@ from .chernobyl_disaster import *
 from .cuckoo_search import *
 from .coral_reef import *
 from .coyotes import *
+from .dragonfly import *
 from .earthworms import *
 from .electromagnetic_field import *
 from .elephant_herd import *
@@ -33,6 +35,7 @@ from .invasive_weed import *
 from .krill_herd import *
 from .levi_jaya_swarm import *
 from .monarch_butterfly import *
+from .moth_flame import *
 from .mountain_gazelle import *
 from .osprey import *
 from .particle_swarm import *

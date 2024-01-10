@@ -31,6 +31,7 @@ class BiogeographyBasedOptimization(OptimizationAbstract):
 
     def optimization_step(self):
         def evolve(idx: int, population: Population) -> Population:
+            idx_selected = roulette_wheel_index(costs)
             # migration step
             condition = np.random.random(n_dims) < mr[idx]
             pos_new = np.where(condition, self._population[idx_selected].position, population.position)
@@ -46,7 +47,8 @@ class BiogeographyBasedOptimization(OptimizationAbstract):
         pop_elites = best_agents(self._population, n_best=self._config.n_elites)
 
         # pick a position from which to emigrate (roulette wheel selection)
-        idx_selected = roulette_wheel_index(np.array([agent.cost for agent in self._population]))
+        costs = np.array([agent.cost for agent in self._population])
+        costs /= np.sum(costs)
 
         self._population = [evolve(idx, agent) for idx, agent in enumerate(self._population)]
 

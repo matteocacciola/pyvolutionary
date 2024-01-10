@@ -38,7 +38,7 @@ class AntColonyOptimization(OptimizationAbstract):
         ranks = np.array([idx for idx in range(1, self._config.population_size + 1)])
         Q = self._config.intent_factor * self._config.population_size
         weights = 1 / (np.sqrt(2 * np.pi) * Q) * np.exp(-0.5 * ((ranks - 1) / Q) ** 2)
-        weights = weights / np.sum(weights)  # Normalize to find the probability
+        weights /= np.sum(weights)  # Normalize to find the probability
 
         # compute the sigmas of each ant in the population
         positions = np.array([ant.position for ant in self._population])
