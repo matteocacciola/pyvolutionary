@@ -31,22 +31,22 @@ class ElephantHerdOptimization(OptimizationAbstract):
         super()._init_population()
         self.__groups = generate_group_population(self._population, self._config.n_clans, self.__n_individuals)
 
-    def __evolve__(self, idx: int, elephant: Elephant) -> Elephant:
-        n_individuals = self.__n_individuals
-        clan_idx = int(idx / n_individuals)
-        pos_group = [np.array(elephant.position) for elephant in self.__groups[clan_idx]]
-
-        # pos_clan_idx == 0 means the best in clan, because all clans are sorted based on cost
-        pos_clan_idx = int(idx % n_individuals)
-        pos_new = self._config.beta * np.mean(pos_group, axis=0) if pos_clan_idx == 0 else (
-            pos_group[pos_clan_idx] + self._config.alpha * np.random.random() * (pos_group[0] - pos_group[pos_clan_idx])
-        )
-        agent = Elephant(**self._init_agent(pos_new).model_dump())
-        return self._greedy_select_agent(elephant, agent)
-
     def optimization_step(self):
-        self._population = self._solve_mode_process(self.__evolve__)
+        def evolve(idx: int, elephant: Elephant) -> Elephant:
+            clan_idx = int(idx / n_individuals)
+            pos_group = [np.array(elephant.position) for elephant in self.__groups[clan_idx]]
+            # pos_clan_idx == 0 means the best in clan, because all clans are sorted based on cost
+            pos_clan_idx = int(idx % n_individuals)
+            pos_new = beta * np.mean(pos_group, axis=0) if pos_clan_idx == 0 else (
+                pos_group[pos_clan_idx] + alpha * np.random.random() * (pos_group[0] - pos_group[pos_clan_idx])
+            )
+            agent = Elephant(**self._init_agent(pos_new).model_dump())
+            return self._greedy_select_agent(elephant, agent)
 
+        n_individuals = self.__n_individuals
+        alpha = self._config.alpha
+        beta = self._config.beta
+        self._population = [evolve(idx, elephant) for idx, elephant in enumerate(self._population)]
         self.__groups = generate_group_population(self._population, self._config.n_clans, self.__n_individuals)
 
         # Separating operator

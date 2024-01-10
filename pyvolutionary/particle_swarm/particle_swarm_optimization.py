@@ -1,6 +1,5 @@
 import numpy as np
 
-from ..enums import ModeSolver
 from ..models import ContinuousVariable
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
@@ -50,35 +49,26 @@ class ParticleSwarmOptimization(OptimizationAbstract):
         super()._init_population()
         self.__pbest = self._population.copy()
 
-    def __evolve__(self, idx: int, particle: Particle, pbests: list[Particle]) -> tuple[Particle, Particle, int]:
+    def optimization_step(self):
+        def evolve(particle: Particle, pbest: Particle) -> tuple[Particle, Particle]:
+            velocity = w * np.array(particle.velocity) + c1 * np.random.rand() * (
+                np.array(pbest.position) - np.array(particle.position)
+            ) + c2 * np.random.rand() * (best_agent_position - np.array(particle.position))
+            # Move particles by adding velocity
+            particle = self._init_agent(position=particle.position + velocity, velocity=velocity)
+            # Update personal best
+            pbest = self._greedy_select_agent(particle, pbest)
+            return particle, pbest
+
         w_min, w_max = self._config.w
+        c1 = self._config.c1
+        c2 = self._config.c2
 
         # Randomly generate r1, r2 and inertia weight from normal distribution, and then calculate the new velocity
         w = np.random.uniform(w_min, w_max)  # Inertia weight * (cycles + 1) / max_cycles
+        best_agent_position = np.array(self._best_agent.position)
 
-        pbest = pbests[idx]
-
-        velocity = w * np.array(particle.velocity) + self._config.c1 * np.random.rand() * (
-            np.array(pbest.position) - np.array(particle.position)
-        ) + self._config.c2 * np.random.rand() * (
-           np.array(self._best_agent.position) - np.array(particle.position)
-       )
-
-        # Move particles by adding velocity
-        particle = self._init_agent(position=particle.position + velocity, velocity=velocity)
-
-        # Update personal best
-        pbest = self._greedy_select_agent(particle, pbest)
-
-        return particle, pbest, idx
-
-    def optimization_step(self):
         # merge the population and the archive, sort them by cost and update the population with the best n_ants
-        pop, pbests, idxs = list(zip(*self._solve_mode_process(self.__evolve__, self.__pbest)))
-
-        if self._mode == ModeSolver.SERIAL:
-            self._population = list(pop)
-            self.__pbest = list(pbests)
-        else:
-            self._population = [pop[idx] for idx in idxs]
-            self.__pbest = [pbests[idx] for idx in idxs]
+        pop, pbests = list(zip(*[evolve(particle, pbest) for particle, pbest in zip(self._population, self.__pbest)]))
+        self._population = list(pop)
+        self.__pbest = list(pbests)

@@ -25,7 +25,19 @@ class InvasiveWeedOptimization(OptimizationAbstract):
     def __init__(self, config: InvasiveWeedOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 
-    def __evolve__(self, idx: int, weed: InvasiveWeed, best: InvasiveWeed, worst: InvasiveWeed) -> list[InvasiveWeed]:
+    def optimization_step(self):
+        def evolve(weed: InvasiveWeed) -> list[InvasiveWeed]:
+            ratio = (
+                np.random.random() if best.cost == worst.cost else (weed.cost - worst.cost) / (best.cost - worst.cost)
+            )
+            s = min(int(np.ceil(seed_min + (seed_max - seed_min) * ratio)), int(np.sqrt(pop_size)))
+            return [InvasiveWeed(**self._init_agent(
+                np.array(weed.position) + sigma * np.random.normal(0, 1, n_dims)
+            ).model_dump()) for _ in range(0, s)]
+
+        # get best and worst Invasive Weeds
+        (best, ), (worst, ) = special_agents(self._population, n_best=1, n_worst=1)
+
         seed_min, seed_max = self._config.seed
         pop_size = self._config.population_size
         n_dims = self._task.space_dimension
@@ -33,28 +45,10 @@ class InvasiveWeedOptimization(OptimizationAbstract):
         # update Standard Deviation
         sigma_start, sigma_end = self._config.sigma
         sigma = (
-            (self._config.max_cycles - self._cycles) / (self._config.max_cycles - 1)
+                        (self._config.max_cycles - self._current_cycle) / (self._config.max_cycles - 1)
         ) ** self._config.exponent * (sigma_start - sigma_end) + sigma_end
 
-        ratio = (
-            np.random.random() if best.cost == worst.cost else (weed.cost - worst.cost) / (best.cost - worst.cost)
-        )
-        s = min(int(np.ceil(seed_min + (seed_max - seed_min) * ratio)), int(np.sqrt(pop_size)))
-
-        pop_new = []
-        for jdx in range(0, s):
-            # initialize offspring and generate random location
-            pop_new.append(InvasiveWeed(**self._init_agent(
-                weed.position + sigma * np.random.normal(0, 1, n_dims)).model_dump()
-            ))
-
-        return pop_new
-
-    def optimization_step(self):
-        # get best and worst Invasive Weeds
-        (best, ), (worst, ) = special_agents(self._population, n_best=1, n_worst=1)
-
-        pop_new = list(chain.from_iterable(self._solve_mode_process(self.__evolve__, best, worst)))
+        pop_new = list(chain.from_iterable(map(evolve, self._population)))
 
         # update population
         self._extend_and_trim_population(pop_new)

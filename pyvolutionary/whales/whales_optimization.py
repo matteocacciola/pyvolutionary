@@ -51,10 +51,10 @@ class WhalesOptimization(OptimizationAbstract):
             return self._greedy_select_agent(whale, agent)
 
         # a decreases linearly from 2 to 0 in Eq. (2.3)
-        a = 2 - 2 * self._cycles / self._config.max_cycles
+        a = 2 - 2 * self._current_cycle / self._config.max_cycles
 
         # a2 linearly decreases from -1 to -2 to calculate t in Eq. (3.12)
-        a2 = -1 - self._cycles / self._config.max_cycles
+        a2 = -1 - self._current_cycle / self._config.max_cycles
 
         # Update the Position of search agents
         leader_position = np.array(self._best_agent.position)

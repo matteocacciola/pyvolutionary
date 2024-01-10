@@ -1,9 +1,6 @@
 import numpy as np
 
-from ..enums import ModeSolver
 from ..helpers import (
-    get_pool_executor,
-    get_pool_results,
     roulette_wheel_index,
     parse_obj_doc,  # type: ignore
 )
@@ -28,63 +25,31 @@ class AntColonyOptimization(OptimizationAbstract):
     def __init__(self, config: AntColonyOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 
-    def __selection_probability__(self) -> np.ndarray:
-        """
-        Compute the selection probability of each ant in the population.
-        :return: a numpy array of the selection probability of each ant in the population
-        :rtype: np.ndarray
-        """
-        ranks = np.array([idx for idx in range(1, self._config.population_size + 1)])
-        Q = self._config.intent_factor * self._config.population_size
-        weights = 1 / (np.sqrt(2 * np.pi) * Q) * np.exp(-0.5 * ((ranks - 1) / Q) ** 2)
-        return weights / np.sum(weights)  # Normalize to find the probability.
+    def optimization_step(self):
+        def compute_sigma(ant: Ant) -> float:
+            M = np.repeat(np.array(ant.position).reshape((1, -1)), pop_size, axis=0)
+            return zeta * np.sum(np.abs(positions - M), axis=0) / (pop_size - 1)
 
-    def __compute_sigmas__(self) -> np.ndarray:
-        """
-        Compute the sigmas of each ant in the population. Each sigma is computed as follows:
-            sigma_i = zeta * sum(|x_j - x_i|) / (N - 1)
-        where:
-            x_i: the position of the i-th ant.\n
-            x_j: the position of the j-th ant.\n
-            zeta: the zeta parameter of the colony.\n
-            N: the population size.
-        :return: a numpy array of the sigmas of each ant in the population
-        :rtype: np.ndarray
-        """
-        positions = np.array([ant.position for ant in self._population])
-        pop_size = self._config.population_size
-
-        sigmas = []
-        for idx in range(0, self._config.population_size):
-            M = np.repeat(np.array(self._population[idx].position).reshape((1, -1)), pop_size, axis=0)
-            sigmas.append(
-                self._config.zeta * np.sum(np.abs(positions - M), axis=0) / (pop_size - 1)
-            )
-        return np.array(sigmas)
-
-    def __generate_new_ants__(self, weights: np.ndarray, sigmas: np.ndarray) -> list[Ant]:
         def generate_coordinate(j: int) -> float:
             rdx = roulette_wheel_index(weights)
             return float(self._population[rdx].position[j] + np.random.normal() * sigmas[rdx, j])
 
-        # Generate Samples
-        if self._mode == ModeSolver.SERIAL:
-            return [Ant(**self._init_agent(
-                list(map(generate_coordinate, range(0, self._task.space_dimension)))
-            ).model_dump()) for _ in range(0, self._config.archive_size)]
+        # compute the selection probability of each ant in the population
+        ranks = np.array([idx for idx in range(1, self._config.population_size + 1)])
+        Q = self._config.intent_factor * self._config.population_size
+        weights = 1 / (np.sqrt(2 * np.pi) * Q) * np.exp(-0.5 * ((ranks - 1) / Q) ** 2)
+        weights = weights / np.sum(weights)  # Normalize to find the probability
 
-        with get_pool_executor(self._mode, self._workers) as executor:
-            executors = [executor.submit(
-                self._init_agent, list(map(generate_coordinate, range(0, self._task.space_dimension)))
-            ) for _ in range(0, self._config.archive_size)]
-            pop = get_pool_results(executors)
-        return pop
+        # compute the sigmas of each ant in the population
+        positions = np.array([ant.position for ant in self._population])
+        pop_size = self._config.population_size
+        zeta = self._config.zeta
 
-    def optimization_step(self):
-        weights = self.__selection_probability__()
-        sigmas = self.__compute_sigmas__()
+        sigmas = np.array([compute_sigma(ant) for ant in self._population])
 
         # Generate new ants
-        new_ants = self.__generate_new_ants__(weights, sigmas)
+        new_ants = [Ant(**self._init_agent(
+            list(map(generate_coordinate, range(0, self._task.space_dimension)))
+        ).model_dump()) for _ in range(0, self._config.archive_size)]
 
         self._extend_and_trim_population(new_ants)

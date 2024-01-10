@@ -34,7 +34,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         self._population: list[T] = []
         self._best_agent: T | None = None
         self._worst_agent: T | None = None
-        self._cycles = 1
+        self._current_cycle = 1
 
     @abstractmethod
     def optimization_step(self):
@@ -219,7 +219,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         :return: the corrected position
         :rtype: list[Any]
         """
-        return [v.get_value(c) for c, v in zip(position, self._task.variables)]
+        return [v.correct(c) for c, v in zip(position, self._task.variables)]
 
     def _extend_and_trim_population(self, new_population: list[T]):
         """
@@ -239,23 +239,6 @@ class OptimizationAbstract(ABC, Generic[T]):
         :param new_population: the new population
         """
         self._population = sort_and_trim(new_population, self._config.population_size)
-
-    def _solve_mode_process(self, fnc: callable, *args) -> list:
-        """
-        This function is able to solve the specified `fnc` process, with the picked `mode` specified in the `optimize`
-        method. `fnc` is applied over each element of the population. Therefore, `fnc` must have an int representing
-        the position of the agent and the agent itself as its first and second input arguments, respectively.
-        :param fnc: the function to call
-        :return: a list obtained by applying `fnc` to each element of the population
-        :rtype: list
-        """
-        if self._mode == ModeSolver.SERIAL:
-            return [fnc(idx, agent, *args) for idx, agent in enumerate(self._population)]
-
-        with get_pool_executor(self._mode, self._workers) as executor:
-            executors = [executor.submit(fnc, idx, agent, *args) for idx, agent in enumerate(self._population)]
-            pop = get_pool_results(executors)
-        return pop
 
     def optimize(self, task: Task, mode: str | None = None, workers: int | None = None) -> OptimizationResult:
         """
@@ -303,16 +286,16 @@ class OptimizationAbstract(ABC, Generic[T]):
             error, fitness, has_to_stop = self.__should_stop__()
             errors.append(error)
             if self._debug:
-                print(f"Cycle {self._cycles} - Best position {self._best_agent.position}, "
+                print(f"Cycle {self._current_cycle} - Best position {self._best_agent.position}, "
                       f"cost {self._best_agent.cost if task.minmax == TaskType.MIN else -self._best_agent.cost} - "
                       f"Average fitness {fitness}, fitness error {error}")
             if has_to_stop:
                 break
 
-            self._cycles += 1
+            self._current_cycle += 1
 
         if has_to_stop and self._debug:
-            print("Maximum number of cycles reached" if self._cycles >= self._config.max_cycles else
+            print("Maximum number of cycles reached" if self._current_cycle >= self._config.max_cycles else
                   f"Error criteria reached - Fitness error: {error}")
 
         return OptimizationResult(
@@ -329,7 +312,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         # Get the optimal population
         fitness_error = self._config.fitness_error
         avg_fit = average_fitness(self._population)
-        cycle = self._cycles
+        cycle = self._current_cycle
         max_cycles = self._config.max_cycles
 
         current_error = abs(1 - avg_fit)

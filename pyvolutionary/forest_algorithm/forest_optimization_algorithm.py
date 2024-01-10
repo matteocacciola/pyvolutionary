@@ -34,88 +34,45 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
         agent = super()._init_agent(position)
         return Tree(**agent.model_dump())
 
-    def __local_seeding__(self) -> list[Tree]:
-        """
-        Local optimum search stage that should prevent getting stuck in a local optimum. It is performed by randomly
-        changing the position of a tree, i.e. by randomly seeding a tree around it. The number of changes is defined by
-        the local_seeding_changes parameter. Finally, the age of each tree is increased by one and the seeded trees are
-        added to the population.
-        :return: list of seeded trees
-        :rtype: list[Tree]
-        """
-        def update_position(position: np.ndarray) -> np.ndarray:
-            indices = np.random.choice(self._task.space_dimension, self._config.local_seeding_changes, replace=False)
+    def optimization_step(self):
+        def local_seeding(tree: Tree) -> Tree:
+            position = np.array(tree.position)
+            indices = np.random.choice(dims, local_seeding_changes, replace=False)
             position[indices] += np.random.uniform(-self.__dx[indices], self.__dx[indices])
-            return position
+            return self._init_agent(position)
 
-        # repeat local_seeding_changes times each tree that is going to be removed
-        candidates = [
-            self._init_agent(update_position(np.array(tree.position)))
-            for tree in self._population if tree.age == 0
-            for _ in range(self._config.local_seeding_changes)
-        ]
-
-        # increase the age of each tree
-        for tree in self._population:
-            tree.age += 1
-
-        return candidates
-
-    def __global_seeding__(self, candidates: list[Tree], size: int) -> list[Tree]:
-        """
-        Global optimum search stage that should prevent getting stuck in a local optimum. It is performed by randomly
-        changing the position of a tree, i.e. by randomly seeding a tree around it. The number of changes is defined by
-        the global_seeding_changes parameter. The difference between this method and the local_seeding method is that
-        this method is performed on trees that are dying, i.e. that are going to be removed.
-        :param candidates: list of trees that are dying, i.e. that are going to be removed.
-        :param size: number of seeds to be generated
-        :return: list of seeded trees
-        """
-        def update_position(position: np.ndarray) -> np.ndarray:
+        def global_seeding(tree: Tree) -> Tree:
+            position = np.array(tree.position)
             indices = np.random.choice(self._task.space_dimension, self._config.global_seeding_changes, replace=False)
             position[indices] = self._uniform_coordinates(indices)
-            return position
+            return self._init_agent(position)
 
-        return [self._init_agent(
-            update_position(np.array(candidates[idx].position))
-        ) for idx in np.random.choice(len(candidates), size, replace=False)]
+        dims, local_seeding_changes = self._task.space_dimension, self._config.local_seeding_changes
+        area_limit = self._config.area_limit
+        transfer_rate = self._config.transfer_rate
 
-    def __remove_lifetime_exceeded__(self) -> list[Tree]:
-        """
-        Remove trees that exceeded their lifetime. The lifetime of a tree is defined by the lifetime parameter.
-        :return: list of trees that exceeded their lifetime
-        :rtype: list[Tree]
-        """
-        candidates = [tree for tree in self._population if tree.age > self._config.lifetime]
-        # remove trees that exceeded their lifetime from the population
-        self._population = [tree for tree in self._population if tree.age <= self._config.lifetime]
-        return candidates
-
-    def __survival_of_the_fittest__(self, candidates: list[Tree]):
-        """
-        Survival of the fittest stage. It is performed by removing the trees with the highest cost function value.
-        :param candidates: list of trees that are dying, i.e. that are going to be removed.
-        :return: candidates to be removed
-        :rtype: list[Tree]
-        """
-        sort_by_cost(self._population)
-        candidates += self._population[self._config.area_limit+1:]
-        self._population = self._population[:self._config.area_limit]
-        return candidates
-
-    def optimization_step(self):
         # add seeded trees to the population
-        self._population += self.__local_seeding__()
+        self._population += [local_seeding(tree) for tree in self._population if tree.age == 0
+                             for _ in range(local_seeding_changes)]
 
-        # identify trees that exceeded their lifetime and area limit
-        dying_trees = self.__survival_of_the_fittest__(
-            self.__remove_lifetime_exceeded__()
-        )
+        # remove trees that exceeded their lifetime from the population
+        dying_trees = [tree for tree in self._population if tree.age > self._config.lifetime]
+        self._population = [tree for tree in self._population if tree.age <= self._config.lifetime]
+
+        # identify and remove trees that exceeded their area limit
+        sort_by_cost(self._population)
+        dying_trees += self._population[area_limit + 1:]
+
+        self._population = self._population[:area_limit]
 
         # global seeding
-        gsn = int(self._config.transfer_rate * len(dying_trees))
+        gsn = int(transfer_rate * len(dying_trees))
         if gsn > 0:
-            self._population += self.__global_seeding__(dying_trees, gsn)
+            self._population += [
+                global_seeding(dying_trees[idx]) for idx in np.random.choice(len(dying_trees), gsn, replace=False)
+            ]
 
         self._population = sort_and_trim(self._population, self._config.population_size)
-        self._population[0].age = 0
+        self._population = [
+            t.model_copy(update={"age": t.age + 1}) if idx > 0 else t for idx, t in enumerate(self._population)
+        ]

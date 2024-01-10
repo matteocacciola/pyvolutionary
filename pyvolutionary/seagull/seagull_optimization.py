@@ -21,25 +21,22 @@ class SeagullOptimization(OptimizationAbstract):
     def __init__(self, config: SeagullOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 
-    def __evolve__(self, idx: int, seagull: Seagull, best_position: list[float]) -> Seagull:
-        best_position = np.array(best_position)
+    def optimization_step(self):
+        def evolve(seagull: Seagull) -> Seagull:
+            pos = np.array(seagull.position)
+            M = B * (best_position - pos)  # Eq. 7
+            C = A * pos  # Eq. 5
+            D = np.abs(C + M)  # Eq. 9
+            pos_new = r * np.cos(k) * r * np.sin(k) * r * k * D + np.random.normal(0, 1) * best_position  # Eq. 14
+            agent = Seagull(**self._init_agent(pos_new).model_dump())
+            return self._greedy_select_agent(agent, seagull)
 
-        A = self._config.fc - self._cycles * self._config.fc / self._config.max_cycles  # Eq. 6
-        uu = vv = 1
-
-        pos = np.array(seagull.position)
-
+        A = self._config.fc - self._current_cycle * self._config.fc / self._config.max_cycles  # Eq. 6
         B = 2 * A ** 2 * np.random.random()  # Eq. 8
-        M = B * (best_position - pos)  # Eq. 7
-        C = A * pos  # Eq. 5
-        D = np.abs(C + M)  # Eq. 9
+        uu = vv = 1
         k = np.random.uniform(0, 2 * np.pi)
         r = uu * np.exp(k * vv)
 
-        pos_new = r * np.cos(k) * r * np.sin(k) * r * k * D + np.random.normal(0, 1) * best_position  # Eq. 14
-        agent = Seagull(**self._init_agent(pos_new).model_dump())
+        best_position = np.array(self._best_agent.position)
 
-        return self._greedy_select_agent(agent, seagull)
-
-    def optimization_step(self):
-        self._population = self._solve_mode_process(self.__evolve__, self._best_agent.position)
+        self._population = [evolve(seagull) for seagull in self._population]

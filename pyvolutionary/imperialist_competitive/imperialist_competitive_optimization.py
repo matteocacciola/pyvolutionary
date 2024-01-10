@@ -67,59 +67,6 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
         task_type = self._task.minmax
         self._population = [Transformer.transform(empire, task_type) for empire in self.__empires]
 
-    def __assimilate__(self):
-        """
-        Assimilate colonies into empires. The assimilation rate is defined by the user. The assimilation is done by
-        replacing the representation of the colony with the representation of the empire.
-        """
-        assimilation_rate = self._config.assimilation_rate
-        dim = self._task.space_dimension
-        for empire in self.__empires:
-            empire_representation = empire.emperor.representation
-            for colony in empire.colonies:
-                candidates = np.random.choice(
-                    range(0, dim), int(np.round(dim * assimilation_rate, decimals=0)), replace=False,
-                )
-                colony.set_representation(self._init_agent(
-                    [r if i in candidates else colony.representation[i] for i, r in enumerate(empire_representation)]
-                ))
-
-    def __revolution__(self):
-        """
-        Revolution is a process that is applied to a colony. The revolution rate is defined by the user. The revolution
-        is done by exchanging the representation of the colony with the representation of another colony.
-        """
-        revolution_probability = self._config.revolution_probability
-        revolution_rate = self._config.revolution_rate
-        fcn = self._fcn
-        dim = self._task.space_dimension
-        for empire in self.__empires:
-            for i, colony in enumerate(empire.colonies):
-                if np.random.random() <= revolution_probability:
-                    # select the colony to exchange with
-                    colony_representation = colony.representation
-                    old_cost = colony.cost
-                    number_of_tasks = int(math.ceil(revolution_rate * dim))
-
-                    candidates = np.random.choice(range(0, dim), number_of_tasks, replace=False)
-                    exchange = list(range(0, dim))
-
-                    # remove the candidates from the exchange list
-                    for index in candidates:
-                        del exchange[index]
-
-                    # select the candidates to exchange with
-                    exchange_candidates = np.random.choice(exchange, number_of_tasks)
-                    new_colony_representation = colony_representation
-                    # exchange the candidates
-                    for (x, y) in zip(candidates, exchange_candidates):
-                        new_colony_representation[x], new_colony_representation[y] = (
-                            colony_representation[y], colony_representation[x]
-                        )
-                    new_colony = Country(self._init_agent(new_colony_representation))
-                    if new_colony.cost < old_cost:
-                        empire.replace_colony(i, new_colony)
-
     def __inter_empire_war__(self):
         """
         Inter-empire competition is a process that is applied to empires. The weakest empire is selected and a war is
@@ -128,9 +75,6 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
         from the weakest empire. If the weakest empire has no colonies, then the weakest emperor is assimilated by the
         winning empire.
         """
-        if len(self.__empires) == 1:
-            return
-
         total_cost = np.array([empire.cost for empire in self.__empires])
 
         # the weakest empire is the one with the highest cost
@@ -168,31 +112,68 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
             winning_empire.add_colony(weakest_empire.emperor)
             del self.__empires[self.__empires.index(weakest_empire)]
 
-    def __intra_empire_war__(self):
-        """
-        Intra-empire competition is a process that is applied to empires. It replaces a weakest emperor with the
-        strongest colony in case of internal war. The probability of winning the war is proportional to the cost of the
-        colony. Total cost remains unchanged for the empire
-        """
-        for empire in self.__empires:
+    def optimization_step(self):
+        def assimilate_colonies(empire: EmpireClass) -> EmpireClass:
+            empire_representation = empire.emperor.representation
+            for colony in empire.colonies:
+                candidates = np.random.choice(
+                    range(0, dim), int(np.round(dim * assimilation_rate, decimals=0)), replace=False,
+                )
+                colony.set_representation(self._init_agent(
+                    [r if i in candidates else colony.representation[i] for i, r in enumerate(empire_representation)]
+                ))
+            return empire
+
+        def revolution(empire: EmpireClass) -> EmpireClass:
+            for i, colony in enumerate(empire.colonies):
+                if np.random.random() <= revolution_probability:
+                    # select the colony to exchange with
+                    colony_representation = colony.representation
+                    old_cost = colony.cost
+                    number_of_tasks = int(math.ceil(revolution_rate * dim))
+                    candidates = np.random.choice(range(0, dim), number_of_tasks, replace=False)
+                    exchange = list(range(0, dim))
+                    # remove the candidates from the exchange list
+                    for index in candidates:
+                        del exchange[index]
+                    # select the candidates to exchange with
+                    exchange_candidates = np.random.choice(exchange, number_of_tasks)
+                    new_colony_representation = colony_representation
+                    # exchange the candidates
+                    for (x, y) in zip(candidates, exchange_candidates):
+                        new_colony_representation[x], new_colony_representation[y] = (
+                            colony_representation[y], colony_representation[x]
+                        )
+                    new_colony = Country(self._init_agent(new_colony_representation))
+                    if new_colony.cost < old_cost:
+                        empire.replace_colony(i, new_colony)
+            return empire
+
+        def intra_empire_war(empire: EmpireClass) -> EmpireClass:
             strongest_colony_index, strongest_colony = empire.get_strongest_colony()
             # if there is a picked colony and its cost is lower than the emperor, then swap them
             if strongest_colony and strongest_colony.cost < empire.emperor.cost:
                 empire.replace_colony(strongest_colony_index, empire.emperor)
                 empire.replace_emperor(strongest_colony)
+            return empire
 
-    def optimization_step(self):
+        assimilation_rate = self._config.assimilation_rate
+        revolution_probability = self._config.revolution_probability
+        revolution_rate = self._config.revolution_rate
+        dim = self._task.space_dimension
+
         # assimilation
-        self.__assimilate__()
+        self.__empires = [assimilate_colonies(empire) for empire in self.__empires]
 
         # revolution
-        self.__revolution__()
+        self.__empires = [revolution(empire) for empire in self.__empires]
 
         # Intra - empire competition
-        self.__intra_empire_war__()
+        self.__empires = [intra_empire_war(empire) for empire in self.__empires]
 
         # Inter - empire competition
-        self.__inter_empire_war__()
+        if len(self.__empires) > 1:
+            self.__inter_empire_war__()
 
         task_type = self._task.minmax
         self._population = [Transformer.transform(empire, task_type) for empire in self.__empires]

@@ -55,6 +55,78 @@ variables currently implemented in the library.
 |---------------|-----------------------|----------------------------------------|----------------------------------------------------------------------------------|
 | Continuous    | `ContinuousVariable`  | A continuous variable                  | `ContinuousVariable(name="x0", lower_bound=-100.0, upper_bound=100.0)`           |
 | Discrete      | `DiscreteVariable`    | A discrete variable                    | `DiscreteVariable(choices=["scale", "auto", 0.01, 0.1, 0.5, 1.0], name="gamma")` |
+| Permutation   | `PermutationVariable` | A permutation of the specified choices | `PermutationVariable(items=[[60, 200], [180, 200], [80, 180]], name="routes")`   |
+
+An example of a custom `Task` class is the following:
+
+```python
+from pyvolutionary import ContinuousVariable, Task
+
+class Sphere(Task):
+    def objective_function(self, x: list[float]) -> float:
+        x1, x2 = x
+        f1 = x1 - 2 * x2 + 3
+        f2 = 2 * x1 + x2 - 8
+        return f1 ** 2 + f2 ** 2
+
+
+# Define the task with the bounds and the configuration of the optimizer
+task = Sphere(
+    variables=[
+        ContinuousVariable(name="x1", lower_bound=-100.0, upper_bound=100.0),
+        ContinuousVariable(name="x2", lower_bound=-100.0, upper_bound=100.0),
+    ],
+)
+```
+
+You can pass the `minmax` parameter to the `Task` class to specify whether you want to minimize or maximize the function.
+Therefore, if you want to maximize the function, you can write:
+
+```python
+from pyvolutionary import ContinuousVariable, Task
+
+class Sphere(Task):
+    def objective_function(self, x: list[float]) -> float:
+        x1, x2 = x
+        f1 = x1 - 2 * x2 + 3
+        f2 = 2 * x1 + x2 - 8
+        return -(f1 ** 2 + f2 ** 2)
+
+task = Sphere(
+    variables=[
+        ContinuousVariable(name="x1", lower_bound=-100.0, upper_bound=100.0),
+        ContinuousVariable(name="x2", lower_bound=-100.0, upper_bound=100.0),
+    ],
+    minmax="max",
+)
+```
+
+By default, the `minmax` parameter is set to `min`. If necessary (e.g., in the implementation of the objective function),
+additional data can be injected into the `Task` class by using the `data` parameter of the constructor. This data can
+be accessed by using the `data` attribute of the `Task` class (see combinatorial example below).
+
+Finally, you can also specify the seed of the random number generator by using the `seed` parameter of the definition
+of the `Task`:
+
+```python
+from pyvolutionary import ContinuousVariable, Task
+
+class Sphere(Task):
+    def objective_function(self, x: list[float]) -> float:
+        x1, x2 = x
+        f1 = x1 - 2 * x2 + 3
+        f2 = 2 * x1 + x2 - 8
+        return -(f1 ** 2 + f2 ** 2)
+
+task = Sphere(
+    variables=[
+        ContinuousVariable(name="x1", lower_bound=-100.0, upper_bound=100.0),
+        ContinuousVariable(name="x2", lower_bound=-100.0, upper_bound=100.0),
+    ],
+    minmax="max",
+    seed=42,
+)
+```
 
 ### Continuous problems
 For example, let us inspect how you can solve the continuous _sphere_ problem with the Particle Swarm Optimization algorithm.
@@ -95,22 +167,6 @@ configuration = ParticleSwarmOptimizationConfig(
 optimization_result = ParticleSwarmOptimization(configuration).optimize(task)
 ```
 
-You can pass the `minmax` parameter to the `Task` class to specify whether you want to minimize or maximize the function.
-Therefore, if you want to maximize the function, you can write:
-
-```python
-task = Sphere(
-    variables=[ContinuousVariable(
-        name=f"x{i}", lower_bound=position_min, upper_bound=position_max
-    ) for i in range(dimension)],
-    minmax="max",
-)
-
-optimization_result = ParticleSwarmOptimization(configuration).optimize(task)
-```
-
-By default, the `minmax` parameter is set to `min`.
-
 You can also specify the mode of the solver by using the `mode` argument of the `optimize` method.
 For instance, if you want to run the Particle Swarm Optimization algorithm in parallel with threads, you can write:
 
@@ -128,21 +184,6 @@ In case of `process` and `thread` modes, you can also specify the number of proc
 
 ```python
 optimization_result = ParticleSwarmOptimization(configuration).optimize(task, mode="thread", jobs=4)
-```
-
-Finally, you can also specify the seed of the random number generator by using the `seed` parameter of the definition
-of the `Task`:
-
-```python
-task = Sphere(
-    variables=[ContinuousVariable(
-        name=f"x{i}", lower_bound=position_min, upper_bound=position_max
-    ) for i in range(dimension)],
-    minmax="max",
-    seed=42,
-)
-
-optimization_result = ParticleSwarmOptimization(configuration).optimize(task)
 ```
 
 The optimization result is a dictionary containing the following keys:
@@ -240,8 +281,67 @@ print(f"Best accuracy: {best.cost}")
 
 You can replace the PSO with any other algorithm implemented in the library.
 
+### Combinatorial problem
+Within the framework of **pyVolutionary** for addressing the Traveling Salesman Problem (TSP), a solution is a plausible
+route signifying a tour that encompasses visiting all cities precisely once and returning to the initial city.
+Typically, this solution is articulated as a permutation of the cities, wherein each city features exactly once in the permutation.
+
+As an illustration, consider a TSP scenario involving 5 cities denoted as A, B, C, D, and E. A potential solution might
+be denoted by the permutation [A, B, D, E, C], illustrating the order in which the cities are visited. This interpretation
+indicates that the tour initiates at city A, proceeds to city B, then D, E, and ultimately C before looping back to city A.
+
+The following code snippet illustrates how to solve the TSP with the Virus Colony Search Optimization algorithm.
+
+```python
+from typing import Any
+import numpy as np
+from pyvolutionary import (
+    best_agent,
+    Task,
+    PermutationVariable,
+    VirusColonySearchOptimization,
+    VirusColonySearchOptimizationConfig,
+)
+from pyvolutionary.helpers import distance
+
+
+class TspProblem(Task):
+    def objective_function(self, x: list[Any]) -> float:
+        x_transformed = self.transform_position(x)
+        routes = x_transformed["routes"]
+        city_pos = self.data["city_positions"]
+        n_routes = len(routes)
+        return np.sum([distance(
+            city_pos[route], city_pos[routes[(idx + 1) % n_routes]]
+        ) for idx, route in enumerate(routes)])
+
+
+city_positions = [
+    [60, 200], [180, 200], [80, 180], [140, 180], [20, 160],
+    [100, 160], [200, 160], [140, 140], [40, 120], [100, 120],
+    [180, 100], [60, 80], [120, 80], [180, 60], [20, 40],
+    [100, 40], [200, 40], [20, 20], [60, 20], [160, 20]
+]
+task = TspProblem(
+    variables=[PermutationVariable(name="routes", items=list(range(0, len(city_positions))))],
+    data={"city_positions": city_positions},
+)
+configuration = VirusColonySearchOptimizationConfig(
+    population_size=10,
+    fitness_error=0.01,
+    max_cycles=100,
+    lamda=0.1,
+    sigma=2.5,
+)
+result = VirusColonySearchOptimization(configuration).optimize(task)
+best = best_agent(result.evolution[-1].agents, task.minmax)
+
+print(f"Best real scheduling: {task.transform_position(best.position)}")
+print(f"Best fitness: {best.cost}")
+```
+
 ### Utilities
-**pyVolutionary** also provides a set of utilities to facilitate the use of the library. For example, you can use the
+**pyVolutionary** provides a set of utilities to facilitate the use of the library. For example, you can use the
 `plot` function to plot the evolution of the algorithm. Its usage is as follows:
 
 ```python
@@ -309,6 +409,8 @@ class BaseOptimizationConfig(BaseModel):
     max_cycles: int
 ```
 
+The examples listed in the following section can be used as a reference for the implementation of a new algorithm.
+
 Once you created your new classes, you can run the algorithm by calling the `optimize` method, which takes as input a
 `Task` object and returns a dictionary as above described.
 
@@ -323,6 +425,7 @@ The following algorithms are currently implemented in **pyVolutionary**:
 | Artificial Bee Colony Optimization        | `BeeColonyOptimization`                  | 2007 | [paper](https://api.semanticscholar.org/CorpusID:8215393)                                                                                                                                                                     | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bco.py)   |
 | Bacterial Foraging Optimization           | `BacterialForagingOptimization`          | 2002 | [paper](https://api.semanticscholar.org/CorpusID:108291966)                                                                                                                                                                   | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bfo.py)   |
 | Bat Optimization                          | `BatOptimization`                        | 2010 | [paper](https://link.springer.com/chapter/10.1007/978-3-642-12538-6_6)                                                                                                                                                        | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bo.py)    |
+| Biogeography-Based Optimization           | `BiogeographyBasedOptimization`          | 2008 | [paper](https://ieeexplore.ieee.org/abstract/document/4475427)                                                                                                                                                                | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bgbo.py)  |
 | Brown-Bear Optimization                   | `BrownBearOptimization`                  | 2023 | [paper](https://www.taylorfrancis.com/chapters/edit/10.1201/9781003337003-6/novel-brown-bear-optimization-algorithm-solving-economic-dispatch-problem-tapan-prakash-praveen-prakash-singh-vinay-pratap-singh-sri-niwas-singh) | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bbo.py)   |
 | Camel Caravan Optimization                | `CamelCaravanOptimization`               | 2016 | [paper](https://ijeee.edu.iq/Papers/Vol12-Issue2/118375.pdf)                                                                                                                                                                  | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/ccoa.py)  |
 | Cat Swarm Optimization                    | `CatSwarmOptimization`                   | 2006 | [paper](https://link.springer.com/chapter/10.1007/978-3-540-36668-3_94)                                                                                                                                                       | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/cso.py)   |

@@ -45,69 +45,49 @@ class BeeColonyOptimization(OptimizationAbstract):
         # if the current agent can not be improved, increase its trial counter
         return new_agent if new_agent.cost < agent.cost else agent.model_copy(update={"trials": agent.trials + 1})
 
-    def __send_employed_bees__(self) -> None:
-        """
-        Send employed bees to search for food sources. Each employed bee will dance on a food source.
-        """
-        for i, bee in enumerate(self._population):
-            self.__food_source_dance__(i, bee)
+    def optimization_step(self):
+        def food_source_dance(idx: int, bee: Bee):
+            # a randomly chosen solution is used in producing a mutant solution of the i-th solution
+            # randomly selected solution must be different from the i-th solution
+            partner_index = get_partner_index(idx, population_size)
+            partner = self._population[partner_index]
+            # generate a mutant solution by perturbing the current solution "index" with a random number
+            pos_new = np.array(bee.position) + phi * (np.array(bee.position) - np.array(partner.position))
+            return self._greedy_select_agent(bee, self._init_agent(pos_new))
 
-    def __food_source_dance__(self, index: int, bee: Bee):
-        """
-        Perform a food source dance. The dance is performed by generating a mutant solution and evaluating it. If the
-        mutant solution is better than the current solution, the current solution is replaced with the mutant solution.
-        Otherwise, the trial counter of the current solution is increased by one.
-        :param index: the index of the bee to consider
-        :param bee: the bee to consider
-        """
-        # a randomly chosen solution is used in producing a mutant solution of the i-th solution
-        # randomly selected solution must be different from the i-th solution
-        partner_index = get_partner_index(index, self._config.population_size)
-        partner = self._population[partner_index]
-
-        # generate a mutant solution by perturbing the current solution "index" with a random number
-        phi = np.random.uniform(low=-1, high=1, size=self._task.space_dimension)
-        pos_new = np.array(bee.position) + phi * (np.array(bee.position) - np.array(partner.position))
-        self._population[index] = self._greedy_select_agent(bee, self._init_agent(pos_new))
-
-    def __send_onlooker_bees__(self):
-        """
-        Send onlooker bees to search for food sources. Each onlooker bee will dance on a food source. The probability of
-        each onlooker bee to dance on a food source is proportional to the quality of the food source. The better the
-        food source, the higher the probability of being selected. The probability of each food source is calculated
-        using the following formula:
-            p_i = cost_i / sum(costs)
-        where p_i is the probability of the i-th food source, and cost_i is the cost of the i-th food source. The
-        probability of each food source is calculated using the costs of the employed bees. The onlooker bees will use a
-        roulette wheel selection to select a food source.
-        """
-        # Calculate the probabilities of each employed bee
-        employed_costs = np.array([agent.cost for agent in self._population])
-        probabilities = employed_costs / np.sum(employed_costs)
-        for idx in range(0, self._config.population_size):
+        def send_onlooker_bees(idx: int) -> Bee:
+            """
+            Send onlooker bees to search for food sources. Each onlooker bee will dance on a food source. The probability of
+            each onlooker bee to dance on a food source is proportional to the quality of the food source. The better the
+            food source, the higher the probability of being selected. The probability of each food source is calculated
+            using the following formula:
+                p_i = cost_i / sum(costs)
+            where p_i is the probability of the i-th food source, and cost_i is the cost of the i-th food source. The
+            probability of each food source is calculated using the costs of the employed bees. The onlooker bees will use a
+            roulette wheel selection to select a food source.
+            """
             # Select an employed bee using roulette wheel selection
             selected_bee = self._population[roulette_wheel_index(probabilities)]
-            self.__food_source_dance__(idx, selected_bee)
+            return food_source_dance(idx, selected_bee)
 
-    def __send_scout_bees__(self):
-        """
-        Send scout bees to search for food sources. If the number of trials of a food source exceeds a predefined limit,
-        the food source is abandoned and a new food source is generated. The new food source is generated randomly.
-        """
-        trials = np.array([food.trials for food in self._population])
+        population_size = self._config.population_size
+        dims = self._task.space_dimension
+        phi = np.random.uniform(low=-1, high=1, size=dims)
 
-        # Check the number of trials for each employed bee and abandon the food sources if the limit is exceeded
-        abandoned = np.where(trials >= self._config.scouting_limit)[0]
-        for idx in abandoned:
-            self._population[idx] = self._init_agent()  # replace food source with a brand new one
-
-    def optimization_step(self):
-        # generate and evaluate a neighbour point to every food source
-        self.__send_employed_bees__()
+        # generate and evaluate a neighbour point to every food source; it means to send the employed bees
+        self._population = [food_source_dance(idx, bee) for idx, bee in enumerate(self._population)]
 
         # based to probability, generate a neighbour point and evaluate again some food sources
         # same food source can be evaluated multiple times
-        self.__send_onlooker_bees__()
+        employed_costs = np.array([agent.cost for agent in self._population])
+        probabilities = employed_costs / np.sum(employed_costs)
+        self._population = [send_onlooker_bees(idx) for idx in range(0, population_size)]
 
-        # abandon the food sources which have not been improved after a predefined number of trials
-        self.__send_scout_bees__()
+        # abandon the food sources which have not been improved after a predefined number of trials; it means to send
+        # the scout bees
+        scouting_limit = self._config.scouting_limit
+        trials = np.array([food.trials for food in self._population])
+        abandoned = np.where(trials >= scouting_limit)[0]
+        self._population = [
+            agent if idx not in abandoned else self._init_agent() for idx, agent in enumerate(self._population)
+        ]

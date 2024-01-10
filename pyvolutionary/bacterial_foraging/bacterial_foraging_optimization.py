@@ -34,71 +34,14 @@ class BacterialForagingOptimization(OptimizationAbstract):
         agent = super()._init_agent(position)
         return Cell(**agent.model_dump(), local_best=agent.position.copy(), local_cost=agent.cost)
 
-    def __update_step_size__(self, cell: Cell) -> float:
-        """
-        Update the step size of the cell. The step size is computed as follows:\n
-        s / cell.nutrients if cell.nutrients > 0 else s, where:\n
-        s = C_s - (C_s - C_e) * cell.cost / total_costs\n
-        :param cell: the cell to update the step size
-        :return: the step size
-        :rtype: float
-        """
-        total_costs = np.sum([agent.cost for agent in self._population])
-        step_size = self.__C_s - (self.__C_s - self.__C_e) * cell.cost / total_costs
-        return step_size / cell.nutrients if cell.nutrients > 0 else step_size
-
-    def __tumble_cell__(self, cell: Cell, step_size: float) -> Cell:
-        """
-        Tumble the cell. The new position is computed as follows:\n
-        new_position = cell.position + step_size * delta_i / delta, where:\n
-        delta_i = (best_agent.position - cell.position) + (cell.local_best - cell.position)\n
-        delta = sqrt(delta_i * delta_i.T)\n
-        :param cell: the cell to tumble
-        :param step_size: the step size
-        :return: the new cell
-        :rtype: Cell
-        """
-        position = np.array(cell.position)
-        delta_i = (np.array(self._best_agent.position) - position) + (np.array(cell.local_best) - position)
-        delta = np.sqrt(np.dot(delta_i, delta_i.T))
-        if delta == 0:
-            delta_i = np.random.uniform(-1.0, 1.0, self._task.space_dimension)
-            delta = np.sqrt(np.dot(delta_i, delta_i.T))
-
-        return self._init_agent(cell.position + step_size * delta_i / delta)
-
-    def __swim__(self, cell: Cell, step_size: float) -> Cell:
-        """
-        Swim the cell. The cell will swim to a new cell or tumble some every time interval.
-        :param cell: the cell to swim
-        :param step_size: the step size
-        :return: the cell after swimming
-        :rtype: Cell
-        """
-        for m in range(self._config.Ns):
-            # move the bacterium to the location of the new cell and evaluate the moved position
-            new_cell = self.__tumble_cell__(cell, step_size)
-            if new_cell.cost >= cell.cost:
-                cell.nutrients -= 1
-                continue
-
-            new_cell.nutrients += 1
-            cell = new_cell
-            # update personal best
-            if new_cell.cost < cell.local_cost:
-                cell.local_best = new_cell.position.copy()
-                cell.local_cost = new_cell.cost
-
-        return cell
-
     def __clean_population__(self):
         """
         Remove duplicates from the population. This method is called after each optimization step.
         """
         new_set = set()
-        for idx, obj in enumerate(self._population):
-            pos = tuple(obj.position)
-            if pos in new_set:
+        pop = self._population.copy()
+        for idx, obj in enumerate(pop):
+            if pos := tuple(obj.position) in new_set:
                 self._population.pop(idx)
             else:
                 new_set.add(pos)
@@ -120,40 +63,65 @@ class BacterialForagingOptimization(OptimizationAbstract):
             for idx in sorted(list_idx_removed, reverse=True):
                 self._population.pop(idx)
 
-    def __evolve__(self, idx: int, cell: Cell) -> Cell:
-        """
-        Evolve the cell. This method is called within each optimization step.
-        :param idx: the index of the cell to evolve
-        :param cell: the cell to evolve
-        :return: the new population
-        :rtype: list[Cell]
-        """
-        step_size = self.__update_step_size__(cell)
-        cell = self.__swim__(cell, step_size)
-
-        m = max(self._config.N_split, self._config.N_split + (
-            len(self._population) - self._config.population_size
-        ) / self._config.N_adapt)
-
-        pos = np.array(cell.position)
-
-        if cell.nutrients > m:
-            tt = np.random.normal(0, 1, self._task.space_dimension)
-            agent = self._init_agent(
-                self._correct_position(tt * pos + (1 - tt) * (np.array(self._best_agent.position) - pos))
-            )
-            self._population.append(agent)
-        nut_min = min(self._config.N_adapt, self._config.N_adapt + (
-            len(self._population) - self._config.population_size
-        ) / self._config.N_adapt)
-
-        if cell.nutrients < nut_min and np.random.random() < self._config.Ped:
-            cell = self._init_agent()
-
-        return cell
-
     def optimization_step(self):
-        self._population = self._solve_mode_process(self.__evolve__)
+        def update_step_size(c: Cell) -> float:
+            step_sz = C_s - (C_s - C_e) * c.cost / total_costs
+            return step_sz / c.nutrients if c.nutrients > 0 else step_sz
+
+        def tumble_cell(c: Cell, step_sz: float) -> Cell:
+            position = np.array(c.position)
+            delta_i = (best_position - position) + (np.array(c.local_best) - position)
+            delta = np.sqrt(np.dot(delta_i, delta_i.T))
+            if delta == 0:
+                delta_i = np.random.uniform(-1.0, 1.0, self._task.space_dimension)
+                delta = np.sqrt(np.dot(delta_i, delta_i.T))
+            return self._init_agent(c.position + step_sz * delta_i / delta)
+
+        def swim(c: Cell, step_sz: float) -> Cell:
+            for _ in range(Ns):
+                # move the bacterium to the location of the new cell and evaluate the moved position
+                new_cell = tumble_cell(c, step_sz)
+                if new_cell.cost >= c.cost:
+                    c.nutrients -= 1
+                    continue
+                new_cell.nutrients += 1
+                c = new_cell
+                # update personal best
+                if new_cell.cost < c.local_cost:
+                    c.local_best = new_cell.position.copy()
+                    c.local_cost = new_cell.cost
+            return c
+
+        C_s, C_e = self.__C_s, self.__C_e
+        Ns = self._config.Ns
+        best_position = np.array(self._best_agent.position)
+
+        # evolve the population
+        for idx in range(0, self._config.population_size):
+            cell = self._population[idx]
+            total_costs = np.sum([a.cost for a in self._population])
+
+            step_size = update_step_size(cell)
+            cell = swim(cell, step_size)
+
+            m = max(self._config.N_split, self._config.N_split + (
+                len(self._population) - self._config.population_size
+            ) / self._config.N_adapt)
+
+            pos = np.array(cell.position)
+
+            if cell.nutrients > m:
+                tt = np.random.normal(0, 1, self._task.space_dimension)
+                agent = self._init_agent(
+                    self._correct_position(tt * pos + (1 - tt) * (np.array(self._best_agent.position) - pos))
+                )
+                self._population.append(agent)
+            nut_min = min(self._config.N_adapt, self._config.N_adapt + (
+                    len(self._population) - self._config.population_size
+            ) / self._config.N_adapt)
+
+            if cell.nutrients < nut_min and np.random.random() < self._config.Ped:
+                self._population[idx] = self._init_agent()
 
         # make sure the population does not have duplicates
         self.__clean_population__()

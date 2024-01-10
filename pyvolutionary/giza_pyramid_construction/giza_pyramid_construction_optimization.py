@@ -1,4 +1,3 @@
-from itertools import chain
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -11,7 +10,8 @@ class GizaPyramidConstructionOptimization(OptimizationAbstract):
     Implementation of the Fire Hawk Optimization algorithm.
 
     Args:
-        config (GizaPyramidConstructionOptimizationConfig): an instance of GizaPyramidConstructionOptimizationConfig class.
+        config (GizaPyramidConstructionOptimizationConfig): an instance of GizaPyramidConstructionOptimizationConfig
+            class.
             {parse_obj_doc(FireHawkOptimizationConfig)}
 
     Bibliography
@@ -23,7 +23,17 @@ class GizaPyramidConstructionOptimization(OptimizationAbstract):
     def __init__(self, config: GizaPyramidConstructionOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 
-    def __evolve__(self, idx: int, worker: Worker) -> list[Worker]:
+    def optimization_step(self):
+        def evolve(worker: Worker) -> Worker | None:
+            # substitution
+            new_pos = np.where(
+                np.logical_or(first_condition, second_condition),
+                self._uniform_position() * x * (np.array(worker.position) + d),
+                np.array(worker.position)
+            )
+            new_agent = Worker(**self._init_agent(new_pos).model_dump())
+            return new_agent if new_agent.cost < worker.cost else None
+
         mu1, mu2 = self._config.friction
         g = 2 * self._config.gravity
         theta = np.deg2rad(self._config.theta)
@@ -33,32 +43,13 @@ class GizaPyramidConstructionOptimization(OptimizationAbstract):
         dim = self._task.space_dimension
         dims = list(range(0, dim))
 
-        candidates = []
-
-        pos = np.array(worker.position)
-
         v0 = np.random.random() ** 2
         mu = np.random.uniform(mu1, mu2)
         d = v0 / (g * (sin_theta + (mu * cos_theta)))  # stone destination
         x = v0 / (g * sin_theta)  # worker movement
 
-        new_pos = self._uniform_position() * x * (pos + d)
-
-        # substitution
         first_condition = dims == np.repeat(np.random.randint(0, dim), dim)
         second_condition = np.random.random(dim) <= pss
-        new_pos = self._correct_position(
-            np.where(np.logical_or(first_condition, second_condition), new_pos, pos)
-        )
 
-        new_agent = Worker(**self._init_agent(new_pos).model_dump())
-
-        if new_agent.cost < worker.cost:
-            candidates.append(new_agent)
-
-        return candidates
-
-    def optimization_step(self):
-        pop_new = list(chain.from_iterable(self._solve_mode_process(self.__evolve__)))
-
-        self._extend_and_trim_population(pop_new)
+        pop_new = [evolve(worker) for worker in self._population]
+        self._extend_and_trim_population([item for item in pop_new if item is not None])

@@ -2,9 +2,69 @@ from abc import ABC, abstractmethod
 from dataclasses import field
 from typing import TypeVar, Any
 import numpy as np
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, ConfigDict
 
 from .enums import TaskType
+
+
+class LabelEncoder:
+    """
+    Encode categorical features as integer labels.
+    Especially, it can encode a list of mixed types include integer, float, and string. Better than scikit-learn module.
+    """
+    def __init__(self):
+        self.unique_labels = None
+        self.label_to_index = {}
+
+    @staticmethod
+    def set_y(y):
+        if type(y) not in (list, tuple, np.ndarray):
+            y = (y,)
+        return y
+
+    def fit(self, y: list | tuple) -> "LabelEncoder":
+        """
+        Fit label encoder to a given set of labels.
+        :param y: labels to encode
+        """
+        self.unique_labels = sorted(set(y), key=lambda x: (isinstance(x, (int, float)), x))
+        self.label_to_index = {label: i for i, label in enumerate(self.unique_labels)}
+        return self
+
+    def transform(self, y: list | tuple) -> list:
+        """
+        Transform labels to encoded integer labels.
+        :param y: labels to encode
+        :return: encoded integer labels
+        :rtype: list
+        """
+        if self.unique_labels is None:
+            raise ValueError("Label encoder has not been fit yet.")
+        y = self.set_y(y)
+        return [self.label_to_index[label] for label in y]
+
+    def fit_transform(self, y: list | tuple) -> list:
+        """
+        Fit label encoder and return encoded labels.
+        :param y: target values
+        :return: encoded labels
+        :rtype: list
+        """
+        y = self.set_y(y)
+        self.fit(y)
+        return self.transform(y)
+
+    def inverse_transform(self, y: list | tuple) -> list:
+        """
+        Transform integer labels to original labels.
+        :param y: encoded integer labels
+        :return: original labels
+        :rtype: list
+        """
+        if self.unique_labels is None:
+            raise ValueError("Label encoder has not been fit yet.")
+        y = self.set_y(y)
+        return [self.unique_labels[i] if i in self.label_to_index.values() else "unknown" for i in y]
 
 
 class BaseOptimizationConfig(BaseModel):
@@ -14,7 +74,7 @@ class BaseOptimizationConfig(BaseModel):
 
 
 class Agent(BaseModel):
-    position: list[float]
+    position: list[Any]
     cost: float
     fitness: float
 
@@ -78,15 +138,19 @@ class Variable(BaseModel, ABC):
     value: Any | None = None
 
     @abstractmethod
-    def randomize(self) -> None:
+    def randomize(self):
         pass
 
     @abstractmethod
-    def get_bounds(self) -> tuple[float | int, float | int]:
+    def get_bounds(self) -> tuple:
         pass
 
     @abstractmethod
-    def get_value(self, value: float | int) -> float | int:
+    def correct(self, value):
+        pass
+
+    @abstractmethod
+    def decode(self, value):
         pass
 
 
@@ -107,9 +171,12 @@ class ContinuousVariable(Variable):
     def get_bounds(self) -> tuple[float, float]:
         return self.lower_bound, self.upper_bound
 
-    def get_value(self, value: float | int) -> float:
-        self.value = value
-        return float(np.clip(self.value, self.lower_bound, self.upper_bound))
+    def correct(self, value: float | int) -> float:
+        self.value = float(np.clip(value, self.lower_bound, self.upper_bound))
+        return self.value
+
+    def decode(self, value: float) -> float:
+        return value
 
 
 class DiscreteVariable(Variable):
@@ -122,10 +189,42 @@ class DiscreteVariable(Variable):
     def get_bounds(self) -> tuple[int, int]:
         return 0, len(self.choices) - 1
 
-    def get_value(self, value: float | int) -> int:
-        self.value = value
+    def correct(self, value: float | int) -> int:
         lb, ub = self.get_bounds()
-        return int(np.clip(self.value, lb, ub))
+        self.value = int(np.clip(value, lb, ub))
+        return self.value
+
+    def decode(self, value: float | int) -> Any:
+        return self.choices[int(value)]
+
+
+class PermutationVariable(Variable):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    items: list[Any]
+    label_encoder: LabelEncoder = LabelEncoder()
+
+    def __init__(self, **data: Any):
+        super().__init__(**data)
+        self.label_encoder.fit(self.items)
+
+    def randomize(self) -> list[int]:
+        self.value = np.random.permutation(range(0, len(self.items))).tolist()
+        return self.value
+
+    def get_bounds(self) -> tuple[list, list]:
+        n_items = len(self.items)
+        lb = np.zeros(n_items)
+        ub = (n_items - 1e-4) * np.ones(n_items)
+        return lb.tolist(), ub.tolist()
+
+    def correct(self, value: tuple | list | np.ndarray) -> list[int]:
+        self.value = np.argsort(value).tolist()
+        return self.value
+
+    def decode(self, value: tuple | list | np.ndarray) -> Any:
+        value = self.correct(value)
+        return self.label_encoder.inverse_transform(value)
 
 
 class Task(BaseModel, ABC):
@@ -133,6 +232,7 @@ class Task(BaseModel, ABC):
     variables: list[Variable] = field(default_factory=list)
     space_dimension: int
     minmax: TaskType = TaskType.MIN
+    data: dict | None = None
 
     def __init__(self, **data: Any):
         data["space_dimension"] = len(data.get("variables", []))
@@ -147,10 +247,7 @@ class Task(BaseModel, ABC):
         pass
 
     def transform_position(self, x: list[float | int]) -> dict[str, Any]:
-        return {
-            v.name: x[i] if isinstance(v, ContinuousVariable) else v.choices[int(x[i])]
-            for i, v in enumerate(self.variables)
-        }
+        return {v.name: v.decode(x[i]) for i, v in enumerate(self.variables)}
 
 
 T = TypeVar("T", Agent, Agent)

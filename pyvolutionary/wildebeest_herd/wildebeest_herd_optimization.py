@@ -1,3 +1,4 @@
+from itertools import chain
 import numpy as np
 
 from ..helpers import (
@@ -27,113 +28,69 @@ class WildebeestHerdOptimization(OptimizationAbstract):
     def __init__(self, config: WildebeestHerdOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 
-    def __local_movement__(self, idx: int, wildebeest: Wildebeest) -> Wildebeest:
-        """
-        Local movement of wildebeest herd optimization algorithm (Milling behaviour)
-        :param idx: the index of the Wildebeest to consider
-        :param wildebeest: the Wildebeest to consider
-        :return the updated Wildebeest
-        :rtype: Wildebeest
-        """
+    def optimization_step(self):
         def get_best_local(wb: Wildebeest) -> Wildebeest:
             local_list = []
             pos = np.array(wb.position)
-            eta = self._config.eta
-            for _ in range(0, self._config.n_explore_step):
+            for _ in range(0, n_explore_step):
                 local_list.append(self._init_agent(pos + eta * np.random.uniform() * self._uniform_position()))
             return Wildebeest(**best_agent(local_list).model_dump())
 
-        local_alpha, local_beta = self._config.local_alpha, self._config.local_beta
-        best_local_position = np.array(get_best_local(wildebeest).position)
-        agent = Wildebeest(**self._init_agent(
-            local_alpha * best_local_position + local_beta * (np.array(wildebeest.position) - best_local_position)
-        ).model_dump())
-        return self._greedy_select_agent(wildebeest, agent)
+        def local_movement(wildebeest: Wildebeest) -> Wildebeest:
+            best_local_position = np.array(get_best_local(wildebeest).position)
+            agent = Wildebeest(**self._init_agent(
+                local_alpha * best_local_position + local_beta * (np.array(wildebeest.position) - best_local_position)
+            ).model_dump())
+            return self._greedy_select_agent(wildebeest, agent)
 
-    def __herd_instinct__(self, wildebeest: Wildebeest) -> Wildebeest:
-        """
-        Herd instinct of wildebeest herd optimization algorithm (Herd behaviour)
-        :param wildebeest: the Wildebeest to consider
-        :return: the updated Wildebeest
-        """
+        def herd_instinct(wildebeest: Wildebeest) -> Wildebeest:
+            idr = np.random.choice(range(0, pop_size))
+            picked_wildebeest = self._population[idr]
+            if picked_wildebeest.cost >= wildebeest.cost or np.random.random() >= phi:
+                return wildebeest
+            agent = Wildebeest(**self._init_agent(
+                global_alpha * np.array(wildebeest.position) + global_beta * np.array(picked_wildebeest.position)
+            ).model_dump())
+            return self._greedy_select_agent(wildebeest, agent)
+
+        def starvation_avoidance(wildebeest: Wildebeest) -> list[Wildebeest]:
+            dist_to_worst = distance(wildebeest.position, g_worst.position)
+            children = []
+            if dist_to_worst < delta_w:
+                children.append(
+                    Wildebeest(**self._init_agent(self._increase_position(wildebeest.position)).model_dump()))
+            return children
+
+        def population_pressure(wildebeest: Wildebeest) -> list[Wildebeest]:
+            dist_to_best = distance(wildebeest.position, g_best.position)
+            children = []
+            if 1.0 < dist_to_best < delta_c:
+                children.append(Wildebeest(**self._init_agent(
+                    np.array(g_best.position) + self._config.eta * self._uniform_position()
+                ).model_dump()))
+            return children
+
+        def herd_social_memory() -> list[Wildebeest]:
+            return [Wildebeest(
+                **self._init_agent(np.array(g_best.position) + 0.1 * self._uniform_position()).model_dump()
+            ) for _ in range(0, n_exploit_step)]
+
+        def generate_children(wildebeest: Wildebeest) -> list[Wildebeest]:
+            return starvation_avoidance(wildebeest) + population_pressure(wildebeest) + herd_social_memory()
+
+        eta = self._config.eta
+        delta_c, delta_w = self._config.delta_c, self._config.delta_w
+        local_alpha, local_beta = self._config.local_alpha, self._config.local_beta
+        n_explore_step, n_exploit_step = self._config.n_explore_step, self._config.n_exploit_step
+
         pop_size = self._config.population_size
         phi = self._config.phi
         global_alpha, global_beta = self._config.global_alpha, self._config.global_beta
 
-        idr = np.random.choice(range(0, pop_size))
-        picked_wildebeest = self._population[idr]
-        if picked_wildebeest.cost >= wildebeest.cost or np.random.random() >= phi:
-            return wildebeest
-
-        agent = Wildebeest(**self._init_agent(
-            global_alpha * np.array(wildebeest.position) + global_beta * np.array(picked_wildebeest.position)
-        ).model_dump())
-
-        return self._greedy_select_agent(wildebeest, agent)
-
-    def __starvation_avoidance__(
-        self, children: list[Wildebeest], wildebeest: Wildebeest, g_worst: Wildebeest
-    ) -> list[Wildebeest]:
-        """
-        Starvation avoidance of wildebeest herd optimization algorithm (Starvation behaviour). If the distance between
-        wildebeest and worst wildebeest is less than delta_w, then wildebeest will move to another position. The new
-        position is generated by adding random number between 0 and 1 to the current position of wildebeest. The new
-        position will be clipped to the lower and upper bounds.
-        :param children: the current list of children
-        :param wildebeest: the current wildebeest
-        :param g_worst: the worst wildebeest
-        :return: the updated list of children
-        :rtype: list[Wildebeest]
-        """
-        dist_to_worst = distance(wildebeest.position, g_worst.position)
-        if dist_to_worst < self._config.delta_w:
-            children.append(Wildebeest(**self._init_agent(self._increase_position(wildebeest.position)).model_dump()))
-        return children
-
-    def __population_pressure__(
-        self, children: list[Wildebeest], wildebeest: Wildebeest, g_best: Wildebeest
-    ) -> list[Wildebeest]:
-        """
-        Population pressure of wildebeest herd optimization algorithm (Population pressure behaviour). If the distance
-        between wildebeest and best wildebeest is less than delta_c, then wildebeest will move to another position. The
-        new position is generated by adding random number between 0 and 1 to the current position of wildebeest. The
-        new position will be clipped to the lower and upper bounds.
-        :param children: the current list of children
-        :param wildebeest: the current wildebeest
-        :param g_best: the best wildebeest
-        :return: the updated list of children
-        :rtype: list[Wildebeest]
-        """
-        dist_to_best = distance(wildebeest.position, g_best.position)
-
-        if 1.0 < dist_to_best < self._config.delta_c:
-            children.append(Wildebeest(**self._init_agent(
-                np.array(g_best.position) + self._config.eta * self._uniform_position()
-            ).model_dump()))
-
-        return children
-
-    def __herd_social_memory__(self, g_best: Wildebeest) -> list[Wildebeest]:
-        return [Wildebeest(
-            **self._init_agent(np.array(g_best.position) + 0.1 * self._uniform_position()).model_dump()
-        ) for _ in range(0, self._config.n_exploit_step)]
-
-    def optimization_step(self):
-        self._population = self._solve_mode_process(self.__local_movement__)
-
-        self._population = [self.__herd_instinct__(wildebeest) for wildebeest in self._population]
+        self._population = [local_movement(wildebeest) for wildebeest in self._population]
+        self._population = [herd_instinct(wildebeest) for wildebeest in self._population]
         (g_best, ), (g_worst, ) = special_agents(self._population, n_best=1, n_worst=1)
 
-        children = []
-        for wildebeest in self._population:
-            # starvation avoidance
-            children = self.__starvation_avoidance__(children, wildebeest, g_worst)
-
-            # population pressure
-            children = self.__population_pressure__(children, wildebeest, g_best)
-
-            # herd social memory
-            children.extend(self.__herd_social_memory__(g_best))
-
+        children = list(chain.from_iterable([generate_children(agent) for agent in self._population]))
         children = sort_and_trim(children, self._config.population_size)
         self._greedy_select_population(children)

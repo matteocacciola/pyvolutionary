@@ -39,62 +39,42 @@ class CamelCaravanOptimization(OptimizationAbstract):
             temperature=np.random.uniform(*self._config.temperatures),
         )
 
-    def __walk__(self, camel: Camel) -> Camel:
-        """
-        Move the camel in search space. This function is used to move Camel.
-        :param camel: the camel to consider
-        :return: the moved camel
-        :rtype: Camel
-        """
-        bc_position = np.array(best_agent(self._population).position)
+    def optimization_step(self):
+        def walk(camel: Camel) -> Camel:
+            supply = camel.supply * (1 - burden_factor * camel.steps / max_cycles)
+            endurance = camel.endurance * (1 - temperature / max_temperature) * (1 - camel.steps / max_cycles)
+            new_position = camel.position + np.random.uniform(-1, 1) * (1 - (endurance / config_endurance)
+            ) * np.exp(1 - supply / config_supply) * (bc_position - np.array(camel.position))
+            if self._is_valid_position(new_position):
+                return self._init_agent(position=new_position, endurance=endurance, supply=supply)
+            return self._init_agent(position=camel.position, endurance=endurance, supply=supply)
 
+        def oasis(camel: Camel, past_cost: float) -> Camel:
+            if np.random.random() <= (1 - self._config.visibility) and camel.cost <= past_cost:
+                camel.supply = config_supply
+                camel.endurance = config_endurance
+            return camel
+
+        def life_cycle(camel: Camel, past_cost: float) -> Camel:
+            if past_cost <= death_rate * camel.cost:
+                return self._init_agent(endurance=config_endurance, supply=config_supply)
+            camel.steps += 1
+            return camel
+
+        def evolve(camel: Camel) -> Camel:
+            c = camel.model_copy()
+            past_cost = c.cost
+            c = life_cycle(walk(c), past_cost)
+            return oasis(c, past_cost)
+
+        death_rate = self._config.death_rate
+        burden_factor = self._config.burden_factor
+        max_cycles = self._config.max_cycles
+        config_endurance = self._config.endurance
+        config_supply = self._config.supply
         min_temperature, max_temperature = self._config.temperatures
 
         temperature = np.random.uniform(min_temperature, max_temperature)
-        supply = camel.supply * (1 - self._config.burden_factor * camel.steps / self._config.max_cycles)
-        endurance = camel.endurance * (1 - temperature / max_temperature) * (1 - camel.steps / self._config.max_cycles)
+        bc_position = np.array(best_agent(self._population).position)
 
-        new_position = camel.position + np.random.uniform(-1, 1) * (
-            1 - (endurance / self._config.endurance)
-        ) * np.exp(1 - supply / self._config.supply) * (bc_position - np.array(camel.position))
-        if self._is_valid_position(new_position):
-            return self._init_agent(position=new_position, endurance=endurance, supply=supply)
-
-        return self._init_agent(position=camel.position, endurance=endurance, supply=supply)
-
-    def __oasis__(self, camel: Camel, past_cost: float) -> Camel:
-        """
-        Apply oasis function to Camel. This function is used to refill supply and endurance of Camel.
-        :param camel: the camel to consider
-        :param past_cost: the past cost of Camel
-        :return: the camel after oasis function
-        :rtype: Camel
-        """
-        if np.random.random() <= (1 - self._config.visibility) and camel.cost <= past_cost:
-            camel.supply = self._config.supply
-            camel.endurance = self._config.endurance
-        return camel
-
-    def __life_cycle__(self, camel: Camel, past_cost: float) -> Camel:
-        """
-        Apply life cycle to Camel. This function is used to kill Camel.
-        :param camel: the camel to consider
-        :param past_cost: the past cost of Camel
-        :return: the camel after life cycle
-        :rtype: Camel
-        """
-        if past_cost <= self._config.death_rate * camel.cost:
-            return self._init_agent(endurance=self._config.endurance, supply=self._config.supply)
-
-        camel.steps += 1
-        return camel
-
-    def __evolve__(self, idx: int, camel: Camel) -> Camel:
-        c = camel.model_copy()
-        past_cost = c.cost
-
-        c = self.__life_cycle__(self.__walk__(c), past_cost)
-        return self.__oasis__(c, past_cost)
-
-    def optimization_step(self):
-        self._population = self._solve_mode_process(self.__evolve__)
+        self._population = [evolve(camel) for camel in self._population]

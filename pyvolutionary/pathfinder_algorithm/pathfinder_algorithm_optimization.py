@@ -42,8 +42,8 @@ class PathfinderAlgorithmOptimization(OptimizationAbstract):
         alpha, beta = np.random.uniform(1, 2, 2)
         best_position = np.array(self._best_agent.position)
 
-        A = self._uniform_position() * np.exp(-2 * self._cycles / self._config.max_cycles)
-        t = 1. - self._cycles / (self._config.max_cycles + 1)
+        A = self._uniform_position() * np.exp(-2 * self._current_cycle / self._config.max_cycles)
+        t = 1. - self._current_cycle / (self._config.max_cycles + 1)
         space = self._bandwidth()
         
         # update the position of pathfinder and check the bound

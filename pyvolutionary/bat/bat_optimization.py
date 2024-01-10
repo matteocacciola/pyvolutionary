@@ -52,18 +52,17 @@ class BatOptimization(OptimizationAbstract):
         """
         return new_agent if new_agent.cost < agent.cost and np.random.random() < agent.loudness else agent
 
-    def __evolve__(self, idx: int, bat: Bat) -> Bat:
+    def optimization_step(self):
+        def evolve(bat: Bat) -> Bat:
+            velocity = bat.velocity + np.random.uniform(pf_min, pf_max) * (np.array(bat.position) - best_position)
+            # Local Search around g_best position
+            position = best_position + mean_a * np.random.normal(-1, 1) \
+                if np.random.random() > bat.pulse_rate else bat.position + velocity
+            return self._greedy_select_agent(bat, self._init_agent(position, velocity, bat.loudness, bat.pulse_rate))
+
         mean_a = np.mean([bat.loudness for bat in self._population])
 
         pf_min, pf_max = self._config.pulse_frequency
         best_position = np.array(self._best_agent.position)
 
-        velocity = bat.velocity + np.random.uniform(pf_min, pf_max) * (np.array(bat.position) - best_position)
-
-        # Local Search around g_best position
-        position = best_position + mean_a * np.random.normal(-1, 1) \
-            if np.random.random() > bat.pulse_rate else bat.position + velocity
-        return self._greedy_select_agent(bat, self._init_agent(position, velocity, bat.loudness, bat.pulse_rate))
-
-    def optimization_step(self):
-        self._population = self._solve_mode_process(self.__evolve__)
+        self._population = [evolve(agent) for agent in self._population]
