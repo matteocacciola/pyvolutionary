@@ -81,9 +81,9 @@ class DragonflyOptimization(OptimizationAbstract):
             pos_new += np.clip(temp, -1 * self.__delta_max, self.__delta_max)
             pos_delta_new = np.clip(temp_new, -1 * self.__delta_max, self.__delta_max)
             # amend solution
-            agent_new = Dragonfly(**self._init_agent(pos_new).model_dump())
-            agent_delta_new = Dragonfly(**self._init_agent(pos_delta_new).model_dump())
-            return self._greedy_select_agent(dragonfly, agent_new), self._greedy_select_agent(dragonfly_delta, agent_delta_new)
+            a_new = Dragonfly(**self._init_agent(pos_new).model_dump())
+            ad_new = Dragonfly(**self._init_agent(pos_delta_new).model_dump())
+            return self._greedy_select_agent(dragonfly, a_new), self._greedy_select_agent(dragonfly_delta, ad_new)
 
         bandwidth = self._bandwidth()
         cycle = self._current_cycle

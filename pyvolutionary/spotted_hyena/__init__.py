@@ -1,0 +1,2 @@
+from .models import SpottedHyena, SpottedHyenaOptimizationConfig
+from .spotted_hyena_optimization import SpottedHyenaOptimization

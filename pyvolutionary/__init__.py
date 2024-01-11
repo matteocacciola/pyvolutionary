@@ -9,6 +9,7 @@ from .biogeography_based import *
 from .brown_bear import *
 from .camel_caravan import *
 from .cat_swarm import *
+from .chaos_game import *
 from .chernobyl_disaster import *
 from .cuckoo_search import *
 from .coral_reef import *
@@ -43,6 +44,7 @@ from .pathfinder_algorithm import *
 from .pelican import *
 from .seagull import *
 from .siberian_tiger import *
+from .spotted_hyena import *
 from .tasmanian_devil import *
 from .virus_colony_search import *
 from .walrus import *
