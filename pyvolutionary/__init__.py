@@ -2,6 +2,7 @@ from .african_vulture import *
 from .ant_colony import *
 from .ant_lion import *
 from .aquila import *
+from .archimede import *
 from .bacterial_foraging import *
 from .bat import *
 from .bee_colony import *
