@@ -1,6 +1,6 @@
 # pyVolutionary
 
-[![GitHub release](https://img.shields.io/badge/release-1.1.0-yellow.svg)](https://github.com/matteocacciola/pyvolutionary/releases/tag/v1.1.0)
+[![GitHub release](https://img.shields.io/badge/release-1.1.1-yellow.svg)](https://github.com/matteocacciola/pyvolutionary/releases/tag/v1.1.1)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyvolutionary.svg)
 ![PyPI - Status](https://img.shields.io/pypi/status/pyvolutionary.svg)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pyvolutionary.svg)
