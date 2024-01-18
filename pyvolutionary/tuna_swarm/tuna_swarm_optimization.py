@@ -22,11 +22,11 @@ class TunaSwarmOptimization(OptimizationAbstract):
         super().__init__(config, debug)
 
     def optimization_step(self):
-        def get_new_local_pos(pos: list[float], prev_pos: list[float]) -> list[float]:
+        def get_new_local_pos(pos: list[float], prev_pos: list[float]) -> list[float] | None:
             pos = np.array(pos)
             prev_pos = np.array(prev_pos)
             if np.random.random() < zz:
-                return self._init_position()
+                return None
             diff_pos = best_position - pos
             if 0.5 < np.random.random():
                 r1 = np.random.random()

@@ -209,7 +209,7 @@ class Agent(BaseModel):
 These are the basic information, but each algorithm can add more information to the agent, such as the velocity in the
 case of PSO.
 
-### Discrete problem
+### Discrete problems
 A typical problem involving discrete variables is the optimization of the hyperparameters of a Machine Learning model,
 such as a Support Vector Classifier (SVC). You can use **pyVolutionary** to accomplish this task. In the following, we
 provide an example using the Particle Swarm Optimization (PSO) as the optimizer.
@@ -281,7 +281,7 @@ print(f"Best accuracy: {best.cost}")
 
 You can replace the PSO with any other algorithm implemented in the library.
 
-### Combinatorial problem
+### Combinatorial problems
 Within the framework of **pyVolutionary** for addressing the Traveling Salesman Problem (TSP), a solution is a plausible
 route signifying a tour that encompasses visiting all cities precisely once and returning to the initial city.
 Typically, this solution is articulated as a permutation of the cities, wherein each city features exactly once in the permutation.
@@ -340,7 +340,92 @@ print(f"Best real scheduling: {task.transform_position(best.position)}")
 print(f"Best fitness: {best.cost}")
 ```
 
-### Utilities
+### Constrained problems
+**pyVolutionary** also supports constrained problems. In order to solve a constrained problem, you need to implement
+something like the following example:
+
+```python
+import numpy as np
+from pyvolutionary import (
+    Task,
+    ContinuousVariable,
+    AntLionOptimization,
+    AntLionOptimizationConfig,
+)
+
+## Link: https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781119136507.app2
+class ConstrainedBenchmark(Task):
+    def objective_function(self, solution):
+        def g1(x):
+            return 2*x[0] + 2*x[1] + x[9] + x[10] - 10
+        def g2(x):
+            return 2 * x[0] + 2 * x[2] + x[9] + x[10] - 10
+        def g3(x):
+            return 2 * x[1] + 2 * x[2] + x[10] + x[11] - 10
+        def g4(x):
+            return -8*x[0] + x[9]
+        def g5(x):
+            return -8*x[1] + x[10]
+        def g6(x):
+            return -8*x[2] + x[11]
+        def g7(x):
+            return -2*x[3] - x[4] + x[9]
+        def g8(x):
+            return -2*x[5] - x[6] + x[10]
+        def g9(x):
+            return -2*x[7] - x[8] + x[11]
+    
+        def violate(value):
+            return 0 if value <= 0 else value
+    
+        fx = 5 * np.sum(solution[:4]) - 5*np.sum(solution[:4]**2) - np.sum(solution[4:13])
+    
+        ## Increase the punishment for g1 and g4 to boost the algorithm (You can choice any constraint instead of g1 and g4)
+        fx += violate(g1(solution))**2 + violate(g2(solution)) + violate(g3(solution)) + \
+                2*violate(g4(solution)) + violate(g5(solution)) + violate(g6(solution))+ \
+                violate(g7(solution)) + violate(g8(solution)) + violate(g9(solution))
+        return fx
+
+
+# Define the task with the bounds and the configuration of the optimizer
+task = ConstrainedBenchmark(
+    variables=[ContinuousVariable(
+        name="x",
+        lower_bounds=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        upper_bounds=[1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100, 1],
+    )],
+)
+
+configuration = AntLionOptimizationConfig(population_size=200, fitness_error=10e-4, max_cycles=400)
+optimization_result = AntLionOptimization(configuration).optimize(task)
+```
+
+## Extending the library
+**pyVolutionary** is designed to be easily extensible. You can add your own algorithms and problems to the library by
+following the instructions below.
+
+### Adding a new algorithm
+To add a new algorithm, you need to create a new class that inherits from the `OptimizationAbstract` class. The new
+class must implement the `optimization_step` method, where you can implement your new metaheuristic algorithm.
+
+The constructor of the new class must accept a `config` parameter, which is a Pydantic model extending the `BaseOptimizationConfig`
+class. This class contains the parameters of the algorithm, such as the population size, the number of generations, etc.
+
+```python
+from pydantic import BaseModel
+
+class BaseOptimizationConfig(BaseModel):
+    population_size: int
+    fitness_error: float | None = None
+    max_cycles: int
+```
+
+The examples listed in the following section can be used as a reference for the implementation of a new algorithm.
+
+Once you created your new classes, you can run the algorithm by calling the `optimize` method, which takes as input a
+`Task` object and returns a dictionary as above described.
+
+## Utilities
 **pyVolutionary** provides a set of utilities to facilitate the use of the library. For example, you can use the
 `plot` function to plot the evolution of the algorithm. Its usage is as follows:
 
@@ -388,31 +473,6 @@ where:
 - `idx`: the index of the agent to consider
 - `iters`: the same as above
 It returns a list of the cost values of the agent at each iteration.
-
-## Extending the library
-**pyVolutionary** is designed to be easily extensible. You can add your own algorithms and problems to the library by
-following the instructions below.
-
-### Adding a new algorithm
-To add a new algorithm, you need to create a new class that inherits from the `OptimizationAbstract` class. The new
-class must implement the `optimization_step` method, where you can implement your new metaheuristic algorithm.
-
-The constructor of the new class must accept a `config` parameter, which is a Pydantic model extending the `BaseOptimizationConfig`
-class. This class contains the parameters of the algorithm, such as the population size, the number of generations, etc.
-
-```python
-from pydantic import BaseModel
-
-class BaseOptimizationConfig(BaseModel):
-    population_size: int
-    fitness_error: float | None = None
-    max_cycles: int
-```
-
-The examples listed in the following section can be used as a reference for the implementation of a new algorithm.
-
-Once you created your new classes, you can run the algorithm by calling the `optimize` method, which takes as input a
-`Task` object and returns a dictionary as above described.
 
 ## Algorithms
 The following algorithms are currently implemented in **pyVolutionary**:
