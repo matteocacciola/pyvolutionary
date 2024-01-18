@@ -2,7 +2,7 @@ import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
-from .models import WindDrivenOptimizationConfig, Wind
+from .models import WindDrivenOptimizationConfig, AirParcel
 
 
 class WindDrivenOptimization(OptimizationAbstract):
@@ -28,7 +28,7 @@ class WindDrivenOptimization(OptimizationAbstract):
         ])
 
     def optimization_step(self):
-        def evolve(idx: int, wind: Wind) -> tuple[list[float], Wind]:
+        def evolve(idx: int, wind: AirParcel) -> tuple[list[float], AirParcel]:
             pos = np.array(wind.position)
             rand_dim = np.random.randint(0, n_dims)
             temp = self.__dyn_list_velocity[idx][rand_dim] * np.ones(n_dims)
@@ -38,7 +38,7 @@ class WindDrivenOptimization(OptimizationAbstract):
             vel = np.clip(vel, -max_v, max_v).tolist()
             # Update air parcel positions, check the bound and calculate pressure (fitness)
             self.__dyn_list_velocity[idx] = vel
-            return vel, Wind(**self._init_agent(pos + vel).model_dump())
+            return vel, AirParcel(**self._init_agent(pos + vel).model_dump())
 
         RT = self._config.RT
         g_c = self._config.g_c

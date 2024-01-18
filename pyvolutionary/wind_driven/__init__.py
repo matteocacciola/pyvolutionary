@@ -1,2 +1,2 @@
-from .models import Wind, WindDrivenOptimizationConfig
+from .models import AirParcel, WindDrivenOptimizationConfig
 from .wind_driven_optimization import WindDrivenOptimization

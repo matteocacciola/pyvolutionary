@@ -3,7 +3,7 @@ from pydantic import field_validator
 from ..models import Agent, BaseOptimizationConfig
 
 
-class Wind(Agent):
+class AirParcel(Agent):
     pass
 
 
