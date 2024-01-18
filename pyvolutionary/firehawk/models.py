@@ -6,4 +6,7 @@ class FireHawk(Agent):
 
 
 class FireHawkOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Fire Hawk Optimization algorithm.
+    """
     pass

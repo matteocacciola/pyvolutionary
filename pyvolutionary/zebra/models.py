@@ -6,4 +6,7 @@ class Zebra(Agent):
 
 
 class ZebraOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Zebra Optimization algorithm.
+    """
     pass

@@ -6,4 +6,7 @@ class Particle(Agent):
 
 
 class EnergyValleyOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Energy Valley Optimization algorithm.
+    """
     pass

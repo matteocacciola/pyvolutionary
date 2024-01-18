@@ -6,4 +6,7 @@ class Walrus(Agent):
 
 
 class WalrusOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Walrus Optimization algorithm.
+    """
     pass

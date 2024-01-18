@@ -6,4 +6,7 @@ class Pelican(Agent):
 
 
 class PelicanOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Pelican Optimization algorithm.
+    """
     pass

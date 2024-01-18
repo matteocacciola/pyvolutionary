@@ -6,4 +6,7 @@ class Dragonfly(Agent):
 
 
 class DragonflyOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Dragonfly Optimization algorithm.
+    """
     pass

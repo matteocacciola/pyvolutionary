@@ -6,4 +6,7 @@ class MountainGazelle(Agent):
 
 
 class MountainGazelleOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Mountain Gazelle Optimization algorithm.
+    """
     pass

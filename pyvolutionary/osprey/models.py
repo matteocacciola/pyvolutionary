@@ -6,4 +6,7 @@ class Osprey(Agent):
 
 
 class OspreyOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Osprey Optimization algorithm.
+    """
     pass

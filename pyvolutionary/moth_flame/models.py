@@ -6,4 +6,7 @@ class MothFlame(Agent):
 
 
 class MothFlameOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Moth Flame Optimization algorithm.
+    """
     pass

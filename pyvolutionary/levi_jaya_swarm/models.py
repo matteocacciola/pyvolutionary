@@ -6,4 +6,7 @@ class Jaya(Agent):
 
 
 class LeviFlightJayaSwarmOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Levy Flight Jaya Swarm Optimization algorithm.
+    """
     pass

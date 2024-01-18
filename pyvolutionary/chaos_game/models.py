@@ -6,4 +6,7 @@ class Seed(Agent):
 
 
 class ChaosGameOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Chaos Game Optimization algorithm.
+    """
     pass

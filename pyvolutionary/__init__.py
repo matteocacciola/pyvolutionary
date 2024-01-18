@@ -47,10 +47,12 @@ from .seagull import *
 from .siberian_tiger import *
 from .spotted_hyena import *
 from .tasmanian_devil import *
+from .tuna_swarm import *
 from .virus_colony_search import *
 from .walrus import *
 from .whales import *
 from .wildebeest_herd import *
+from .wind_driven import *
 from .zebra import *
 from .enums import TaskType
 from .models import (

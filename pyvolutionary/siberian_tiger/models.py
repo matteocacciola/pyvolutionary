@@ -6,4 +6,7 @@ class SiberianTiger(Agent):
 
 
 class SiberianTigerOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Siberian Tiger Optimization algorithm.
+    """
     pass

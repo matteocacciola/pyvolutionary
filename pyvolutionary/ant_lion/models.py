@@ -6,4 +6,7 @@ class AntLion(Agent):
 
 
 class AntLionOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Ant Lion Optimization algorithm.
+    """
     pass

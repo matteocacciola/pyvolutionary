@@ -6,4 +6,7 @@ class Aquila(Agent):
 
 
 class AquilaOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Aquila algorithm.
+    """
     pass

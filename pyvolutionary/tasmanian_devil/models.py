@@ -6,4 +6,7 @@ class TasmanianDevil(Agent):
 
 
 class TasmanianDevilOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Tasmanian Devil Optimization algorithm.
+    """
     pass

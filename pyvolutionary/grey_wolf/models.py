@@ -6,4 +6,7 @@ class GreyWolf(Agent):
 
 
 class GreyWolfOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Grey Wolf Optimization algorithm.
+    """
     pass

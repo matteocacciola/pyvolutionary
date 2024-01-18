@@ -6,4 +6,7 @@ class BrownBear(Agent):
 
 
 class BrownBearOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Brown Bear Optimization algorithm.
+    """
     pass

@@ -6,4 +6,7 @@ class SearchRadiation(Agent):
 
 
 class ChernobylDisasterOptimizationConfig(BaseOptimizationConfig):
+    """
+    Configuration class for Chernobyl Disaster Optimization algorithm.
+    """
     pass
