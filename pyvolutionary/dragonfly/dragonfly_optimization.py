@@ -34,7 +34,9 @@ class DragonflyOptimization(OptimizationAbstract):
         self.__radius = self.__delta_max = self._bandwidth() / 10
 
     def optimization_step(self):
-        def neighbouring(jdx: int, pos: np.ndarray, pos_jdx: list[float]) -> tuple[list[float] | None, list[float] | None]:
+        def neighbouring(
+            jdx: int, pos: np.ndarray, pos_jdx: list[float]
+        ) -> tuple[list[float] | None, list[float] | None]:
             dist = np.abs(pos - np.array(pos_jdx))
             if np.all(dist <= r) and np.all(dist != 0):
                 return self._population[jdx].position, self.__population_delta[jdx].position
@@ -45,21 +47,18 @@ class DragonflyOptimization(OptimizationAbstract):
             pos_delta = np.array(dragonfly_delta.position)
             # find the neighbouring solutions
             neighbour_data = [neighbouring(j, pos, agent.position) for j, agent in enumerate(self._population)]
-            pos_neighbours, pos_neighbours_delta = list(
-                zip(*[(p, delta) for p, delta in neighbour_data if p is not None])
-            )
+            pos_neighbours, pos_neighbours_delta = zip(*[(p, delta) for p, delta in neighbour_data])
             pos_neighbours = [p for p in pos_neighbours if p is not None]
             pos_neighbours_delta = [p for p in pos_neighbours_delta if p is not None]
             neighbours_num = len(pos_neighbours)
             # separation: Eq 3.1, Alignment: Eq 3.2, Cohesion: Eq 3.3
+            S = np.zeros(n_dims)
+            A = pos_delta.copy()
+            C_temp = pos.copy()
             if neighbours_num > 1:
                 S = np.sum(np.array(pos_neighbours), axis=0) - neighbours_num * pos
                 A = np.sum(np.array(pos_neighbours_delta), axis=0) / neighbours_num
                 C_temp = np.sum(pos_neighbours, axis=0) / neighbours_num
-            else:
-                S = np.zeros(n_dims)
-                A = pos_delta.copy()
-                C_temp = pos.copy()
             C = C_temp - pos
             # attraction to food: Eq 3.4
             dist_to_food = np.abs(pos - g_best_position)
@@ -81,9 +80,11 @@ class DragonflyOptimization(OptimizationAbstract):
             pos_new += np.clip(temp, -1 * self.__delta_max, self.__delta_max)
             pos_delta_new = np.clip(temp_new, -1 * self.__delta_max, self.__delta_max)
             # amend solution
-            a_new = Dragonfly(**self._init_agent(pos_new).model_dump())
-            ad_new = Dragonfly(**self._init_agent(pos_delta_new).model_dump())
-            return self._greedy_select_agent(dragonfly, a_new), self._greedy_select_agent(dragonfly_delta, ad_new)
+            agent_new = self._greedy_select_agent(dragonfly, Dragonfly(**self._init_agent(pos_new).model_dump()))
+            agent_delta_new = self._greedy_select_agent(
+                dragonfly_delta, Dragonfly(**self._init_agent(pos_delta_new).model_dump())
+            )
+            return agent_new, agent_delta_new
 
         bandwidth = self._bandwidth()
         cycle = self._current_cycle
