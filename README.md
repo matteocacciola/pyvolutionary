@@ -426,8 +426,10 @@ Once you created your new classes, you can run the algorithm by calling the `opt
 `Task` object and returns a dictionary as above described.
 
 ## Utilities
-**pyVolutionary** provides a set of utilities to facilitate the use of the library. For example, you can use the
-`plot` function to plot the evolution of the algorithm. Its usage is as follows:
+**pyVolutionary** provides a set of utilities to facilitate the use of the library.
+
+For instance, in case of bi-dimensional problems, you can use the `plot` function to plot the evolution of the algorithm.
+Its usage is as follows:
 
 ```python
 plot(function: callable, pos_min: float, pos_max: float, evolution: list[Population])
@@ -438,7 +440,8 @@ where:
 - `pos_max`: the maximum possible coordinates in the search space
 - `evolution`: the evolution of the algorithm, i.e., the list of the agents found at each generation
 
-It is also possible to inspect an animation of the evolution of the algorithm by using the `animate` function:
+Still considering bi-dimensional problems, it is also possible to inspect an animation of the evolution of the algorithm
+by using the `animate` function:
 
 ```python
 animate(function: callable, optimization_result: OptimizationResult, pos_min: float, pos_max: float, filename: str)
@@ -451,7 +454,9 @@ where:
 - `pos_max`: the same as above
 - `filename`: the name of the file where to save the animation
 
-Furthermore, you can extract the trend of the best agent found by the algorithm by using the `best_agent_trend` function:
+Not restricted to bi-dimensional problems, other utilities are available. 
+
+The trend of the best agent found by the algorithm by using the `best_agent_trend` function can be extracted by:
 
 ```python
 best_agent_trend(optimization_result: OptimizationResult, iters: list[int] | None = None) -> list[float]
@@ -526,7 +531,7 @@ The following algorithms are currently implemented in **pyVolutionary**:
 | Pelican Optimization                      | `PelicanOptimization`                    | 2022 | [paper](https://www.mdpi.com/1424-8220/22/3/855)                                                                                                                                                                              | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/poa.py)   |
 | Seagull Optimization                      | `SeagullOptimization`                    | 2019 | [paper](https://doi.org/10.1016/j.knosys.2018.11.024)                                                                                                                                                                         | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/so.py)    |
 | Siberian Tiger Optimization               | `SiberianTigerOptimization`              | 2022 | [paper](https://ieeexplore.ieee.org/document/9989374)                                                                                                                                                                         | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/stoa.py)  |
-| Spotted Hyena Optimization                | `SpottedHyenaOptimization                | 2017 | [paper](https://doi.org/10.1016/j.advengsoft.2017.05.014)                                                                                                                                                                     | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/sho.py)   |
+| Spotted Hyena Optimization                | `SpottedHyenaOptimization`               | 2017 | [paper](https://doi.org/10.1016/j.advengsoft.2017.05.014)                                                                                                                                                                     | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/sho.py)   |
 | Tasmanian Devil Optimization              | `TasmanianDevilOptimization`             | 2022 | [paper](https://ieeexplore.ieee.org/document/9714388)                                                                                                                                                                         | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/tdo.py)   |
 | Tuna Swarm Optimization                   | `TunaSwarmOptimization`                  | 2021 | [paper](https://www.hindawi.com/journals/cin/2021/9210050/)                                                                                                                                                                   | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/tso.py)   |
 | Virus Colony Search Optimization          | `VirusColonySearchOptimization`          | 2016 | [paper](https://doi.org/10.1016/j.advengsoft.2015.11.004)                                                                                                                                                                     | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/vcso.py)  |
