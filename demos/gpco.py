@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import GizaPyramidConstructionOptimization, GizaPyramidConstructionOptimizationConfig, animate
+from pyvolutionary import GizaPyramidConstructionOptimization, GizaPyramidConstructionOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = GizaPyramidConstructionOptimizationConfig(
     population_size=population,

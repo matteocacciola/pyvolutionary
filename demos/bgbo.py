@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import BiogeographyBasedOptimization, BiogeographyBasedOptimizationConfig, animate
+from pyvolutionary import BiogeographyBasedOptimization, BiogeographyBasedOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = BiogeographyBasedOptimizationConfig(
     population_size=population,

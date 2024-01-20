@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import ElephantHerdOptimization, ElephantHerdOptimizationConfig, animate
+from pyvolutionary import ElephantHerdOptimization, ElephantHerdOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = ElephantHerdOptimizationConfig(
     population_size=population,

@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import ChaosGameOptimization, ChaosGameOptimizationConfig, animate
+from pyvolutionary import ChaosGameOptimization, ChaosGameOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = ChaosGameOptimizationConfig(
     population_size=population,

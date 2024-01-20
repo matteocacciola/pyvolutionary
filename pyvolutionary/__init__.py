@@ -39,6 +39,7 @@ from .levi_jaya_swarm import *
 from .monarch_butterfly import *
 from .moth_flame import *
 from .mountain_gazelle import *
+from .nuclear_reaction import *
 from .osprey import *
 from .particle_swarm import *
 from .pathfinder_algorithm import *

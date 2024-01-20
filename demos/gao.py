@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import GeneticAlgorithmOptimization, GeneticAlgorithmOptimizationConfig, animate
+from pyvolutionary import GeneticAlgorithmOptimization, GeneticAlgorithmOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = GeneticAlgorithmOptimizationConfig(
     population_size=population,

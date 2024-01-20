@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import FishSchoolSearchOptimization, FishSchoolSearchOptimizationConfig, animate
+from pyvolutionary import FishSchoolSearchOptimization, FishSchoolSearchOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = FishSchoolSearchOptimizationConfig(
     population_size=population,

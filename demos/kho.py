@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import KrillHerdOptimization, KrillHerdOptimizationConfig, animate
+from pyvolutionary import KrillHerdOptimization, KrillHerdOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = KrillHerdOptimizationConfig(
     population_size=population,

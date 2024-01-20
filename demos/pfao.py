@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import PathfinderAlgorithmOptimization, PathfinderAlgorithmOptimizationConfig, animate
+from pyvolutionary import PathfinderAlgorithmOptimization, PathfinderAlgorithmOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = PathfinderAlgorithmOptimizationConfig(
     population_size=population,

@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import AquilaOptimization, AquilaOptimizationConfig, animate
+from pyvolutionary import AquilaOptimization, AquilaOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = AquilaOptimizationConfig(
     population_size=population,

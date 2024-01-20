@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import InvasiveWeedOptimization, InvasiveWeedOptimizationConfig, animate
+from pyvolutionary import InvasiveWeedOptimization, InvasiveWeedOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = InvasiveWeedOptimizationConfig(
     population_size=population,

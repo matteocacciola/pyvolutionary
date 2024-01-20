@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import ImperialistCompetitiveOptimization, ImperialistCompetitiveOptimizationConfig, animate
+from pyvolutionary import ImperialistCompetitiveOptimization, ImperialistCompetitiveOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = ImperialistCompetitiveOptimizationConfig(
     population_size=population,

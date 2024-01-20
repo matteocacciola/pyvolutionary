@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import HarmonySearchOptimization, HarmonySearchOptimizationConfig, animate
+from pyvolutionary import HarmonySearchOptimization, HarmonySearchOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = HarmonySearchOptimizationConfig(
     population_size=population,

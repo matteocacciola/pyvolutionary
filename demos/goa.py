@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import GrasshopperOptimization, GrasshopperOptimizationConfig, animate
+from pyvolutionary import GrasshopperOptimization, GrasshopperOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = GrasshopperOptimizationConfig(
     population_size=population,

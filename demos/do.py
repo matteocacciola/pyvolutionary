@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import DragonflyOptimization, DragonflyOptimizationConfig, animate
+from pyvolutionary import DragonflyOptimization, DragonflyOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = DragonflyOptimizationConfig(
     population_size=population,

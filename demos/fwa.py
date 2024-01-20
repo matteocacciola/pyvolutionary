@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import FireworksOptimization, FireworksOptimizationConfig, animate
+from pyvolutionary import FireworksOptimization, FireworksOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = FireworksOptimizationConfig(
     population_size=population,

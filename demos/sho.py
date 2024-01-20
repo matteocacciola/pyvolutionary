@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import SpottedHyenaOptimization, SpottedHyenaOptimizationConfig, animate
+from pyvolutionary import SpottedHyenaOptimization, SpottedHyenaOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = SpottedHyenaOptimizationConfig(
     population_size=population,

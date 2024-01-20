@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import EarthwormsOptimization, EarthwormsOptimizationConfig, animate
+from pyvolutionary import EarthwormsOptimization, EarthwormsOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = EarthwormsOptimizationConfig(
     population_size=population,

@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import FireflySwarmOptimization, FireflySwarmOptimizationConfig, animate
+from pyvolutionary import FireflySwarmOptimization, FireflySwarmOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = FireflySwarmOptimizationConfig(
     population_size=population,

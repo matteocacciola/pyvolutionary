@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import AntColonyOptimization, AntColonyOptimizationConfig, animate
+from pyvolutionary import AntColonyOptimization, AntColonyOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = AntColonyOptimizationConfig(
     population_size=population,

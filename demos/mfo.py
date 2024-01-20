@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import MothFlameOptimization, MothFlameOptimizationConfig, animate
+from pyvolutionary import MothFlameOptimization, MothFlameOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = MothFlameOptimizationConfig(
     population_size=population,

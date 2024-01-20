@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import PelicanOptimization, PelicanOptimizationConfig, animate
+from pyvolutionary import PelicanOptimization, PelicanOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = PelicanOptimizationConfig(
     population_size=population,

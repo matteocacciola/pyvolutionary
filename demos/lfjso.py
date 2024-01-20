@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import LeviFlightJayaSwarmOptimization, LeviFlightJayaSwarmOptimizationConfig, animate
+from pyvolutionary import LeviFlightJayaSwarmOptimization, LeviFlightJayaSwarmOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = LeviFlightJayaSwarmOptimizationConfig(
     population_size=population,

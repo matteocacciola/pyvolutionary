@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import BatOptimization, BatOptimizationConfig, animate
+from pyvolutionary import BatOptimization, BatOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = BatOptimizationConfig(
     population_size=population,

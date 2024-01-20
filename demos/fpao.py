@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import FlowerPollinationAlgorithmOptimization, FlowerPollinationAlgorithmOptimizationConfig, animate
+from pyvolutionary import FlowerPollinationAlgorithmOptimization, FlowerPollinationAlgorithmOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = FlowerPollinationAlgorithmOptimizationConfig(
     population_size=population,

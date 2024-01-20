@@ -229,6 +229,11 @@ class OptimizationAbstract(ABC, Generic[T]):
         """
         return [v.correct(c) for c, v in zip(position, self._task.variables)]
 
+    def _amend_position(self, position: list[float | int] | np.ndarray) -> np.ndarray:
+        position = position if isinstance(position, np.ndarray) else np.array(position)
+        lb, ub = self._get_bounds()
+        return np.where(np.logical_and(lb <= position <= ub), position, np.array(self._init_position()))
+
     def _extend_and_trim_population(self, new_population: list[T]):
         """
         Extend the population with the new population and trim the population to the population size if the population

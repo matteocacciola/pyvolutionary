@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import BacterialForagingOptimization, BacterialForagingOptimizationConfig, animate
+from pyvolutionary import BacterialForagingOptimization, BacterialForagingOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = BacterialForagingOptimizationConfig(
     population_size=population,

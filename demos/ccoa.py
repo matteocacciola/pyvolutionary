@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import CamelCaravanOptimization, CamelCaravanOptimizationConfig, animate
+from pyvolutionary import CamelCaravanOptimization, CamelCaravanOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = CamelCaravanOptimizationConfig(
     population_size=population,

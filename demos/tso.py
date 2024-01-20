@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import TunaSwarmOptimization, TunaSwarmOptimizationConfig, animate
+from pyvolutionary import TunaSwarmOptimization, TunaSwarmOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = TunaSwarmOptimizationConfig(
     population_size=population,

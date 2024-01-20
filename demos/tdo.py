@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import TasmanianDevilOptimization, TasmanianDevilOptimizationConfig, animate
+from pyvolutionary import TasmanianDevilOptimization, TasmanianDevilOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = TasmanianDevilOptimizationConfig(
     population_size=population,

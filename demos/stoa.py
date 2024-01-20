@@ -1,7 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
-from pyvolutionary import SiberianTigerOptimization, SiberianTigerOptimizationConfig, animate
+from pyvolutionary import SiberianTigerOptimization, SiberianTigerOptimizationConfig
+from pyvolutionary.utils import animate
 
 configuration = SiberianTigerOptimizationConfig(
     population_size=population,
