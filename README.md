@@ -1,9 +1,10 @@
 # pyVolutionary
 
-[![GitHub release](https://img.shields.io/badge/release-2.0.0-yellow.svg)](https://github.com/matteocacciola/pyvolutionary/releases/tag/v2.0.0)
+[![GitHub release](https://img.shields.io/badge/release-1.2.0-yellow.svg)](https://github.com/matteocacciola/pyvolutionary/releases/tag/v1.2.0)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyvolutionary.svg)
 ![PyPI - Status](https://img.shields.io/pypi/status/pyvolutionary.svg)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pyvolutionary.svg)
+[![Downloads](https://static.pepy.tech/badge/pyvolutionary)](https://pepy.tech/project/pyvolutionary)
 ![GitHub Release Date](https://img.shields.io/github/release-date/matteocacciola/pyvolutionary.svg)
 [![GitTutorial](https://img.shields.io/badge/PR-Welcome-%23FF8300.svg?)](https://git-scm.com/book/en/v2/GitHub-Contributing-to-a-Project)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -48,14 +49,14 @@ Now, you can access the algorithms and problems included in the library. With **
 continuous and discrete optimization problems. It is also possible to solve mixed problems, i.e., problems with both
 continuous and discrete variables. In order to do so, you need to define a `Task` class, which inherits from the
 `Task` class of the library. The list of variables in the problem must be specified in the constructor of the class
-inheriting from `Task`. The variables can be either continuous or discrete. The following table describes the types of
-variables currently implemented in the library.
+inheriting from `Task`. The following table describes the types of variables currently implemented in the library.
 
-| Variable type | Class name            | Description                            | Example                                                                          |
-|---------------|-----------------------|----------------------------------------|----------------------------------------------------------------------------------|
-| Continuous    | `ContinuousVariable`  | A continuous variable                  | `ContinuousVariable(name="x0", lower_bound=-100.0, upper_bound=100.0)`           |
-| Discrete      | `DiscreteVariable`    | A discrete variable                    | `DiscreteVariable(choices=["scale", "auto", 0.01, 0.1, 0.5, 1.0], name="gamma")` |
-| Permutation   | `PermutationVariable` | A permutation of the specified choices | `PermutationVariable(items=[[60, 200], [180, 200], [80, 180]], name="routes")`   |
+| Variable type   | Class name               | Description                                          | Example                                                                                       |
+|-----------------|--------------------------|------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| Continuous      | `ContinuousVariable`     | A continuous variable                                | `ContinuousVariable(name="x0", lower_bound=-100.0, upper_bound=100.0)`                        |
+| Discrete        | `DiscreteVariable`       | A discrete variable                                  | `DiscreteVariable(choices=["scale", "auto", 0.01, 0.1, 0.5, 1.0], name="gamma")`              |
+| Permutation     | `PermutationVariable`    | A permutation of the specified choices               | `PermutationVariable(items=[[60, 200], [180, 200], [80, 180]], name="routes")`                |
+| Multi-objective | `MultiObjectiveVariable` | A type of variable used for multi-objective problems | `MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10))`            |
 
 An example of a custom `Task` class is the following:
 
@@ -304,7 +305,6 @@ from pyvolutionary import (
 )
 from pyvolutionary.helpers import distance
 
-
 class TspProblem(Task):
     def objective_function(self, x: list[Any]) -> float:
         x_transformed = self.transform_position(x)
@@ -340,65 +340,12 @@ print(f"Best real scheduling: {task.transform_position(best.position)}")
 print(f"Best fitness: {best.cost}")
 ```
 
-### Constrained problems
-**pyVolutionary** also supports constrained problems. In order to solve a constrained problem, you need to implement
-something like the following example:
-
-```python
-import numpy as np
-from pyvolutionary import Task, ContinuousVariable, AntLionOptimization, AntLionOptimizationConfig
-
-## Link: https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781119136507.app2
-class ConstrainedBenchmark(Task):
-    def objective_function(self, solution):
-        def g1(x):
-            return 2*x[0] + 2*x[1] + x[9] + x[10] - 10
-        def g2(x):
-            return 2 * x[0] + 2 * x[2] + x[9] + x[10] - 10
-        def g3(x):
-            return 2 * x[1] + 2 * x[2] + x[10] + x[11] - 10
-        def g4(x):
-            return -8*x[0] + x[9]
-        def g5(x):
-            return -8*x[1] + x[10]
-        def g6(x):
-            return -8*x[2] + x[11]
-        def g7(x):
-            return -2*x[3] - x[4] + x[9]
-        def g8(x):
-            return -2*x[5] - x[6] + x[10]
-        def g9(x):
-            return -2*x[7] - x[8] + x[11]
-    
-        def violate(value):
-            return 0 if value <= 0 else value
-    
-        fx = 5 * np.sum(solution[:4]) - 5*np.sum(solution[:4]**2) - np.sum(solution[4:13])
-    
-        ## Increase the punishment for g1 and g4 to boost the algorithm (You can choice any constraint instead of g1 and g4)
-        fx += violate(g1(solution))**2 + violate(g2(solution)) + violate(g3(solution)) + \
-                2*violate(g4(solution)) + violate(g5(solution)) + violate(g6(solution))+ \
-                violate(g7(solution)) + violate(g8(solution)) + violate(g9(solution))
-        return fx
-
-
-# Define the task with the bounds and the configuration of the optimizer
-task = ConstrainedBenchmark(
-    variables=[ContinuousVariable(
-        name="x",
-        lower_bounds=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        upper_bounds=[1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100, 1],
-    )],
-)
-
-configuration = AntLionOptimizationConfig(population_size=200, fitness_error=10e-4, max_cycles=400)
-optimization_result = AntLionOptimization(configuration).optimize(task)
-```
-
 ### Multi-objective problems
-**pyVolutionary** also supports multi-objetive problems. A multi-objective problem is a problem with more than one
+**pyVolutionary** also supports multi-objective problems. A multi-objective problem is a problem with more than one
 objective function. All the objective functions are then "mixed" together by means of a weight vector. The latter has
-to be specified within the configuration of the `Task` class. For example, let us consider the following problem:
+to be specified within the configuration of the `Task` class. The following problem is an example of a multi-objective
+problem solved by **pyVolutionary** with the Forest Optimization Algorithm (the latter can be replaced with any other
+algorithm implemented in the library):
 
 ```python
 import numpy as np
@@ -439,6 +386,73 @@ configuration = ForestOptimizationAlgorithmConfig(
 optimization_result = ForestOptimizationAlgorithm(configuration).optimize(task)
 ```
 
+### Constrained problems
+**pyVolutionary** also supports constrained problems. They are implemented as usual, but the objective function has to
+specify the constraints, thus returning the cost of the constrained solution. Here is an example of a constrained problem solved
+by **pyVolutionary** with the Ant Lion Optimization algorithm (the latter can be replaced with any other algorithm
+implemented in the library):
+
+```python
+import numpy as np
+from pyvolutionary import Task, ContinuousVariable, AntLionOptimization, AntLionOptimizationConfig
+
+## Link: https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781119136507.app2
+class ConstrainedBenchmark(Task):
+    def objective_function(self, solution):
+        def g1(x):
+            return 2 * x[0] + 2 * x[1] + x[9] + x[10] - 10
+
+        def g2(x):
+            return 2 * x[0] + 2 * x[2] + x[9] + x[10] - 10
+
+        def g3(x):
+            return 2 * x[1] + 2 * x[2] + x[10] + x[11] - 10
+
+        def g4(x):
+            return -8 * x[0] + x[9]
+
+        def g5(x):
+            return -8 * x[1] + x[10]
+
+        def g6(x):
+            return -8 * x[2] + x[11]
+
+        def g7(x):
+            return -2 * x[3] - x[4] + x[9]
+
+        def g8(x):
+            return -2 * x[5] - x[6] + x[10]
+
+        def g9(x):
+            return -2 * x[7] - x[8] + x[11]
+
+        def violate(value):
+            return 0 if value <= 0 else value
+
+        fx = 5 * np.sum(solution[:4]) - 5 * np.sum(solution[:4] ** 2) - np.sum(solution[4:])
+
+        fx += violate(g1(solution)) ** 2 + violate(g2(solution)) + violate(g3(solution)) + (
+            2 * violate(g4(solution)) + violate(g5(solution)) + violate(g6(solution))
+        ) + violate(g7(solution)) + violate(g8(solution)) + violate(g9(solution))
+        return fx
+
+
+# Define the task with the bounds and the configuration of the optimizer
+task = ConstrainedBenchmark(
+    variables=(
+        [ContinuousVariable(name=f"x{i}", lower_bound=0, upper_bound=1) for i in range(9)] + [
+            ContinuousVariable(name=f"x{i}", lower_bound=0, upper_bound=100) for i in range(9, 12)
+        ] + [ContinuousVariable(name=f"x12", lower_bound=0, upper_bound=1)]
+    )
+)
+
+configuration = AntLionOptimizationConfig(population_size=200, fitness_error=10e-4, max_cycles=400)
+optimization_result = AntLionOptimization(configuration).optimize(task)
+```
+
+A multi-objective constrained problem can be also managed by **pyVolutionary**. In this case, the objective function
+must return a list of costs, and the constraints must be specified in the objective function of the `Task` class as well.
+
 ## Extending the library
 **pyVolutionary** is designed to be easily extensible. You can add your own algorithms and problems to the library by
 following the instructions below.
@@ -467,56 +481,33 @@ Once you created your new classes, you can run the algorithm by calling the `opt
 ## Utilities
 **pyVolutionary** provides a set of utilities to facilitate the use of the library.
 
-For instance, in case of bi-dimensional problems, you can use the `plot` function to plot the evolution of the algorithm.
-Its usage is as follows:
-
-```python
-plot(function: callable, pos_min: float, pos_max: float, evolution: list[Population])
-```
-where:
-- `function`: the function to plot, i.e., the function to optimize
-- `pos_min`: the minimum possible coordinates in the search space
-- `pos_max`: the maximum possible coordinates in the search space
-- `evolution`: the evolution of the algorithm, i.e., the list of the agents found at each generation
-
-Still considering bi-dimensional problems, it is also possible to inspect an animation of the evolution of the algorithm
-by using the `animate` function:
-
-```python
-animate(function: callable, optimization_result: OptimizationResult, pos_min: float, pos_max: float, filename: str)
-```
-
-where:
-- `function`: the same as above
-- `optimization_result`: the result of the optimization, i.e., the dictionary returned by the `optimize` method
-- `pos_min`: the same as above
-- `pos_max`: the same as above
-- `filename`: the name of the file where to save the animation
-
-Not restricted to bi-dimensional problems, other utilities are available. 
-
-The trend of the best agent found by the algorithm by using the `best_agent_trend` function can be extracted by:
-
-```python
-best_agent_trend(optimization_result: OptimizationResult, iters: list[int] | None = None) -> list[float]
-```
-
-where:
-- `optimization_result`: the same as above
-- `iters`: a list of the iterations to consider. If `None`, all the iterations are considered
-It returns a list of the cost values of the best agent found at each iteration.
-
-If you prefer, you can extract the trend of a specific agent by using the `agent_trend` function:
+### Agent characteristics
+The characteristics of an agent can be extracted by using two functions:
+- `agent_trend`: it returns the trend of the agent at each iteration
+- `agent_position`: it returns the position of the agent at each iteration
 
 ```python
 agent_trend(optimization_result: OptimizationResult, idx: int, iters: list[int] | None = None) -> list[float]
+agent_position(optimization_result: OptimizationResult, idx: int, iters: list[int] | None = None) -> list[list[float]]
 ```
 
 where:
-- `optimization_result`: the same as above
+- `optimization_result`: the result from the optimization algorithm
 - `idx`: the index of the agent to consider
-- `iters`: the same as above
-It returns a list of the cost values of the agent at each iteration.
+- `iters`: a list of the iterations to consider. If `None`, all the iterations are considered.
+
+The two methods return a list of the cost or location in the space search, respectively, of the considered agent at each
+of the specified iterations.
+
+### Best agent characteristics
+Specifically for the best agent, you can use two functions in order to locate its position in the space search and to
+extract the trend of its cost, at each iteration:
+
+```python
+best_agent_trend(optimization_result: OptimizationResult, iters: list[int] | None = None) -> list[float]
+best_agent_position(optimization_result: OptimizationResult, iters: list[int] | None = None) -> list[list[float]]
+```
+
 
 ## Algorithms
 The following algorithms are currently implemented in **pyVolutionary**:

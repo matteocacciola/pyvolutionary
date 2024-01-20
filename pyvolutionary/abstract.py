@@ -146,11 +146,8 @@ class OptimizationAbstract(ABC, Generic[T]):
         """
         position = self._init_position(position)
         cost = self._fcn(position)
-        n_weights = 1
-        n_objectives = 1
-        if self._task.is_multi_objective:
-            n_weights = len(self._task.objective_weights)
-            n_objectives = len(cost)
+        n_weights = len(self._task.objective_weights) if self._task.is_multi_objective else 1
+        n_objectives = len(cost) if isinstance(cost, list) else 1
         if n_weights != n_objectives:
             raise ValueError(f"Invalid number of weights. Expected {n_weights}, found {n_objectives}")
 

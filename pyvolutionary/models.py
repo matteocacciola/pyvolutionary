@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import field
 from typing import TypeVar, Any
 import numpy as np
-from pydantic import BaseModel, model_validator, ConfigDict, field_validator
+from pydantic import BaseModel, model_validator, ConfigDict
 from functools import wraps
 
 from .enums import TaskType
@@ -256,11 +256,12 @@ class MultiObjectiveVariable(Variable):
 def task_decorator(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        variables = kwargs.get("variables", [])
-        kwargs["is_multi_objective"] = kwargs.get("objective_weights") is not None
+        variables = kwargs.get("variables")
+        if not isinstance(variables, list) and not isinstance(variables, MultiObjectiveVariable):
+            raise ValueError("Variables must be a list or a multi-objective variable")
+
+        kwargs["is_multi_objective"] = isinstance(variables, MultiObjectiveVariable)
         if kwargs["is_multi_objective"]:
-            if not isinstance(variables, MultiObjectiveVariable):
-                raise ValueError("Variables must be a multi-objective variable")
             lower_bounds, upper_bounds = variables.get_bounds()
 
             variables = [ContinuousVariable(
@@ -298,12 +299,6 @@ class Task(BaseModel, ABC):
         if not np.all(np.array(self.objective_weights) >= 0):
             raise ValueError("Objective weights must be greater than or equal to zero")
         return self
-
-    @field_validator("variables")
-    def validate_variables(cls, v):
-        if not isinstance(v, list) and not isinstance(v, MultiObjectiveVariable):
-            raise ValueError("Variables must be a list or a multi-objective variable")
-        return v
 
     @abstractmethod
     def objective_function(self, x: list[float | int]) -> float | list[float]:
