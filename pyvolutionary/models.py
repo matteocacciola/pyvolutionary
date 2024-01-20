@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 from dataclasses import field
 from typing import TypeVar, Any
 import numpy as np
-from pydantic import BaseModel, model_validator, ConfigDict
+from pydantic import BaseModel, model_validator, ConfigDict, field_validator
+from functools import wraps
 
 from .enums import TaskType
 
@@ -134,11 +135,11 @@ class OptimizationResult(BaseModel):
 
 
 class Variable(BaseModel, ABC):
-    name: str
+    name: str | None = "var"
     value: Any | None = None
 
     @abstractmethod
-    def randomize(self):
+    def randomize(self) -> Any:
         pass
 
     @abstractmethod
@@ -146,11 +147,11 @@ class Variable(BaseModel, ABC):
         pass
 
     @abstractmethod
-    def correct(self, value):
+    def correct(self, value) -> Any:
         pass
 
     @abstractmethod
-    def decode(self, value):
+    def decode(self, value) -> Any:
         pass
 
 
@@ -227,23 +228,85 @@ class PermutationVariable(Variable):
         return self.label_encoder.inverse_transform(value)
 
 
+class MultiObjectiveVariable(Variable):
+    lower_bounds: tuple[float] | list[float]
+    upper_bounds: tuple[float] | list[float]
+
+    @model_validator(mode="after")
+    def validate_bounds(self) -> "MultiObjectiveVariable":
+        if len(self.lower_bounds) != len(self.upper_bounds):
+            raise ValueError("Lower and upper bounds must have the same length")
+        if np.any(np.array([ub <= lb for lb, ub in zip(self.lower_bounds, self.upper_bounds)])):
+            raise ValueError("Upper bound must be greater than lower bound")
+        return self
+
+    def randomize(self):
+        raise NotImplementedError
+
+    def get_bounds(self) -> tuple[tuple[float] | list[float], tuple[float] | list[float]]:
+        return self.lower_bounds, self.upper_bounds
+
+    def correct(self, value: list):
+        raise NotImplementedError
+
+    def decode(self, value: list) -> list:
+        raise NotImplementedError
+
+
+def task_decorator(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        variables = kwargs.get("variables", [])
+        kwargs["is_multi_objective"] = kwargs.get("objective_weights") is not None
+        if kwargs["is_multi_objective"]:
+            if not isinstance(variables, MultiObjectiveVariable):
+                raise ValueError("Variables must be a multi-objective variable")
+            lower_bounds, upper_bounds = variables.get_bounds()
+
+            variables = [ContinuousVariable(
+                name=f"{variables.name}{i}", lower_bound=lb, upper_bound=ub
+            ) for i, (lb, ub) in enumerate(zip(lower_bounds, upper_bounds))]
+        kwargs["variables"] = variables
+        kwargs["space_dimension"] = len(variables)
+        return f(*args, **kwargs)
+
+    return wrapper
+
+
 class Task(BaseModel, ABC):
     seed: float | None = None
     variables: list[Variable] = field(default_factory=list)
     space_dimension: int
     minmax: TaskType = TaskType.MIN
     data: dict | None = None
+    objective_weights: list[float] | None = None
+    is_multi_objective: bool = False
 
+    @task_decorator
     def __init__(self, **data: Any):
-        data["space_dimension"] = len(data.get("variables", []))
         tt = data.get("minmax", TaskType.MIN)
         if tt not in TaskType:
             raise ValueError(f"Invalid task type: {tt}")
         data["minmax"] = TaskType(tt)
+
         super().__init__(**data)
 
+    @model_validator(mode="after")
+    def validate_objective_weights(self) -> "Task":
+        if self.objective_weights is None:
+            return self
+        if not np.all(np.array(self.objective_weights) >= 0):
+            raise ValueError("Objective weights must be greater than or equal to zero")
+        return self
+
+    @field_validator("variables")
+    def validate_variables(cls, v):
+        if not isinstance(v, list) and not isinstance(v, MultiObjectiveVariable):
+            raise ValueError("Variables must be a list or a multi-objective variable")
+        return v
+
     @abstractmethod
-    def objective_function(self, x: list[float | int]) -> float:
+    def objective_function(self, x: list[float | int]) -> float | list[float]:
         pass
 
     def transform_position(self, x: list[float | int]) -> dict[str, Any]:

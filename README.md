@@ -1,6 +1,6 @@
 # pyVolutionary
 
-[![GitHub release](https://img.shields.io/badge/release-1.1.1-yellow.svg)](https://github.com/matteocacciola/pyvolutionary/releases/tag/v1.1.1)
+[![GitHub release](https://img.shields.io/badge/release-2.0.0-yellow.svg)](https://github.com/matteocacciola/pyvolutionary/releases/tag/v2.0.0)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyvolutionary.svg)
 ![PyPI - Status](https://img.shields.io/pypi/status/pyvolutionary.svg)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pyvolutionary.svg)
@@ -346,12 +346,7 @@ something like the following example:
 
 ```python
 import numpy as np
-from pyvolutionary import (
-    Task,
-    ContinuousVariable,
-    AntLionOptimization,
-    AntLionOptimizationConfig,
-)
+from pyvolutionary import Task, ContinuousVariable, AntLionOptimization, AntLionOptimizationConfig
 
 ## Link: https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781119136507.app2
 class ConstrainedBenchmark(Task):
@@ -398,6 +393,50 @@ task = ConstrainedBenchmark(
 
 configuration = AntLionOptimizationConfig(population_size=200, fitness_error=10e-4, max_cycles=400)
 optimization_result = AntLionOptimization(configuration).optimize(task)
+```
+
+### Multi-objective problems
+**pyVolutionary** also supports multi-objetive problems. A multi-objective problem is a problem with more than one
+objective function. All the objective functions are then "mixed" together by means of a weight vector. The latter has
+to be specified within the configuration of the `Task` class. For example, let us consider the following problem:
+
+```python
+import numpy as np
+from pyvolutionary import Task, MultiObjectiveVariable, ForestOptimizationAlgorithm, ForestOptimizationAlgorithmConfig
+
+class MultiObjectiveBenchmark(Task):
+    # Link: https://en.wikipedia.org/wiki/Test_functions_for_optimization
+    def objective_function(self, solution):
+        def booth(x, y):
+            return (x + 2 * y - 7) ** 2 + (2 * x + y - 5) ** 2
+
+        def bukin(x, y):
+            return 100 * np.sqrt(np.abs(y - 0.01 * x ** 2)) + 0.01 * np.abs(x + 10)
+
+        def matyas(x, y):
+            return 0.26 * (x ** 2 + y ** 2) - 0.48 * x * y
+
+        return [booth(solution[0], solution[1]), bukin(solution[0], solution[1]), matyas(solution[0], solution[1])]
+
+
+# Define the task with the bounds and the configuration of the optimizer
+task = MultiObjectiveBenchmark(
+    variables=MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10)),
+    objective_weights=[0.4, 0.1, 0.5],
+)
+
+configuration = ForestOptimizationAlgorithmConfig(
+    population_size=200,
+    fitness_error=10e-4,
+    max_cycles=400,
+    lifetime=5,
+    area_limit=50,
+    local_seeding_changes=1,
+    global_seeding_changes=2,
+    transfer_rate=0.5,
+)
+
+optimization_result = ForestOptimizationAlgorithm(configuration).optimize(task)
 ```
 
 ## Extending the library

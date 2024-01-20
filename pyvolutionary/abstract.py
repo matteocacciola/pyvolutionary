@@ -129,10 +129,12 @@ class OptimizationAbstract(ABC, Generic[T]):
         lb, ub = self._get_bounds()
         return lb + ub
 
-    def _fcn(self, x: list[float] | np.ndarray) -> float:
+    def _fcn(self, x: list[float] | np.ndarray) -> float | list[float]:
         """
         This method evaluates the objective function.
         :param x: the position to evaluate
+        :return the cost of the position, or the list of costs if the objective function is multi-objective
+        :rtype: float | list[float]
         """
         return self._task.objective_function(x) \
             if self._task.minmax == TaskType.MIN else -1 * self._task.objective_function(x)
@@ -144,6 +146,15 @@ class OptimizationAbstract(ABC, Generic[T]):
         """
         position = self._init_position(position)
         cost = self._fcn(position)
+        n_weights = 1
+        n_objectives = 1
+        if self._task.is_multi_objective:
+            n_weights = len(self._task.objective_weights)
+            n_objectives = len(cost)
+        if n_weights != n_objectives:
+            raise ValueError(f"Invalid number of weights. Expected {n_weights}, found {n_objectives}")
+
+        cost = np.dot(cost, self._task.objective_weights) if self._task.is_multi_objective else cost
         return Agent(position=position, cost=cost, fitness=calculate_fitness(cost, self._task.minmax))
     
     def _generate_agents(self, n_agents: int) -> list[Agent]:
@@ -266,6 +277,9 @@ class OptimizationAbstract(ABC, Generic[T]):
                 self._mode = ModeSolver(mode)
             except ValueError:
                 raise ValueError("Invalid mode. Possible values are 'serial', 'thread' and 'process'")
+
+        if self._task.is_multi_objective and np.any(np.array(self._task.objective_weights) < 0):
+            raise ValueError("Invalid weights. They must be greater than 0")
 
         self.before_initialization()
         self._init_population()
