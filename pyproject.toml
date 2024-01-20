@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "pyVolutionary"
-version = "1.2.0"
+version = "2.0.0"
 description = "pyVolutionary is a package collecting metaheuristic algorithms, available for free usage and able to solve a wide range of optimization problems."
 authors = ["Matteo Cacciola <matteo.cacciola@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/matteocacciola/fastapi_healthz"
+repository = "https://github.com/matteocacciola/pyvolutionary"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3.9 | 3.10 | 3.11 | 3.12",
