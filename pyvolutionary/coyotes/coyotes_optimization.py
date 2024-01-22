@@ -1,7 +1,6 @@
 import numpy as np
 
 from ..helpers import (
-    generate_group_population,
     sort_by_cost,
     parse_obj_doc,  # type: ignore
 )
@@ -76,7 +75,7 @@ class CoyotesOptimization(OptimizationAbstract):
         dim = self._task.space_dimension
         num_coyotes = self._config.num_coyotes
 
-        self.__packs = generate_group_population(self._population, self.__n_packs, self._config.num_coyotes)
+        self.__packs = self._generate_group_population(self.__n_packs, self._config.num_coyotes)
         for p in range(0, self.__n_packs):
             self.__packs[p] = evolve_pack(self.__packs[p])
 

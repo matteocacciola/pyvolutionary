@@ -253,6 +253,33 @@ class OptimizationAbstract(ABC, Generic[T]):
         """
         self._population = sort_and_trim(new_population, self._config.population_size)
 
+    def _generate_group_population(
+        self, n_groups: int, n_agents: int, with_residual: bool | None = True
+    ) -> list[list[T]]:
+        """
+        Generate a list of group population from the current population. The population is divided into n_groups
+        groups, each composed by n_agents agents. The residual agents are added to the last group.
+        :param n_groups: the number of groups
+        :param n_agents: the number of agents in each group
+        :param with_residual: whether to add the residual agents to the last group or not (default: True)
+        :return: a list of group population
+        :rtype: list[list[Agent]]
+        """
+        # calculate the groups composed by n_agents
+        groups = []
+        for idx in range(0, n_groups):
+            group = self._population[idx * n_agents:(idx + 1) * n_agents]
+            groups.append([agent.model_copy() for agent in group])
+
+        if not with_residual:
+            return groups
+
+        # calculate the group composed by the residual agents
+        residual = self._config.population_size % n_groups
+        if residual != 0:
+            groups.append([agent.model_copy() for agent in self._population[-residual:]])
+        return groups
+
     def optimize(self, task: Task, mode: str | None = None, workers: int | None = None) -> OptimizationResult:
         """
         This method optimizes the given objective function. At the beginning, a random population is generated and then

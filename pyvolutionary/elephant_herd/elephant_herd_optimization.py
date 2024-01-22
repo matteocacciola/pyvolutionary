@@ -1,7 +1,6 @@
 import numpy as np
 
 from ..helpers import (
-    generate_group_population,
     sort_by_cost,
     parse_obj_doc,  # type: ignore
 )
@@ -29,7 +28,7 @@ class ElephantHerdOptimization(OptimizationAbstract):
 
     def _init_population(self):
         super()._init_population()
-        self.__groups = generate_group_population(self._population, self._config.n_clans, self.__n_individuals)
+        self.__groups = self._generate_group_population(self._config.n_clans, self.__n_individuals)
 
     def optimization_step(self):
         def evolve(idx: int, elephant: Elephant) -> Elephant:
@@ -47,7 +46,7 @@ class ElephantHerdOptimization(OptimizationAbstract):
         alpha = self._config.alpha
         beta = self._config.beta
         self._population = [evolve(idx, elephant) for idx, elephant in enumerate(self._population)]
-        self.__groups = generate_group_population(self._population, self._config.n_clans, self.__n_individuals)
+        self.__groups = self._generate_group_population(self._config.n_clans, self.__n_individuals)
 
         # Separating operator
         for idx in range(0, self._config.n_clans):

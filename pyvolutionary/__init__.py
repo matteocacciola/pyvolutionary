@@ -7,6 +7,7 @@ from .bacterial_foraging import *
 from .bat import *
 from .bee_colony import *
 from .biogeography_based import *
+from .brain_storm import *
 from .brown_bear import *
 from .camel_caravan import *
 from .cat_swarm import *

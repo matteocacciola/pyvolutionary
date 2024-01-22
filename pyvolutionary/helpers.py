@@ -269,28 +269,6 @@ def get_levy_flight_step(
     return step[0] if size == 1 else step
 
 
-def generate_group_population(population: list[T], n_groups: int, n_agents: int) -> list[list[T]]:
-    """
-    Generate a list of group population from pop
-    :param population: The current population
-    :param n_groups: The number of groups
-    :param n_agents: The number of agents in each group
-    :return: a list of group population
-    :rtype: list[list[Agent]]
-    """
-    # calculate the groups composed by n_agents
-    groups = []
-    for idx in range(0, n_groups):
-        group = population[idx * n_agents:(idx + 1) * n_agents]
-        groups.append([agent.model_copy() for agent in group])
-
-    # calculate the group composed by the residual agents
-    residual = len(population) % n_groups
-    if residual != 0:
-        groups.append([agent.model_copy() for agent in population[-residual:]])
-    return groups
-
-
 def get_pool_executor(mode: ModeSolver, n_workers: int = None) -> parallel.Executor:
     """
     Get the executor of the provided mode.
@@ -315,3 +293,7 @@ def get_pool_results(executors: list[parallel.Future]) -> list:
     for i in parallel.as_completed(executors):
         res.append(i.result())
     return res
+
+
+def find_centers(pop_groups: list[list[T]]) -> list[T]:
+    return [best_agent(pop_group).model_copy() for pop_group in pop_groups]
