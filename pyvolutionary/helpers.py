@@ -90,24 +90,9 @@ def sort_by_cost(population: list[T], task_type: TaskType | None = TaskType.MIN)
     :param population: the population
     :param task_type: the type of task (minimization or maximization)
     """
-    pop_new, _ = sort_by_cost_with_indices(population, task_type)
+    pop_new = population.copy()
+    pop_new.sort(key=lambda agent: agent.cost, reverse=(task_type == TaskType.MAX))
     return pop_new
-
-
-def sort_by_cost_with_indices(
-    population: list[T], task_type: TaskType | None = TaskType.MIN
-) -> tuple[list[T], list[int]]:
-    """
-    Sort the population by the cost value of each agent (the lower the cost, the best the agent). The sorting is done
-    in-place. If reverse is True, the sorting is done in descending order (the higher the cost, the worst the agent).
-    :param population: the population
-    :param task_type: the type of task (minimization or maximization)
-    """
-    indices = np.argsort([agent.cost for agent in population]).tolist()
-    if task_type == TaskType.MAX:
-        indices = indices[::-1]
-
-    return [population[idx] for idx in indices], indices
 
 
 def sort_and_trim(population: list[T], population_size: int) -> list[T]:

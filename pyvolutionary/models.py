@@ -85,17 +85,17 @@ class Population(BaseModel):
 
     # initialize the agents by considering the task type: if it is a minimization task, each agent is accepted as is;
     # otherwise, the position of each agent is multiplied by -1
-    def __init__(self, **data: Any):
+    def __init__(self, **kwargs: Any):
         def refine_agent(a: Agent, tt: TaskType) -> Agent:
             if tt == TaskType.MIN:
                 return a
             # return the agent with the position multiplied by -1
             return a.model_copy(update={"cost": -a.cost})
 
-        task_type = data.get("task_type", TaskType.MIN)
-        agents = [refine_agent(a, task_type) for a in data.get("agents", [])]
-        data["agents"] = agents
-        super().__init__(**data)
+        task_type = kwargs.get("task_type", TaskType.MIN)
+        agents = [refine_agent(a, task_type) for a in kwargs.get("agents", [])]
+        kwargs["agents"] = agents
+        super().__init__(**kwargs)
 
     def __iter__(self):
         return iter(self.agents)
@@ -120,18 +120,18 @@ class OptimizationResult(BaseModel):
 
     # initialize the best_solution by considering the task type: if it is a minimization task, it is accepted as is;
     # otherwise, the position is multiplied by -1
-    def __init__(self, **data: Any):
+    def __init__(self, **kwargs: Any):
         def refine_best_solution(a: Agent, tt: TaskType) -> Agent:
             if tt == TaskType.MIN:
                 return a
             # return the agent with the position multiplied by -1
             return a.model_copy(update={"cost": -a.cost})
 
-        task_type = data.get("task_type", TaskType.MIN)
-        best_solution = data.get("best_solution")
+        task_type = kwargs.get("task_type", TaskType.MIN)
+        best_solution = kwargs.get("best_solution")
         if best_solution is not None:
-            data["best_solution"] = refine_best_solution(best_solution, task_type)
-        super().__init__(**data)
+            kwargs["best_solution"] = refine_best_solution(best_solution, task_type)
+        super().__init__(**kwargs)
 
 
 class Variable(BaseModel, ABC):
@@ -205,9 +205,9 @@ class PermutationVariable(Variable):
     items: list[Any]
     label_encoder: LabelEncoder = LabelEncoder()
 
-    def __init__(self, **data: Any):
-        super().__init__(**data)
+    def __init__(self, **kwargs: Any):
         self.label_encoder.fit(self.items)
+        super().__init__(**kwargs)
 
     def randomize(self) -> list[int]:
         self.value = np.random.permutation(range(0, len(self.items))).tolist()
@@ -284,13 +284,13 @@ class Task(BaseModel, ABC):
     is_multi_objective: bool = False
 
     @task_decorator
-    def __init__(self, **data: Any):
-        tt = data.get("minmax", TaskType.MIN)
+    def __init__(self, **kwargs: Any):
+        tt = kwargs.get("minmax", TaskType.MIN)
         if tt not in TaskType:
             raise ValueError(f"Invalid task type: {tt}")
-        data["minmax"] = TaskType(tt)
+        kwargs["minmax"] = TaskType(tt)
 
-        super().__init__(**data)
+        super().__init__(**kwargs)
 
     @model_validator(mode="after")
     def validate_objective_weights(self) -> "Task":
