@@ -20,8 +20,6 @@ class EnergyValleyOptimization(OptimizationAbstract):
     [1] Azizi, M., Aickelin, U., A. Khorshidi, H., & Baghalzadeh Shishehgarkhaneh, M. (2023). Energy valley optimizer:
         a novel metaheuristic algorithm for global and engineering optimization. Scientific Reports, 13(1), 226.
     """
-    EPS: Final[float] = np.finfo(float).eps
-    
     def __init__(self, config: EnergyValleyOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 

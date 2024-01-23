@@ -203,19 +203,22 @@ def get_partner_index(index: int, num_elements: int) -> int:
     return partner_index
 
 
-def roulette_wheel_index(probabilities: np.ndarray) -> int:
+def roulette_wheel_indexes(probabilities: np.ndarray, num: int | None = 1) -> list[int]:
     """
     Select an index using roulette wheel selection with probabilities as weights of the selection process and return the
     selected index of the population array of the algorithm instance.
     :param probabilities: the probabilities of each element of the population
-    :return: the index of the selected element
+    :param num: the number of indexes to return
+    :return: the indexes of the selected elements
     :rtype: int
     """
     final_probabilities = np.max(probabilities) - probabilities
-    l = len(probabilities)
+    k = list(set(range(0, len(probabilities))))
     if all(final_probabilities == 0):
-        return int(np.random.choice(range(0, l)))
-    return int(np.random.choice(range(0, l), p=final_probabilities / np.sum(final_probabilities)))
+        return np.random.choice(k, size=num, replace=False)
+
+    p = final_probabilities / np.sum(final_probabilities)
+    return np.random.choice(k, size=num, replace=False, p=p)
 
 
 def random_selection(p: list | np.ndarray) -> int:

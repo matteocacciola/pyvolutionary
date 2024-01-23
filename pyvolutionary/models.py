@@ -206,8 +206,8 @@ class PermutationVariable(Variable):
     label_encoder: LabelEncoder = LabelEncoder()
 
     def __init__(self, **kwargs: Any):
-        self.label_encoder.fit(self.items)
         super().__init__(**kwargs)
+        self.label_encoder.fit(self.items)
 
     def randomize(self) -> list[int]:
         self.value = np.random.permutation(range(0, len(self.items))).tolist()

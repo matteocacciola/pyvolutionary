@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic
+from typing import Generic, Final
 import numpy as np
 
 from .enums import ModeSolver
@@ -19,6 +19,7 @@ class OptimizationAbstract(ABC, Generic[T]):
     """
     This class is an abstract for optimization algorithms.
     """
+    EPS: Final[float] = np.finfo(float).eps
 
     def __init__(self, config: BaseOptimizationConfig, debug: bool | None = False):
         """

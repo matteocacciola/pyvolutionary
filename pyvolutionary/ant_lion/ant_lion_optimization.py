@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..helpers import (
-    roulette_wheel_index,
+    roulette_wheel_indexes,
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
@@ -50,7 +50,7 @@ class AntLionOptimization(OptimizationAbstract):
             ) + np.reshape(lb, (n_dims, 1))
 
         def new_agent(idx: int) -> AntLion:
-            roulette_index = roulette_wheel_index(weights)
+            roulette_index, = roulette_wheel_indexes(weights)
             # RA is the random walk around the selected ant lion by roulette wheel
             RA = random_walk_ant_lion(np.array(self._population[roulette_index].position))
             # RE is the random walk around the elite (the best ant lion so far)

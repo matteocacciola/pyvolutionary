@@ -24,8 +24,6 @@ class KrillHerdOptimization(OptimizationAbstract):
         in Nonlinear Science and Numerical Simulation, Volume 17, Issue 12, 2012, Pages 4831-4845, ISSN 1007-5704,
         https://doi.org/10.1016/j.cnsns.2012.05.010.
     """
-    EPS: Final[float] = np.finfo(float).eps
-
     def __init__(self, config: KrillHerdOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
         self.__w_neighbour: np.ndarray | None = None
@@ -53,8 +51,9 @@ class KrillHerdOptimization(OptimizationAbstract):
 
     def optimization_step(self):
         def get_x(x: Krill, y: Krill) -> np.ndarray:
-            EPS = self.EPS
-            return ((np.array(y.position) - np.array(x.position)) + EPS) / (distance(y.position, x.position) + EPS)
+            return (
+                (np.array(y.position) - np.array(x.position)
+            ) + self.EPS) / (distance(y.position, x.position) + self.EPS)
 
         def get_k(x: Krill, y: Krill) -> float:
             return (x.cost - y.cost + self.EPS) / (g_worst.cost - g_best.cost + self.EPS)

@@ -29,6 +29,7 @@ from .flower_pollination_algorithm import *
 from .forest_algorithm import *
 from .fox import *
 from .genetic_algorithm import *
+from .germinal_center import *
 from .giza_pyramid_construction import *
 from .grasshopper import *
 from .grey_wolf import *

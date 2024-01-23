@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..helpers import (
-    roulette_wheel_index,
+    roulette_wheel_indexes,
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
@@ -31,7 +31,7 @@ class AntColonyOptimization(OptimizationAbstract):
             return zeta * np.sum(np.abs(positions - M), axis=0) / (pop_size - 1)
 
         def generate_coordinate(j: int) -> float:
-            rdx = roulette_wheel_index(weights)
+            rdx, = roulette_wheel_indexes(weights)
             return float(self._population[rdx].position[j] + np.random.normal() * sigmas[rdx, j])
 
         # compute the selection probability of each ant in the population

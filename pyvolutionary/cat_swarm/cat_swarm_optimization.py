@@ -3,7 +3,7 @@ import numpy as np
 from ..helpers import (
     best_agent,
     parse_obj_doc,  # type: ignore
-    roulette_wheel_index,
+    roulette_wheel_indexes,
 )
 from ..abstract import OptimizationAbstract
 from .models import Cat, CatSwarmOptimizationConfig
@@ -61,7 +61,7 @@ class CatSwarmOptimization(OptimizationAbstract):
                 return best_agent(cats_k_way).position
             if selected_strategy == 2:  # roulette wheel selection
                 costs = np.array([c.cost for c in candidates])
-                idx = roulette_wheel_index(costs / np.sum(costs))
+                idx, = roulette_wheel_indexes(costs / np.sum(costs))
                 return candidates[idx].position
             idx = np.random.choice(range(0, len(candidates)))  # random
             return candidates[idx].position

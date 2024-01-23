@@ -1,4 +1,3 @@
-from typing import Final
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -20,8 +19,6 @@ class BrownBearOptimization(OptimizationAbstract):
         Solving Economic Dispatch Problem. In Advanced Control & Optimization Paradigms for Energy System Operation and
         Management (pp. 137-164). River Publishers.
     """
-    EPS: Final[float] = np.finfo(float).eps
-    
     def __init__(self, config: BrownBearOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 

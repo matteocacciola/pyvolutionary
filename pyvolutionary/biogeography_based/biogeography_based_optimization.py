@@ -2,7 +2,7 @@ import numpy as np
 
 from ..helpers import (
     best_agents,
-    roulette_wheel_index,
+    roulette_wheel_indexes,
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
@@ -31,7 +31,7 @@ class BiogeographyBasedOptimization(OptimizationAbstract):
 
     def optimization_step(self):
         def evolve(idx: int, population: Population) -> Population:
-            idx_selected = roulette_wheel_index(costs)
+            idx_selected, = roulette_wheel_indexes(costs)
             # migration step
             condition = np.random.random(n_dims) < mr[idx]
             pos_new = np.where(condition, self._population[idx_selected].position, population.position)

@@ -2,7 +2,7 @@ import numpy as np
 
 from ..helpers import (
     get_partner_index,
-    roulette_wheel_index,
+    roulette_wheel_indexes,
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
@@ -63,11 +63,12 @@ class BeeColonyOptimization(OptimizationAbstract):
             using the following formula:
                 p_i = cost_i / sum(costs)
             where p_i is the probability of the i-th food source, and cost_i is the cost of the i-th food source. The
-            probability of each food source is calculated using the costs of the employed bees. The onlooker bees will use a
-            roulette wheel selection to select a food source.
+            probability of each food source is calculated using the costs of the employed bees. The onlooker bees will
+            use a roulette wheel selection to select a food source.
             """
             # Select an employed bee using roulette wheel selection
-            selected_bee = self._population[roulette_wheel_index(probabilities)]
+            jdx, = roulette_wheel_indexes(probabilities)
+            selected_bee = self._population[jdx]
             return food_source_dance(idx, selected_bee)
 
         population_size = self._config.population_size
