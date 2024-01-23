@@ -92,7 +92,7 @@ class EarthwormsOptimization(OptimizationAbstract):
         # elitism strategy: save the best "keep" earthworms in a temporary array
         # sorted from best, i.e., minor cost, to worst
         chrome_keep = best_agents(self._population, self._config.keep)
-        sort_by_cost(self._population)
+        self._population = sort_by_cost(self._population)
         for idx in range(0, keep):
             self._population[n_chromes - idx - 1] = chrome_keep[idx].model_copy()
 

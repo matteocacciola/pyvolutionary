@@ -27,8 +27,7 @@ class VirusColonySearchOptimization(OptimizationAbstract):
 
     def optimization_step(self):
         def calculate_x_mean() -> list[float]:
-            pop = self._population.copy()
-            sort_by_cost(pop)
+            pop = sort_by_cost(self._population)
             positions = [np.array(agent.position) for agent in pop[:n_best]]
             weight = np.log1p(n_best + 1) / (n_best * np.log1p(n_best + 1) - np.log1p(np.prod(range(1, n_best + 1))))
             return weight * np.sum(positions, axis=0) / n_best

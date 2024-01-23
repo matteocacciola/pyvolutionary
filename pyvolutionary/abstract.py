@@ -191,8 +191,8 @@ class OptimizationAbstract(ABC, Generic[T]):
         The new population is so created.
         :param new_population: the new population
         """
-        sort_by_cost(self._population)
-        sort_by_cost(new_population)
+        self._population = sort_by_cost(self._population)
+        new_population = sort_by_cost(new_population)
 
         # Serial mode
         if self._mode == ModeSolver.SERIAL:

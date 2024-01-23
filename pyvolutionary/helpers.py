@@ -83,14 +83,31 @@ def calculate_fitness(value: float, task_type: TaskType) -> float:
     return (1 / (value + 1)) if value >= 0 else (1 + abs(value))
 
 
-def sort_by_cost(population: list[T], reverse: bool = False):
+def sort_by_cost(population: list[T], task_type: TaskType | None = TaskType.MIN) -> list[T]:
     """
     Sort the population by the cost value of each agent (the lower the cost, the best the agent). The sorting is done
     in-place. If reverse is True, the sorting is done in descending order (the higher the cost, the worst the agent).
     :param population: the population
-    :param reverse: whether to sort in ascending or descending order
+    :param task_type: the type of task (minimization or maximization)
     """
-    population.sort(key=lambda x: x.cost, reverse=reverse)
+    pop_new, _ = sort_by_cost_with_indices(population, task_type)
+    return pop_new
+
+
+def sort_by_cost_with_indices(
+    population: list[T], task_type: TaskType | None = TaskType.MIN
+) -> tuple[list[T], list[int]]:
+    """
+    Sort the population by the cost value of each agent (the lower the cost, the best the agent). The sorting is done
+    in-place. If reverse is True, the sorting is done in descending order (the higher the cost, the worst the agent).
+    :param population: the population
+    :param task_type: the type of task (minimization or maximization)
+    """
+    indices = np.argsort([agent.cost for agent in population]).tolist()
+    if task_type == TaskType.MAX:
+        indices = indices[::-1]
+
+    return [population[idx] for idx in indices], indices
 
 
 def sort_and_trim(population: list[T], population_size: int) -> list[T]:
@@ -102,9 +119,7 @@ def sort_and_trim(population: list[T], population_size: int) -> list[T]:
     :return: the sorted and trimmed population
     :rtype: list[Agent]
     """
-    sort_by_cost(population)
-    population = population[:population_size]
-    return population
+    return sort_by_cost(population)[:population_size]
 
 
 def best_agent(population: list[T], task_type: TaskType | None = TaskType.MIN) -> T:
@@ -140,9 +155,7 @@ def best_agents(population: list[T], n_best: int | None = 3, task_type: TaskType
     :return: the best agents
     :rtype: list[T]
     """
-    pop = population.copy()
-    sort_by_cost(pop, reverse=(task_type == TaskType.MAX))
-    return pop[:n_best].copy()
+    return sort_by_cost(population, task_type=task_type)[:n_best]
 
 
 def worst_agents(population: list[T], n_worst: int | None = 3, task_type: TaskType | None = TaskType.MIN) -> list[T]:
@@ -154,9 +167,7 @@ def worst_agents(population: list[T], n_worst: int | None = 3, task_type: TaskTy
     :return: the worst agents
     :rtype: list[T]
     """
-    pop = population.copy()
-    sort_by_cost(pop, reverse=(task_type == TaskType.MIN))
-    return pop[:n_worst]
+    return sort_by_cost(population, task_type=task_type)[len(population)-n_worst:]
 
 
 def special_agents(

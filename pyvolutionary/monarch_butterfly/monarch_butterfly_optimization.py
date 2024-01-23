@@ -31,7 +31,7 @@ class MonarchButterflyOptimization(OptimizationAbstract):
 
     def optimization_step(self):
         # get the elite agents of the current generation
-        sort_by_cost(self._population)
+        self._population = sort_by_cost(self._population)
         elite = self._population[:self._config.keep].copy()
 
         # apply the migration operator to the best habitats of the current generation

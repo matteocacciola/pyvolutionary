@@ -50,7 +50,7 @@ class CoyotesOptimization(OptimizationAbstract):
 
         def evolve_pack(pack: list[Coyote]) -> list[Coyote]:
             # get the coyotes that belong to each pack and compute the social tendency of the pack (Eq. 6)
-            sort_by_cost(pack)
+            pack = sort_by_cost(pack)
             tendency = np.mean(np.array([coyote.position for coyote in pack]), axis=0)
             # update social condition of coyotes (Eq. 8)
             pack = [evolve_coyote(idx, coyote, pack, tendency) for idx, coyote in enumerate(pack)]
@@ -64,7 +64,7 @@ class CoyotesOptimization(OptimizationAbstract):
             )) * np.random.normal(0, 1)
             pup = Coyote(**self._init_agent(pup_pos.tolist()).model_dump())
             # Verify if the pup will survive
-            sort_by_cost(pack)
+            pack = sort_by_cost(pack)
             # find index of element has cost larger than new child: if existing, new child is good
             if pup.cost < pack[-1].cost:
                 # replace the worst element by new child, New born child with age = 0

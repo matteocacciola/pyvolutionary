@@ -50,6 +50,6 @@ class ElephantHerdOptimization(OptimizationAbstract):
 
         # Separating operator
         for idx in range(0, self._config.n_clans):
-            sort_by_cost(self.__groups[idx])
+            self.__groups[idx] = sort_by_cost(self.__groups[idx])
             self.__groups[idx][-1] = self._init_agent()
         self._population = [elephant for pack in self.__groups for elephant in pack]

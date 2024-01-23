@@ -51,9 +51,7 @@ class MothFlameOptimization(OptimizationAbstract):
         a = -1. + cycle * (-1. / max_cycles)
         b = 1
 
-        pop_sorted = self._population.copy()
-        sort_by_cost(pop_sorted)
-
+        pop_sorted = sort_by_cost(self._population)
         g_best = self._best_agent
 
         self._population = [evolve(idx, moth_flame, pop_sorted[idx]) for idx, moth_flame in enumerate(self._population)]

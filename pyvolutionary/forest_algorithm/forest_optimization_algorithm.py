@@ -60,7 +60,7 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
         self._population = [tree for tree in self._population if tree.age <= self._config.lifetime]
 
         # identify and remove trees that exceeded their area limit
-        sort_by_cost(self._population)
+        self._population = sort_by_cost(self._population)
         dying_trees += self._population[area_limit + 1:]
 
         self._population = self._population[:area_limit]

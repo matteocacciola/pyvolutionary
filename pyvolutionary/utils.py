@@ -74,12 +74,7 @@ def agent_trend(result: OptimizationResult, idx: int, iters: list[int] | None = 
     if iters is None:
         iters = range(0, len(result.evolution))
 
-    trend = []
-    for i in iters:
-        agents = result.evolution[i].agents.copy()
-        sort_by_cost(agents)
-        trend.append(agents[idx].cost)
-    return trend
+    return [sort_by_cost(result.evolution[i].agents)[idx].cost for i in iters]
 
 
 def best_agent_trend(result: OptimizationResult, iters: list[int] | None = None) -> list[float]:
@@ -109,12 +104,7 @@ def agent_position(result: OptimizationResult, idx: int, iters: list[int] | None
     if iters is None:
         iters = range(0, len(result.evolution))
 
-    trend = []
-    for i in iters:
-        agents = result.evolution[i].agents.copy()
-        sort_by_cost(agents)
-        trend.append(agents[idx].position)
-    return trend
+    return [sort_by_cost(result.evolution[i].agents)[idx].position for i in iters]
 
 
 def best_agent_position(result: OptimizationResult, iters: list[int] | None = None) -> list[list[float | int]]:

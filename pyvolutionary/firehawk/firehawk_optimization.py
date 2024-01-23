@@ -63,7 +63,7 @@ class FireHawkOptimization(OptimizationAbstract):
                 [move_firehawk_in_group(agent, fh_pop[idx], SPl) for agent in group]
             )
 
-        sort_by_cost(self._population)
+        self._population = sort_by_cost(self._population)
         fh_pop = self._population[:self.__hn].copy()
         groups = get_groups()
 
