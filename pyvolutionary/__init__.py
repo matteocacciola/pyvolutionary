@@ -17,6 +17,7 @@ from .cuckoo_search import *
 from .coral_reef import *
 from .coyotes import *
 from .dragonfly import *
+from .dwarf_mongoose import *
 from .earthworms import *
 from .electromagnetic_field import *
 from .elephant_herd import *

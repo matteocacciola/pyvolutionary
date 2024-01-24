@@ -43,11 +43,14 @@ class CamelCaravanOptimization(OptimizationAbstract):
         def walk(camel: Camel) -> Camel:
             supply = camel.supply * (1 - burden_factor * camel.steps / max_cycles)
             endurance = camel.endurance * (1 - temperature / max_temperature) * (1 - camel.steps / max_cycles)
-            new_position = camel.position + np.random.uniform(-1, 1) * (1 - (endurance / config_endurance)
+            new_position = camel.position + np.random.uniform(-1, 1) * (
+                1 - (endurance / config_endurance)
             ) * np.exp(1 - supply / config_supply) * (bc_position - np.array(camel.position))
-            if self._is_valid_position(new_position):
-                return self._init_agent(position=new_position, endurance=endurance, supply=supply)
-            return self._init_agent(position=camel.position, endurance=endurance, supply=supply)
+            return self._init_agent(
+                position=new_position if self._is_valid_position(new_position) else camel.position,
+                endurance=endurance,
+                supply=supply
+            )
 
         def oasis(camel: Camel, past_cost: float) -> Camel:
             if np.random.random() <= (1 - self._config.visibility) and camel.cost <= past_cost:

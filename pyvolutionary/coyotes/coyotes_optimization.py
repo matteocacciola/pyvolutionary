@@ -46,7 +46,7 @@ class CoyotesOptimization(OptimizationAbstract):
             ) + np.random.random() * (tend - np.array(pack[rc2].position))
             # keep the coyotes in the search space (optimization problem constraint) and evaluate the new position
             # it means to evaluate the new social condition (Eq. 13) and apply the adaptation (Eq. 14)
-            return self._greedy_select_agent(coyote, Coyote(**self._init_agent(pos_new, coyote.age).model_dump()))
+            return self._greedy_select_agent(coyote, self._init_agent(pos_new, coyote.age))
 
         def evolve_pack(pack: list[Coyote]) -> list[Coyote]:
             # get the coyotes that belong to each pack and compute the social tendency of the pack (Eq. 6)
@@ -62,7 +62,7 @@ class CoyotesOptimization(OptimizationAbstract):
                 pack[id_parent1].position,
                 pack[id_parent2].position
             )) * np.random.normal(0, 1)
-            pup = Coyote(**self._init_agent(pup_pos.tolist()).model_dump())
+            pup = self._init_agent(pup_pos.tolist())
             # Verify if the pup will survive
             pack = sort_by_cost(pack)
             # find index of element has cost larger than new child: if existing, new child is good

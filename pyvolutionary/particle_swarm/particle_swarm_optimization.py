@@ -70,5 +70,4 @@ class ParticleSwarmOptimization(OptimizationAbstract):
 
         # merge the population and the archive, sort them by cost and update the population with the best n_ants
         pop, pbests = zip(*[evolve(particle, pbest) for particle, pbest in zip(self._population, self.__pbest)])
-        self._population = list(pop)
-        self.__pbest = list(pbests)
+        self._population, self.__pbest = list(pop), list(pbests)

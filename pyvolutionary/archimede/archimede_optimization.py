@@ -77,8 +77,7 @@ class ArchimedeOptimization(OptimizationAbstract):
                 f = 1 if (2 * np.random.random() - c4) <= 0.5 else -1
                 t = c3 * tf
                 pos_new = best_pos + f * c2 * np.random.random() * acc * ddf * (t * best_pos - pos)
-            new_agent = Object(**self._init_agent(pos_new, den, vol, acc).model_dump())
-            return self._greedy_select_agent(obj, new_agent)
+            return self._greedy_select_agent(obj, self._init_agent(pos_new, den, vol, acc))
 
         pop_size = self._config.population_size
         tf = np.exp(self._current_cycle / self._config.max_cycles)

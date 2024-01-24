@@ -42,9 +42,7 @@ class WarStrategyOptimization(OptimizationAbstract):
                 pos_new = 2 * r1 * (np.array(pop_sorted[idx].position) - best_position) + (
                     np.random.random() * (soldier.wl * best_position - pos)
                 )
-            agent = Soldier(
-                **self._init_agent(pos_new, soldier.wg + 1, soldier.wl * (1 - soldier.wg / epochs) ** 2).model_dump()
-            )
+            agent = self._init_agent(pos_new, soldier.wg + 1, soldier.wl * (1 - soldier.wg / epochs) ** 2)
             return self._greedy_select_agent(soldier, agent)
 
         rr = self._config.rr

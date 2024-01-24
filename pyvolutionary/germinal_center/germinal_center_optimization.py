@@ -43,9 +43,7 @@ class GerminalCenterOptimization(OptimizationAbstract):
                 np.array(self._population[r2].position) - np.array(self._population[r3].position)
             )
             pos_new = np.where(np.random.random(n_dims) < cr, pos_new, pos)
-            agent = GerminalCenter(
-                **self._init_agent(pos_new, center.cell_counter, center.life_signal + 10).model_dump()
-            )
+            agent = self._init_agent(pos_new, center.cell_counter, center.life_signal + 10)
             return self._greedy_select_agent(center, agent)
 
         def light_zone(center: GerminalCenter) -> GerminalCenter:
