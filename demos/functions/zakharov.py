@@ -13,7 +13,7 @@ dimension = 2
 position_min = -4.0
 position_max = 4.0
 generation = 400
-fitness_error = 10e-4
+fitness_error = 0.01
 task = Zakharov(
     variables=[ContinuousVariable(
         name=f"x{i}", lower_bound=position_min, upper_bound=position_max

@@ -54,6 +54,7 @@ from .tuna_swarm import *
 from .virus_colony_search import *
 from .walrus import *
 from .war_strategy import *
+from .water_cycle import *
 from .whales import *
 from .wildebeest_herd import *
 from .wind_driven import *

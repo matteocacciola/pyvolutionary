@@ -1,14 +1,23 @@
 # pyVolutionary
 
-[![GitHub release](https://img.shields.io/badge/release-2.1.0-yellow.svg)](https://github.com/matteocacciola/pyvolutionary/releases/tag/v2.1.0)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyvolutionary.svg)
-![PyPI - Status](https://img.shields.io/pypi/status/pyvolutionary.svg)
+![GitHub Release](https://img.shields.io/github/v/release/matteocacciola/pyvolutionary)
+![GitHub commits since latest release](https://img.shields.io/github/commits-since/matteocacciola/pyvolutionary/latest)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/matteocacciola/pyvolutionary/master)
+![GitHub issues](https://img.shields.io/github/issues/matteocacciola/pyvolutionary)
+[![Wheel](https://img.shields.io/pypi/wheel/gensim.svg)](https://pypi.python.org/pypi/pyvolutionary) 
+[![PyPI version](https://badge.fury.io/py/pyvolutionary.svg)](https://badge.fury.io/py/pyvolutionary)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyvolutionary)
+![PyPI - Status](https://img.shields.io/pypi/status/pyvolutionary)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pyvolutionary.svg)
 [![Downloads](https://static.pepy.tech/badge/pyvolutionary)](https://pepy.tech/project/pyvolutionary)
 ![GitHub Release Date](https://img.shields.io/github/release-date/matteocacciola/pyvolutionary.svg)
+![GitHub contributors](https://img.shields.io/github/contributors/matteocacciola/pyvolutionary.svg)
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/matteocacciola/pyvolutionary.svg)](http://isitmaintained.com/project/matteocacciola/pyvolutionary "Average time to resolve an issue")
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/matteocacciola/pyvolutionary.svg)](http://isitmaintained.com/project/matteocacciola/pyvolutionary "Percentage of issues still open")
 [![GitTutorial](https://img.shields.io/badge/PR-Welcome-%23FF8300.svg?)](https://git-scm.com/book/en/v2/GitHub-Contributing-to-a-Project)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+![GitHub forks](https://img.shields.io/github/forks/matteocacciola/pyvolutionary)
 
 ## Introduction
 <img style="width: 200px; background-color: #fff; float: left; margin: 0 15px 0 0;" src="logo.png" alt="pyVolutionary"/>
@@ -571,6 +580,7 @@ The following algorithms are currently implemented in **pyVolutionary**:
 | Virus Colony Search Optimization          | `VirusColonySearchOptimization`          | 2016 | [paper](https://doi.org/10.1016/j.advengsoft.2015.11.004)                                                                                                                                                                     | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/vcso.py)  |
 | Walrus Optimization                       | `WalrusOptimization`                     | 2022 | [paper](http://doi.org/10.21203/rs.3.rs-2174098/v1)                                                                                                                                                                           | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/woa.py)   |
 | War Strategy Optimization                 | `WarStrategyOptimization`                | 2022 | [paper](https://www.researchgate.net/publication/358806739_War_Strategy_Optimization_Algorithm_A_New_Effective_Metaheuristic_Algorithm_for_Global_Optimization)                                                               | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/wso.py)   |
+| Water Cycle Optimization                  | `WaterCycleOptimization`                 | 2012 | [paper](https://doi.org/10.1016/j.compstruc.2012.07.010)                                                                                                                                                                      | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/wco.py)   |
 | Whales Optimization                       | `WhalesOptimization`                     | 2016 | [paper](https://doi.org/10.1016/j.advengsoft.2016.01.008)                                                                                                                                                                     | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/wo.py)    |
 | Wildebeest Herd Optimization              | `WildebeestHerdOptimization`             | 2019 | [paper](https://content.iospress.com/articles/journal-of-intelligent-and-fuzzy-systems/ifs190495)                                                                                                                             | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/wdo.py)   |
 | Wind Driven Optimization                  | `WindDrivenOptimization`                 | 2013 | [paper](https://ieeexplore.ieee.org/abstract/document/6407788)                                                                                                                                                                | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/who.py)   |
