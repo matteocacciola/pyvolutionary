@@ -48,7 +48,7 @@ class DwarfMongooseOptimization(OptimizationAbstract):
             new_pos = pos + phi * (pos - np.array(self._population[k].position))
             new_agent = self._init_agent(new_pos)
             # sleeping mould
-            SM = (new_agent.cost - agent.cost) / np.max([new_agent.cost, agent.cost])
+            SM = (new_agent.cost - agent.cost) / (np.max([new_agent.cost, agent.cost]) + self.EPS)
             return self._greedy_select_agent(agent, new_agent), SM
 
         def babysitting(idx: int, agent: DwarfMongoose) -> DwarfMongoose:
@@ -69,7 +69,7 @@ class DwarfMongooseOptimization(OptimizationAbstract):
         epochs = self._config.max_cycles
 
         cost_list = np.array([agent.cost for agent in self._population])
-        fi = np.exp(-cost_list / np.mean(cost_list))
+        fi = np.exp(-cost_list / (np.mean(cost_list) + self.EPS))
 
         pop_size = self._config.population_size
         n_dims = self._task.space_dimension
