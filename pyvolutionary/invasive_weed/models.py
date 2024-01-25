@@ -10,7 +10,7 @@ class InvasiveWeed(Agent):
 class InvasiveWeedOptimizationConfig(BaseOptimizationConfig):
     """
     Configuration class of the Invasive Weed Optimization algorithm.
-        seed (list[int]): [1, 3], [4, pop_size/2], minmax numbers of Seeds.\n
+        seed (list[int]): [1, 3], [4, int(pop_size/2)], minmax numbers of Seeds.\n
         exponent (int): [2, 4], variance reduction exponent.\n
         sigma (list[float]): [0.5, 5.0], (0, 0.5), the initial minmax values of Standard Deviation.
     """
@@ -21,7 +21,7 @@ class InvasiveWeedOptimizationConfig(BaseOptimizationConfig):
     @model_validator(mode="after")
     def validate_seed(self) -> "InvasiveWeedOptimizationConfig":
         seed_min, seed_max = self.seed
-        if seed_max > self.population_size / 2:
+        if seed_max > int(self.population_size / 2):
             raise ValueError(f"\"seed_max\" must be less than the half of the population_size. Got {seed_max}")
         return self
 
@@ -32,7 +32,7 @@ class InvasiveWeedOptimizationConfig(BaseOptimizationConfig):
         if not 1 <= seed_min <= 3:
             raise ValueError(f"\"seed[0]\" must be a positive int within the range [1, 3]. Got {seed_min}")
         if seed_max < 4:
-            raise ValueError(f"\"seed[1]\" must be a positive int within the range [4, pop_size/2]. Got {seed_max}")
+            raise ValueError(f"\"seed[1]\" must be a positive int within the range [4, int(pop_size/2)]. Got {seed_max}")
         return v
 
     @field_validator("exponent")

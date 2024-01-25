@@ -48,8 +48,8 @@ class WindDrivenOptimization(OptimizationAbstract):
         n_dims = self._task.space_dimension
         
         best_pos = np.array(self._best_agent.position)
-        new_velocities, new_population = zip(*[
-            evolve(idx, wind) for idx, wind in enumerate(self._population)
-        ])
-        self.__dyn_list_velocity = np.array(list(new_velocities))
-        self._greedy_select_population(list(new_population))
+        self.__dyn_list_velocity, new_population = map(
+            lambda x: list(x), zip(*[evolve(idx, wind) for idx, wind in enumerate(self._population)])
+        )
+        self.__dyn_list_velocity = np.array(self.__dyn_list_velocity)
+        self._greedy_select_population(new_population)

@@ -45,8 +45,7 @@ class ParticleSwarmOptimization(OptimizationAbstract):
         ).tolist()
         return Particle(**agent.model_dump(), velocity=velocity)
 
-    def _init_population(self):
-        super()._init_population()
+    def after_initialization(self):
         self.__pbest = self._population.copy()
 
     def optimization_step(self):
@@ -69,5 +68,7 @@ class ParticleSwarmOptimization(OptimizationAbstract):
         best_agent_position = np.array(self._best_agent.position)
 
         # merge the population and the archive, sort them by cost and update the population with the best n_ants
-        pop, pbests = zip(*[evolve(particle, pbest) for particle, pbest in zip(self._population, self.__pbest)])
-        self._population, self.__pbest = list(pop), list(pbests)
+        self._population, self.__pbest = map(
+            lambda x: list(x),
+            zip(*[evolve(particle, pbest) for particle, pbest in zip(self._population, self.__pbest)]),
+        )

@@ -53,8 +53,8 @@ class OptimizationAbstract(ABC, Generic[T]):
         :return: the lower and upper bounds
         :rtype: tuple[np.ndarray, np.ndarray]
         """
-        lb, ub = zip(*[v.get_bounds() for v in self._task.variables])
-        return np.array(lb), np.array(ub)
+        lb, ub = map(lambda x: np.array(x), zip(*[v.get_bounds() for v in self._task.variables]))
+        return lb, ub
 
     def _init_position(self, position: list[float] | np.ndarray | None = None) -> list[float]:
         """

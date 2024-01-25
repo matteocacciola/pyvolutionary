@@ -19,6 +19,7 @@ from .coyotes import *
 from .dragonfly import *
 from .dwarf_mongoose import *
 from .earthworms import *
+from .egret_swarm import *
 from .electromagnetic_field import *
 from .elephant_herd import *
 from .energy_valley import *
@@ -32,6 +33,7 @@ from .fox import *
 from .genetic_algorithm import *
 from .germinal_center import *
 from .giza_pyramid_construction import *
+from .golden_jackal import *
 from .grasshopper import *
 from .grey_wolf import *
 from .harmony_search import *
@@ -50,6 +52,7 @@ from .pelican import *
 from .seagull import *
 from .siberian_tiger import *
 from .spotted_hyena import *
+from .swarm_hill_climbing import *
 from .tasmanian_devil import *
 from .tuna_swarm import *
 from .virus_colony_search import *

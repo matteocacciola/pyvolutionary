@@ -103,7 +103,7 @@ class DragonflyOptimization(OptimizationAbstract):
         g_best_position = np.array(self._best_agent.position)
         g_worst_position = np.array(self._worst_agent.position)
         
-        pop, pop_delta = list(zip(*[
-            evolve(dragonfly, self.__population_delta[idx]) for idx, dragonfly in enumerate(self._population)
-        ]))
-        self._population, self.__population_delta = list(pop), list(pop_delta)
+        self._population, self.__population_delta = map(
+            lambda x: list(x),
+            zip(*[evolve(dragonfly, self.__population_delta[idx]) for idx, dragonfly in enumerate(self._population)]),
+        )

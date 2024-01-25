@@ -80,8 +80,9 @@ class DwarfMongooseOptimization(OptimizationAbstract):
         self._population = [foraging(idx, agent) for idx, agent in enumerate(self._population)]
 
         # scouting
-        self._population, SM_list = zip(*[scouting(idx, agent) for idx, agent in enumerate(self._population)])
-        self._population, SM_list = list(self._population), list(SM_list)
+        self._population, SM_list = map(
+            lambda x: list(x), zip(*[scouting(idx, agent) for idx, agent in enumerate(self._population)])
+        )
 
         # babysitting
         L = np.round(0.6 * n_dims * n_baby_sitter)
