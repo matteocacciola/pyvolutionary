@@ -29,10 +29,12 @@ from .fireworks import *
 from .fish_school_search import *
 from .firehawk import *
 from .flower_pollination_algorithm import *
+from .forensic_based_investigation import *
 from .forest_algorithm import *
 from .fox import *
 from .genetic_algorithm import *
 from .germinal_center import *
+from .giant_trevally import *
 from .giza_pyramid_construction import *
 from .golden_jackal import *
 from .grasshopper import *
