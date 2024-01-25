@@ -7,7 +7,7 @@ from pyvolutionary.tests.fixtures import task
 @pytest.fixture
 def optimization_config() -> SwarmHillClimbingOptimizationConfig:
     return SwarmHillClimbingOptimizationConfig(
-        population_size=20, fitness_error=0.01, max_cycles=100, neighbour_size=50
+        population_size=20, fitness_error=0.01, max_cycles=100, neighbour_size=8
     )
 
 
