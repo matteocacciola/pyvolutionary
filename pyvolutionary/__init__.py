@@ -15,6 +15,7 @@ from .chaos_game import *
 from .chernobyl_disaster import *
 from .cuckoo_search import *
 from .coral_reef import *
+from .coronavirus_herd_immunity import *
 from .coyotes import *
 from .dragonfly import *
 from .dwarf_mongoose import *
