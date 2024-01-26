@@ -54,6 +54,7 @@ from .pathfinder_algorithm import *
 from .pelican import *
 from .seagull import *
 from .siberian_tiger import *
+from .sine_cosine_algorithm import *
 from .spotted_hyena import *
 from .swarm_hill_climbing import *
 from .tasmanian_devil import *
