@@ -31,15 +31,14 @@ class FoxOptimization(OptimizationAbstract):
                 tt = np.mean(time1)
                 self.__mint = min(self.__mint, tt)
                 jump = 0.5 * 9.81 * (tt / 2) ** 2
-                pos_new = travel_distance * jump * (c1 if np.random.random() > 0.18 else c2)
+                pos_new = travel_distance * jump * (c1 if np.random.random() > pp else c2)
             else:
                 pos_new = best_position + np.random.standard_normal(dim) * (self.__mint * a)
             agent = Fox(**self._init_agent(pos_new).model_dump())
             return self._greedy_select_agent(fox, agent)
 
         a = 2 * (1 - (1.0 / self._current_cycle))
-        c1 = self._config.c1
-        c2 = self._config.c2
+        c1, c2, pp = self._config.c1, self._config.c2, self._config.pp
         dim = self._task.space_dimension
         best_position = np.array(self._best_agent.position)
 
