@@ -13,10 +13,11 @@ from .camel_caravan import *
 from .cat_swarm import *
 from .chaos_game import *
 from .chernobyl_disaster import *
-from .cuckoo_search import *
+from .coati import *
 from .coral_reef import *
 from .coronavirus_herd_immunity import *
 from .coyotes import *
+from .cuckoo_search import *
 from .dragonfly import *
 from .dwarf_mongoose import *
 from .earthworms import *
@@ -44,6 +45,7 @@ from .imperialist_competitive import *
 from .invasive_weed import *
 from .krill_herd import *
 from .levi_jaya_swarm import *
+from .marine_predators import *
 from .monarch_butterfly import *
 from .moth_flame import *
 from .mountain_gazelle import *
@@ -53,9 +55,11 @@ from .particle_swarm import *
 from .pathfinder_algorithm import *
 from .pelican import *
 from .seagull import *
+from .serval import *
 from .siberian_tiger import *
 from .sine_cosine_algorithm import *
 from .spotted_hyena import *
+from .success_history_intelligent import *
 from .swarm_hill_climbing import *
 from .tasmanian_devil import *
 from .tuna_swarm import *
