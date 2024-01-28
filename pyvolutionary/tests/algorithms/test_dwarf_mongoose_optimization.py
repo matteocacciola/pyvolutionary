@@ -9,7 +9,7 @@ def optimization_config() -> DwarfMongooseOptimizationConfig:
     return DwarfMongooseOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         n_baby_sitter=3,
         peep=2,
     )

@@ -41,6 +41,6 @@ class SwarmHillClimbingOptimization(OptimizationAbstract):
         neighbour_size = self._config.neighbour_size
 
         ranks = np.array(list(range(1, pop_size + 1)))
-        ss = np.mean(self._bandwidth()) * np.exp(-2 * (epoch + 1) / epochs) * ranks / np.sum(ranks)
+        ss = np.mean(self._task.bandwidth()) * np.exp(-2 * (epoch + 1) / epochs) * ranks / np.sum(ranks)
 
         self._population = [evolve(idx, climber) for idx, climber in enumerate(self._population)]

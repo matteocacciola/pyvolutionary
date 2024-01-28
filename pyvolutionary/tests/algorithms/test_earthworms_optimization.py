@@ -9,7 +9,7 @@ def optimization_config() -> EarthwormsOptimizationConfig:
     return EarthwormsOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         prob_mutate=0.01,
         prob_crossover=0.8,
         keep=5,

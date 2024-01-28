@@ -9,7 +9,7 @@ def optimization_config() -> BatOptimizationConfig:
     return BatOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         loudness=[1, 2],
         pulse_rate=[0.1, 0.9],
         pulse_frequency=[-0.5, 0.5],

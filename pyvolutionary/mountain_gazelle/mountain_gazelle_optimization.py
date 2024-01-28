@@ -52,7 +52,7 @@ class MountainGazelleOptimization(OptimizationAbstract):
             random_position = np.array(
                 self._population[np.random.randint(0, self._config.population_size)].position
             )
-            x1 = self._uniform_position()
+            x1 = self._task.empty_solution()
             x2 = best_position - np.abs(
                 (np.random.randint(1, 3) * M - np.random.randint(1, 3) * position) * A
             ) * cofi[np.random.randint(0, 4)]

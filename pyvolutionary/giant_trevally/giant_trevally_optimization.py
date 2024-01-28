@@ -54,7 +54,7 @@ class GiantTrevallyOptimization(OptimizationAbstract):
         n_dims = self._task.space_dimension
         epoch = self._current_cycle
         epochs = self._config.max_cycles
-        lb, ub = self._get_bounds()
+        lb, ub = self._task.get_bounds()
 
         best_pos = np.array(self._best_agent.position)
 

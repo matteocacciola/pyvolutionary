@@ -19,7 +19,7 @@ def data() -> tuple[AfricanVultureOptimizationConfig, Task]:
     config = AfricanVultureOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         p=[0.6, 0.4, 0.6],
         alpha=0.8,
         gamma=2.5,

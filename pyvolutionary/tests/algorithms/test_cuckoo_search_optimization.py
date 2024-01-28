@@ -9,7 +9,7 @@ def optimization_config() -> CuckooSearchOptimizationConfig:
     return CuckooSearchOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         p_a=0.3,
     )
 

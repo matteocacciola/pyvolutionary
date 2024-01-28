@@ -9,7 +9,7 @@ def optimization_config() -> HarmonySearchOptimizationConfig:
     return HarmonySearchOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         consideration_rate=0.15,
         pitch_adjusting_rate=0.5,
     )

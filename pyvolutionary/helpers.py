@@ -115,7 +115,7 @@ def best_agent(population: list[T], task_type: TaskType | None = TaskType.MIN) -
     :return: the best agent
     :rtype: Agent
     """
-    (b_agent, ) = best_agents(population, 1, task_type)
+    b_agent, = best_agents(population, 1, task_type)
     return b_agent
 
 
@@ -127,7 +127,7 @@ def worst_agent(population: list[T], task_type: TaskType | None = TaskType.MIN) 
     :return: the worst agent
     :rtype: Agent
     """
-    (w_agent, ) = worst_agents(population, 1, task_type)
+    w_agent, = worst_agents(population, 1, task_type)
     return w_agent
 
 
@@ -218,7 +218,7 @@ def roulette_wheel_indexes(probabilities: np.ndarray, num: int | None = 1) -> li
         return np.random.choice(k, size=num, replace=False)
 
     p = final_probabilities / np.sum(final_probabilities)
-    return np.random.choice(k, size=num, replace=False, p=p)
+    return np.random.choice(k, size=num, replace=len([i for i in p if i != 0]) < num, p=p)
 
 
 def random_selection(p: list | np.ndarray) -> int:

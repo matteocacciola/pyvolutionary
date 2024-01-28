@@ -47,16 +47,16 @@ class CoralReefOptimization(OptimizationAbstract):
         :rtype: list[Coral]
         """
         def gaussian_mutation(position) -> list[float]:
-            return self._correct_position(np.where(
+            return self._task.correct_solution(np.where(
                 np.random.random(self._task.space_dimension) < self._config.GCR,
-                position + self.__G1 * self._bandwidth() * np.random.normal(0, 1,  self._task.space_dimension),
+                position + self.__G1 * self._task.bandwidth() * np.random.normal(0, 1,  self._task.space_dimension),
                 position
             ))
 
         def multi_point_cross(pos1, pos2) -> list[float]:
             p1, p2 = np.random.choice(list(range(0, len(pos1))), 2, replace=False)
             start, end = min(p1, p2), max(p1, p2)
-            return self._correct_position(
+            return self._task.correct_solution(
                 np.concatenate((pos1[:start], pos2[start:end], pos1[end:]), axis=0)
             )
 

@@ -14,7 +14,7 @@ from pyvolutionary.helpers import distance
 
 class TspProblem(Task):
     def objective_function(self, x: list[Any]) -> float:
-        x_transformed = self.transform_position(x)
+        x_transformed = self.transform_solution(x)
         routes = x_transformed["routes"]
         city_pos = self.data["city_positions"]
         n_routes = len(routes)
@@ -39,7 +39,7 @@ def data() -> tuple[VirusColonySearchOptimizationConfig, Task]:
     config = VirusColonySearchOptimizationConfig(
         population_size=10,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         lamda=0.1,
         sigma=2.5,
     )

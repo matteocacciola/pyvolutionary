@@ -9,7 +9,7 @@ def optimization_config() -> WindDrivenOptimizationConfig:
     return WindDrivenOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         RT=2,
         g_c=0.2,
         alp=0.4,

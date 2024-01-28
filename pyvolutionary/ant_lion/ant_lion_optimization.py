@@ -62,7 +62,7 @@ class AntLionOptimization(OptimizationAbstract):
         max_cycles = self._config.max_cycles
 
         I = get_i_ratio()
-        lower_bounds, upper_bounds = self._get_bounds()
+        lower_bounds, upper_bounds = self._task.get_bounds()
         # Decrease boundaries to converge towards ant lion
         lower_bounds /= I  # Equation (2.10) in the paper
         upper_bounds /= I  # Equation (2.10) in the paper

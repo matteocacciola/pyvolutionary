@@ -59,10 +59,9 @@ class EnergyValleyOptimization(OptimizationAbstract):
                     Particle(**self._init_agent(pos_new2).model_dump()),
                 ]
 
-            return [
-                Particle(
-                    **self._init_agent(pos_new1 + np.random.random() * sl * self._uniform_position()).model_dump()),
-            ]
+            return [Particle(**self._init_agent(
+                pos_new1 + np.random.random() * sl * np.array(self._task.empty_solution())
+            ).model_dump())]
 
         pos_list = np.array([agent.position for agent in self._population])
         cost_list = np.array([agent.cost for agent in self._population])

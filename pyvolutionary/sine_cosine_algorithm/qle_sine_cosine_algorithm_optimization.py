@@ -60,6 +60,6 @@ class QleSineCosineAlgorithmOptimization(OptimizationAbstract):
         # calculate the distance
         distances = np.sum(
             np.sqrt(np.sum((best_pos - positions) ** 2, axis=1))
-        ) / np.sum([np.sqrt(np.sum(self._bandwidth() ** 2)) for _ in range(0, self._config.population_size)])
+        ) / np.sum([np.sqrt(np.sum(self._task.bandwidth() ** 2)) for _ in range(0, self._config.population_size)])
 
         self._population = [evolve(zebra) for zebra in self._population]

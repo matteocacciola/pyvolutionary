@@ -9,7 +9,7 @@ def optimization_config() -> SpottedHyenaOptimizationConfig:
     return SpottedHyenaOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         h_factor=5.0,
         n_trials=10,
     )

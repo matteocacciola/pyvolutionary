@@ -9,7 +9,7 @@ def optimization_config() -> CamelCaravanOptimizationConfig:
     return CamelCaravanOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         burden_factor=0.5,
         death_rate=0.5,
         visibility=0.5,

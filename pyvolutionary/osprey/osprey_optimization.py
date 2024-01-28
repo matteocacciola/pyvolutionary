@@ -43,7 +43,7 @@ class OspreyOptimization(OptimizationAbstract):
             agent = Osprey(**self._init_agent(pos_new).model_dump())
             osprey = self._greedy_select_agent(osprey, agent)
             # phase 2: carrying the fish to a suitable position (exploitation)
-            pos_new = self._increase_position(osprey.position)  # Eq. 7
+            pos_new = self._task.increase_solution(osprey.position)  # Eq. 7
             agent = Osprey(**self._init_agent(pos_new).model_dump())
             return self._greedy_select_agent(osprey, agent)
 

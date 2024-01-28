@@ -79,7 +79,7 @@ class EarthwormsOptimization(OptimizationAbstract):
         x_mean = np.mean(np.array([agent.position for agent in self._population]), axis=0)
         best_pos = self._best_agent.position
 
-        sum_bounds = self._sum_bounds()
+        sum_bounds = self._task.sum_bounds()
 
         # the earthworm optimization algorithm process
         self._population = [evolve(idx, earthworm) for idx, earthworm in enumerate(self._population)]
@@ -101,7 +101,7 @@ class EarthwormsOptimization(OptimizationAbstract):
         dimension_to_change = np.random.randint(0, dims - 1, len(duplicates))
         for jdx in duplicates:
             position_jdx = np.array(self._population[jdx].position)
-            position_jdx[dimension_to_change[jdx]] = self._uniform_coordinates(dimension_to_change[jdx])
+            position_jdx[dimension_to_change[jdx]] = self._task.uniform_coordinates(dimension_to_change[jdx])
             self._population[jdx] = Earthworm(**self._init_agent(position_jdx).model_dump())
 
         self.__dyn_beta *= self._config.gamma

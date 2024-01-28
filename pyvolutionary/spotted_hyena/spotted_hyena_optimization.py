@@ -29,7 +29,7 @@ class SpottedHyenaOptimization(OptimizationAbstract):
             done = False
             N = i = 0
             while not done and i < n_trials:
-                pos_temp = np.array(g_best.position) + np.random.normal(0, 1, n_dims) * self._uniform_position()
+                pos_temp = np.array(g_best.position) + np.random.normal(0, 1, n_dims) * self._task.empty_solution()
                 N += 1
                 i += 1
                 done = SpottedHyena(**self._init_agent(pos_temp).model_dump()).cost < g_best.cost

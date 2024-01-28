@@ -47,7 +47,7 @@ class CamelCaravanOptimization(OptimizationAbstract):
                 1 - (endurance / config_endurance)
             ) * np.exp(1 - supply / config_supply) * (bc_position - np.array(camel.position))
             return self._init_agent(
-                position=new_position if self._is_valid_position(new_position) else camel.position,
+                position=new_position if self._task.is_valid_solution(new_position) else camel.position,
                 endurance=endurance,
                 supply=supply
             )
@@ -68,7 +68,7 @@ class CamelCaravanOptimization(OptimizationAbstract):
             c = camel.model_copy()
             past_cost = c.cost
             c = life_cycle(walk(c), past_cost)
-            return oasis(c, past_cost)
+            return self._greedy_select_agent(camel, oasis(c, past_cost))
 
         death_rate = self._config.death_rate
         burden_factor = self._config.burden_factor

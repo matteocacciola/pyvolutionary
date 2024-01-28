@@ -13,7 +13,7 @@ def optimization_config() -> GizaPyramidConstructionOptimizationConfig:
     return GizaPyramidConstructionOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         theta=14,
         friction=[1, 10],
         prob_substitution=0.5,

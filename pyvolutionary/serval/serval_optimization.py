@@ -33,7 +33,7 @@ class ServalOptimization(OptimizationAbstract):
 
         kk_pos = np.array(self._population[np.random.permutation(self._config.population_size)[0]].position)
         n_dims = self._task.space_dimension
-        bandwidth = self._bandwidth()
+        bandwidth = self._task.bandwidth()
         epoch = self._current_cycle
 
         self._population = [evolve(serval) for serval in self._population]

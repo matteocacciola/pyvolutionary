@@ -12,7 +12,7 @@ from .helpers import (
     get_pool_executor,
     get_pool_results,
 )
-from .models import OptimizationResult, Population, T, BaseOptimizationConfig, Task, TaskType, Agent, ContinuousVariable
+from .models import OptimizationResult, Population, T, BaseOptimizationConfig, Task, TaskType, Agent
 
 
 class OptimizationAbstract(ABC, Generic[T]):
@@ -47,89 +47,6 @@ class OptimizationAbstract(ABC, Generic[T]):
     def after_initialization(self):
         pass
 
-    def _get_bounds(self) -> tuple[np.ndarray, np.ndarray]:
-        """
-        Get the lower and upper bounds of the search space.
-        :return: the lower and upper bounds
-        :rtype: tuple[np.ndarray, np.ndarray]
-        """
-        lb, ub = map(lambda x: np.array(x), zip(*[v.get_bounds() for v in self._task.variables]))
-        return lb, ub
-
-    def _init_position(self, position: list[float] | np.ndarray | None = None) -> list[float]:
-        """
-        This method initializes the position of the agent of the optimization algorithm. The position is randomly
-        generated if it is not provided.
-        :param position: the position to initialize
-        :return: the initialized position
-        :rtype: list[float]
-        """
-        position = position.tolist() if isinstance(position, np.ndarray) else position
-        return self._correct_position(position if position is not None else self._uniform_position())
-
-    def _uniform_position(self) -> np.ndarray:
-        """
-        This method generates a uniform random position in the search space.
-        :return: the random position
-        :rtype: np.ndarray
-        """
-        return np.array([v.randomize() for v in self._task.variables])
-
-    def _random_position(self) -> np.ndarray:
-        """
-        This method generates a random position in the search space.
-        :return: the random position
-        :rtype: np.ndarray
-        """
-        lb, _ = self._get_bounds()
-        return np.where(
-            isinstance(self._task.variables, ContinuousVariable),
-            np.random.random() * self._bandwidth() + lb,
-            self._uniform_position()
-        )
-
-    def _increase_position(self, position: list[float], scale_factor: float | None = None) -> np.ndarray:
-        """
-        This method increases the position in the search space.
-        :param position: the position to increase
-        :param scale_factor: the scale factor
-        :return: the increased position
-        :rtype: np.ndarray
-        """
-        scale_factor = scale_factor if scale_factor is not None else 1.0
-        return np.where(
-            isinstance(self._task.variables, ContinuousVariable),
-            np.array(position) + self._random_position() / scale_factor,
-            self._uniform_position()
-        )
-
-    def _uniform_coordinates(self, dimensions: int | list[int]) -> np.ndarray:
-        """
-        This method generates uniform random coordinates in the search space.
-        :param dimensions: the dimensions to generate
-        :return: the random coordinates
-        :rtype: np.ndarray
-        """
-        return self._uniform_position()[dimensions]
-
-    def _bandwidth(self) -> np.ndarray:
-        """
-        This method calculates the bandwidth in the search space for each dimension.
-        :return: the bandwidth
-        :rtype: np.ndarray
-        """
-        lb, ub = self._get_bounds()
-        return ub - lb
-
-    def _sum_bounds(self) -> np.ndarray:
-        """
-        This method calculates the sum of the lower and upper bounds in the search space for each dimension.
-        :return: the sum of the lower and upper bounds
-        :rtype: np.ndarray
-        """
-        lb, ub = self._get_bounds()
-        return lb + ub
-
     def _fcn(self, x: list[float] | np.ndarray) -> float | list[float]:
         """
         This method evaluates the objective function.
@@ -137,22 +54,21 @@ class OptimizationAbstract(ABC, Generic[T]):
         :return the cost of the position, or the list of costs if the objective function is multi-objective
         :rtype: float | list[float]
         """
-        return self._task.objective_function(x) \
-            if self._task.minmax == TaskType.MIN else -1 * self._task.objective_function(x)
+        return self._task.solve(x) if self._task.minmax == TaskType.MIN else -1 * self._task.solve(x)
 
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Agent:
         """
         This method initializes the agent of the optimization algorithm. The position is randomly generated if it is
         not provided. The other properties of the agent.
         """
-        position = self._init_position(position)
+        position = self._task.initial_solution(position)
         cost = self._fcn(position)
-        n_weights = len(self._task.objective_weights) if self._task.is_multi_objective else 1
+        n_weights = len(self._task.objective_weights) if self._task.objective_weights is not None else 1
         n_objectives = len(cost) if isinstance(cost, list) else 1
         if n_weights != n_objectives:
             raise ValueError(f"Invalid number of weights. Expected {n_weights}, found {n_objectives}")
 
-        cost = np.dot(cost, self._task.objective_weights) if self._task.is_multi_objective else cost
+        cost = np.dot(cost, self._task.objective_weights) if self._task.objective_weights is not None else cost
         return Agent(position=position, cost=cost, fitness=calculate_fitness(cost, self._task.minmax))
     
     def _generate_agents(self, n_agents: int) -> list[Agent]:
@@ -174,15 +90,6 @@ class OptimizationAbstract(ABC, Generic[T]):
         This method initializes the population of the optimization algorithm.
         """
         self._population = self._generate_agents(self._config.population_size)
-
-    def _is_valid_position(self, position: list[float] | np.ndarray) -> bool:
-        """
-        Check whether the position is valid or not.
-        :param position: the position to check
-        :return: whether the position is valid or not
-        """
-        lb, ub = self._get_bounds()
-        return np.all(np.less_equal(lb, position)) and np.all(np.less_equal(position, ub))
 
     def _greedy_select_population(self, new_population: list[T]):
         """
@@ -219,21 +126,6 @@ class OptimizationAbstract(ABC, Generic[T]):
         """
         agent_copy = agent.model_copy()
         return new_agent if new_agent.cost < agent_copy.cost else agent_copy
-
-    def _correct_position(self, position: list[float | int] | np.ndarray) -> list[float | int]:
-        """
-        Correct the solution if it is outside the bounds by setting the solution to the closest bound. This function is
-        used to correct the solution after the position update.
-        :param position: the position
-        :return: the corrected position
-        :rtype: list[Any]
-        """
-        return [v.correct(c) for c, v in zip(position, self._task.variables)]
-
-    def _amend_position(self, position: list[float | int] | np.ndarray) -> np.ndarray:
-        position = position if isinstance(position, np.ndarray) else np.array(position)
-        lb, ub = self._get_bounds()
-        return np.where(np.logical_and(lb <= position <= ub), position, np.array(self._init_position()))
 
     def _extend_and_trim_population(self, new_population: list[T]):
         """
@@ -293,10 +185,8 @@ class OptimizationAbstract(ABC, Generic[T]):
         :rtype: OptimizationResult
         """
         np.random.seed(task.seed)
-
         evolution: list[Population] = []
 
-        self._task = task
         if workers is not None:
             if workers <= 0:
                 raise ValueError("Invalid number of workers. It must be greater than 0")
@@ -308,9 +198,7 @@ class OptimizationAbstract(ABC, Generic[T]):
             except ValueError:
                 raise ValueError("Invalid mode. Possible values are 'serial', 'thread' and 'process'")
 
-        if self._task.is_multi_objective and np.any(np.array(self._task.objective_weights) < 0):
-            raise ValueError("Invalid weights. They must be greater than 0")
-
+        self._task = task
         self.before_initialization()
         self._init_population()
         self.after_initialization()

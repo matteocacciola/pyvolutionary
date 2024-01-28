@@ -25,8 +25,8 @@ class FishSchoolSearchOptimization(OptimizationAbstract):
         self.__step_volitive: np.ndarray | None = None
 
     def before_initialization(self):
-        self.__step_individual = self._config.step_individual_init * self._bandwidth()
-        self.__step_volitive = self._config.step_volitive_init * self._bandwidth()
+        self.__step_individual = self._config.step_individual_init * self._task.bandwidth()
+        self.__step_volitive = self._config.step_volitive_init * self._task.bandwidth()
 
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Fish:
         agent = super()._init_agent(position)
@@ -35,7 +35,7 @@ class FishSchoolSearchOptimization(OptimizationAbstract):
     def optimization_step(self):
         def move_individual(fish: Fish) -> Fish:
             pos = np.array(fish.position)
-            new_fish = self._init_agent(pos + (si * self._uniform_position()))
+            new_fish = self._init_agent(pos + (si * self._task.empty_solution()))
             if new_fish.cost < fish.cost:
                 delta_cost = abs(new_fish.cost - fish.cost)
                 delta_pos = (np.array(new_fish.position) - pos).tolist()

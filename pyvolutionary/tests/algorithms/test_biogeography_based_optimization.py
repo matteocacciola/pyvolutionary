@@ -9,7 +9,7 @@ def optimization_config() -> BiogeographyBasedOptimizationConfig:
     return BiogeographyBasedOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         p_m=0.2,
         n_elites=5,
     )

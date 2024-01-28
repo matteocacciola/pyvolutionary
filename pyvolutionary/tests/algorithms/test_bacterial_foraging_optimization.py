@@ -9,7 +9,7 @@ def optimization_config() -> BacterialForagingOptimizationConfig:
     return BacterialForagingOptimizationConfig(
         population_size=10,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         C_s=0.1,
         C_e=0.001,
         Ped=0.01,

@@ -42,7 +42,7 @@ class SiberianTigerOptimization(OptimizationAbstract):
             agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
             siberian_tiger = self._greedy_select_agent(siberian_tiger, agent)
             # phase 2: exploitation
-            pos_new = self._increase_position(siberian_tiger.position, current_cycle)  # Eq. 7
+            pos_new = self._task.increase_solution(siberian_tiger.position, current_cycle)  # Eq. 7
             agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
             return self._greedy_select_agent(siberian_tiger, agent)
 

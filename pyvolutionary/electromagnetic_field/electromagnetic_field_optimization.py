@@ -34,11 +34,11 @@ class ElectromagneticFieldOptimization(OptimizationAbstract):
                         best_position - np.array(self._population[r_idx3].position)
                 ) + np.random.random() * (best_position - np.array(self._population[r_idx2].position))
             else:
-                pos_new = self._init_position()
+                pos_new = self._task.initial_solution()
             # replacement of one electromagnet of generated particle with a random number
             # (only for some generated particles) to bring diversity to the population
             if np.random.random() < r_rate:
-                pos_new[np.random.randint(0, n_dims)] = self._uniform_coordinates(np.random.randint(0, n_dims))
+                pos_new[np.random.randint(0, n_dims)] = self._task.uniform_coordinates(np.random.randint(0, n_dims))
             # checking whether the generated number is inside boundary or not
             agent = Electromagnet(**self._init_agent(pos_new).model_dump())
             return self._greedy_select_agent(electromagnet, agent)

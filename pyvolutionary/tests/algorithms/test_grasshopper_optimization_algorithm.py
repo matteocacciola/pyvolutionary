@@ -9,7 +9,7 @@ def optimization_config() -> GrasshopperOptimizationConfig:
     return GrasshopperOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         c_min=0.00004,
         c_max=2.0,
     )

@@ -55,6 +55,6 @@ class CoatiOptimization(OptimizationAbstract):
         self._population = [exploration(idx, coati) for idx, coati in enumerate(self._population)]
 
         # phase2: the process of escaping from predators (exploitation phase)
-        lb, ub = self._get_bounds()
+        lb, ub = self._task.get_bounds()
         low, high = lb / self._current_cycle, ub / self._current_cycle
         self._population = [exploitation(coati) for coati in self._population]

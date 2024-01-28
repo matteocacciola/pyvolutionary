@@ -9,7 +9,7 @@ def optimization_config() -> KrillHerdOptimizationConfig:
     return KrillHerdOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         n_max=0.01,
         foraging_speed=0.01,
         diffusion_speed=0.01,

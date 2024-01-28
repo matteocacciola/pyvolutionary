@@ -32,7 +32,7 @@ class GeneticAlgorithmOptimization(OptimizationAbstract):
         self.__p_mutation = 1.0 / (self.__bit_genes[0].n_bits * self._task.space_dimension)
 
     def _init_population(self):
-        lb, ub = self._get_bounds()
+        lb, ub = self._task.get_bounds()
         self._population = [Transformer.from_bit_gene_to_gene(
             bit_gene, lb.tolist(), ub.tolist(), self._init_agent
         ) for bit_gene in self.__bit_genes]
@@ -79,7 +79,7 @@ class GeneticAlgorithmOptimization(OptimizationAbstract):
         # update population
         self.__bit_genes = [self.__bit_genes[idx].set_bit_string(child) for idx, child in enumerate(children)]
 
-        lb, ub = self._get_bounds()
+        lb, ub = self._task.get_bounds()
         self._population = [Transformer.from_bit_gene_to_gene(
             bit_gene, lb.tolist(), ub.tolist(), self._init_agent
         ) for bit_gene in self.__bit_genes]

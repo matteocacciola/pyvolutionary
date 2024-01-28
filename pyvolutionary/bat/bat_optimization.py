@@ -32,7 +32,7 @@ class BatOptimization(OptimizationAbstract):
         pulse_rate: float | None = None,
     ) -> Bat:
         agent = super()._init_agent(position)
-        velocity = self._correct_position(velocity if velocity is not None else self._uniform_position().tolist())
+        velocity = self._task.correct_solution(velocity if velocity is not None else self._task.empty_solution())
 
         return Bat(
             **agent.model_dump(),

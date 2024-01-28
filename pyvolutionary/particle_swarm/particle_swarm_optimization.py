@@ -30,7 +30,7 @@ class ParticleSwarmOptimization(OptimizationAbstract):
         self.__pbest: list[Particle] = []
 
     def before_initialization(self):
-        self.__v = 0.2 * self._bandwidth()
+        self.__v = 0.2 * self._task.bandwidth()
 
     def _init_agent(
         self, position: list[float] | np.ndarray | None = None, velocity: list[float] | np.ndarray | None = None
@@ -41,7 +41,7 @@ class ParticleSwarmOptimization(OptimizationAbstract):
             return Particle(**agent.model_dump(), velocity=np.zeros(self._task.space_dimension).tolist())
 
         velocity = np.where(
-            isinstance(self._task.variables, ContinuousVariable), np.clip(velocity, -self.__v, self.__v), velocity
+            isinstance(self._task.get_variables(), ContinuousVariable), np.clip(velocity, -self.__v, self.__v), velocity
         ).tolist()
         return Particle(**agent.model_dump(), velocity=velocity)
 

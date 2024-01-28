@@ -9,7 +9,7 @@ def optimization_config() -> AntColonyOptimizationConfig:
     return AntColonyOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         archive_size=20,
         intent_factor=0.1,
         zeta=0.85,

@@ -27,8 +27,8 @@ class BacterialForagingOptimization(OptimizationAbstract):
         self.__C_e: np.ndarray | None = None
 
     def before_initialization(self):
-        self.__C_s = self._config.C_s * self._bandwidth()
-        self.__C_e = self._config.C_e * self._bandwidth()
+        self.__C_s = self._config.C_s * self._task.bandwidth()
+        self.__C_e = self._config.C_e * self._task.bandwidth()
 
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Cell:
         agent = super()._init_agent(position)
@@ -113,7 +113,7 @@ class BacterialForagingOptimization(OptimizationAbstract):
             if cell.nutrients > m:
                 tt = np.random.normal(0, 1, self._task.space_dimension)
                 agent = self._init_agent(
-                    self._correct_position(tt * pos + (1 - tt) * (np.array(self._best_agent.position) - pos))
+                    self._task.correct_solution(tt * pos + (1 - tt) * (np.array(self._best_agent.position) - pos))
                 )
                 self._population.append(agent)
             nut_min = min(self._config.N_adapt, self._config.N_adapt + (

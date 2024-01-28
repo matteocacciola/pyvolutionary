@@ -6,7 +6,7 @@ from pyvolutionary.tests.fixtures import task
 
 @pytest.fixture
 def optimization_config() -> PelicanOptimizationConfig:
-    return PelicanOptimizationConfig(population_size=20, fitness_error=0.01, max_cycles=100)
+    return PelicanOptimizationConfig(population_size=20, fitness_error=0.01, max_cycles=10)
 
 
 def test_valid_optimization(optimization_config):

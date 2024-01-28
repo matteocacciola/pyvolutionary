@@ -27,7 +27,7 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
         self.__dx: np.ndarray | None = None
 
     def before_initialization(self):
-        _, ub = self._get_bounds()
+        _, ub = self._task.get_bounds()
         self.__dx = np.absolute(ub) / 5.0
 
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Tree:
@@ -44,7 +44,7 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
         def global_seeding(tree: Tree) -> Tree:
             position = np.array(tree.position)
             indices = np.random.choice(self._task.space_dimension, self._config.global_seeding_changes, replace=False)
-            position[indices] = self._uniform_coordinates(indices)
+            position[indices] = self._task.uniform_coordinates(indices)
             return self._init_agent(position)
 
         dims, local_seeding_changes = self._task.space_dimension, self._config.local_seeding_changes

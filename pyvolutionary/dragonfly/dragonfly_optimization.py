@@ -31,7 +31,7 @@ class DragonflyOptimization(OptimizationAbstract):
     def after_initialization(self):
         self.__population_delta = self._generate_agents(self._config.population_size)
         # Initial radius of dragonflies' neighborhoods, and maximum delta value
-        self.__radius = self.__delta_max = self._bandwidth() / 10
+        self.__radius = self.__delta_max = self._task.bandwidth() / 10
 
     def optimization_step(self):
         def neighbouring(
@@ -86,7 +86,7 @@ class DragonflyOptimization(OptimizationAbstract):
             )
             return agent_new, agent_delta_new
 
-        bandwidth = self._bandwidth()
+        bandwidth = self._task.bandwidth()
         cycle = self._current_cycle
         max_cycles = self._config.max_cycles
         n_dims = self._task.space_dimension

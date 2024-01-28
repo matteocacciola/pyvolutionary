@@ -50,7 +50,7 @@ class AfricanVultureOptimization(OptimizationAbstract):
         def exploration_position(rand_pos: np.ndarray, position: np.ndarray) -> np.ndarray:
             if np.random.random() < p1:
                 return rand_pos - (np.abs((2 * np.random.random()) * rand_pos - position)) * F
-            return rand_pos - F + np.random.random() * self._uniform_position()
+            return rand_pos - F + np.random.random() * np.array(self._task.empty_solution())
 
         def evolve(vulture: AfricanVulture) -> AfricanVulture:
             position = np.array(vulture.position)

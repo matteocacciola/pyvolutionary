@@ -33,7 +33,7 @@ class TunaSwarmOptimization(OptimizationAbstract):
                 beta = np.exp(r1 * np.exp(3 * np.cos(np.pi * ((epochs - epoch + 1) / epochs)))) * np.cos(2 * np.pi * r1)
                 if C > np.random.random():
                     return (a1 * (best_position + beta * np.abs(diff_pos)) + a2 * prev_pos).tolist()  # Eqs (8.3-8.4)
-                rand_pos = np.array(self._init_position())
+                rand_pos = np.array(self._task.initial_solution())
                 return (a1 * (rand_pos + beta * np.abs(rand_pos - pos)) + a2 * prev_pos).tolist()  # Eqs (8.1-8.2)
             tf = np.random.choice([-1, 1])
             if 0.5 > np.random.random():

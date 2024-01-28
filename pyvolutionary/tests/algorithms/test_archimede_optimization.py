@@ -9,7 +9,7 @@ def optimization_config() -> ArchimedeOptimizationConfig:
     return ArchimedeOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         c1=2.0,
         c2=2.0,
         c3=2.0,

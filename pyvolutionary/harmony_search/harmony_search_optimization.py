@@ -25,7 +25,7 @@ class HarmonySearchOptimization(OptimizationAbstract):
         self.__fw_damp = 0.9995  # Damp Ratio
 
     def before_initialization(self):
-        self.__fw = 0.0001 * self._bandwidth()  # Bandwidth
+        self.__fw = 0.0001 * self._task.bandwidth()  # Bandwidth
         self.__dyn_fw = self.__fw
 
     def optimization_step(self):
@@ -39,7 +39,7 @@ class HarmonySearchOptimization(OptimizationAbstract):
             :rtype: Harmony
             """
             # Create New Harmony Position
-            pos_new = self._uniform_position()
+            pos_new = self._task.empty_solution()
 
             # Use Harmony Memory
             pos_new = np.where(np.random.random(dim) < consideration_rate, best_pos, pos_new)
@@ -50,7 +50,7 @@ class HarmonySearchOptimization(OptimizationAbstract):
             # Create New Harmony
             return Harmony(**self._init_agent(pos_new).model_dump())
 
-        delta = self.__dyn_fw * self._uniform_position()
+        delta = self.__dyn_fw * self._task.empty_solution()
         best_pos = self._best_agent.position
         consideration_rate = self._config.consideration_rate
         pitch_adjusting_rate = self._config.pitch_adjusting_rate

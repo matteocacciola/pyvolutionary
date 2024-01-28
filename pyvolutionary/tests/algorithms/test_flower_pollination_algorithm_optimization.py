@@ -9,7 +9,7 @@ def optimization_config() -> FlowerPollinationAlgorithmOptimizationConfig:
     return FlowerPollinationAlgorithmOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         p_s=0.8,
         levy_multiplier=0.2,
     )

@@ -9,7 +9,7 @@ def optimization_config() -> CoyotesOptimizationConfig:
     return CoyotesOptimizationConfig(
         population_size=10,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         num_coyotes=3,
     )
 

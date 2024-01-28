@@ -9,7 +9,7 @@ def optimization_config() -> FireflySwarmOptimizationConfig:
     return FireflySwarmOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         alpha=0.5,
         beta_min=0.2,
         gamma=0.99,

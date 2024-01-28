@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import field
 from typing import TypeVar, Any
 import numpy as np
-from pydantic import BaseModel, model_validator, ConfigDict
-from functools import wraps
+from pydantic import BaseModel, field_validator, model_validator, ConfigDict, PrivateAttr
 
 from .enums import TaskType
 
@@ -136,7 +135,10 @@ class OptimizationResult(BaseModel):
 
 class Variable(BaseModel, ABC):
     name: str | None = "var"
-    value: Any | None = None
+
+    @abstractmethod
+    def get(self) -> Any:
+        pass
 
     @abstractmethod
     def randomize(self) -> Any:
@@ -154,6 +156,14 @@ class Variable(BaseModel, ABC):
     def decode(self, value) -> Any:
         pass
 
+    @abstractmethod
+    def dimension(self) -> int:
+        pass
+
+    @abstractmethod
+    def has_children(self) -> bool:
+        pass
+
 
 class ContinuousVariable(Variable):
     lower_bound: float
@@ -165,38 +175,52 @@ class ContinuousVariable(Variable):
             raise ValueError("Upper bound must be greater than lower bound")
         return self
 
+    def get(self) -> "ContinuousVariable":
+        return self
+
     def randomize(self) -> float:
-        self.value = np.random.uniform(self.lower_bound, self.upper_bound)
-        return self.value
+        return np.random.uniform(self.lower_bound, self.upper_bound)
 
     def get_bounds(self) -> tuple[float, float]:
         return self.lower_bound, self.upper_bound
 
     def correct(self, value: float | int) -> float:
-        self.value = float(np.clip(value, self.lower_bound, self.upper_bound))
-        return self.value
+        return float(np.clip(value, self.lower_bound, self.upper_bound))
 
     def decode(self, value: float) -> float:
         return value
+
+    def dimension(self) -> int:
+        return 1
+
+    def has_children(self) -> bool:
+        return False
 
 
 class DiscreteVariable(Variable):
     choices: list[Any]
 
+    def get(self) -> "DiscreteVariable":
+        return self
+
     def randomize(self) -> int:
-        self.value = np.random.choice(range(0, len(self.choices)))
-        return self.value
+        return np.random.choice(range(0, len(self.choices)))
 
     def get_bounds(self) -> tuple[int, int]:
         return 0, len(self.choices) - 1
 
     def correct(self, value: float | int) -> int:
         lb, ub = self.get_bounds()
-        self.value = int(np.clip(value, lb, ub))
-        return self.value
+        return int(np.clip(value, lb, ub))
 
     def decode(self, value: float | int) -> Any:
         return self.choices[int(value)]
+
+    def dimension(self) -> int:
+        return 1
+
+    def has_children(self) -> bool:
+        return False
 
 
 class PermutationVariable(Variable):
@@ -209,9 +233,11 @@ class PermutationVariable(Variable):
         super().__init__(**kwargs)
         self.label_encoder.fit(self.items)
 
+    def get(self) -> "PermutationVariable":
+        return self
+
     def randomize(self) -> list[int]:
-        self.value = np.random.permutation(range(0, len(self.items))).tolist()
-        return self.value
+        return np.random.permutation(range(0, len(self.items))).tolist()
 
     def get_bounds(self) -> tuple[list, list]:
         n_items = len(self.items)
@@ -220,17 +246,30 @@ class PermutationVariable(Variable):
         return lb.tolist(), ub.tolist()
 
     def correct(self, value: tuple | list | np.ndarray) -> list[int]:
-        self.value = np.argsort(value).tolist()
-        return self.value
+        return np.argsort(value).tolist()
 
     def decode(self, value: tuple | list | np.ndarray) -> Any:
         value = self.correct(value)
         return self.label_encoder.inverse_transform(value)
 
+    def dimension(self) -> int:
+        return 1
+
+    def has_children(self) -> bool:
+        return False
+
 
 class MultiObjectiveVariable(Variable):
     lower_bounds: tuple[float] | list[float]
     upper_bounds: tuple[float] | list[float]
+    _children_: list[ContinuousVariable] = PrivateAttr()
+
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
+        lower_bounds, upper_bounds = self.get_bounds()
+        self._children_ = [ContinuousVariable(
+            name=f"{self.name}{i}", lower_bound=lb, upper_bound=ub
+        ) for i, (lb, ub) in enumerate(zip(lower_bounds, upper_bounds))]
 
     @model_validator(mode="after")
     def validate_bounds(self) -> "MultiObjectiveVariable":
@@ -240,38 +279,64 @@ class MultiObjectiveVariable(Variable):
             raise ValueError("Upper bound must be greater than lower bound")
         return self
 
+    def get(self) -> list["ContinuousVariable"]:
+        return self._children_
+
     def randomize(self):
-        raise NotImplementedError
+        return [v.randomize() for v in self._children_]
 
     def get_bounds(self) -> tuple[tuple[float] | list[float], tuple[float] | list[float]]:
         return self.lower_bounds, self.upper_bounds
 
     def correct(self, value: list):
-        raise NotImplementedError
+        return [v.correct(value[idx]) for idx, v in enumerate(self._children_)]
 
     def decode(self, value: list) -> list:
-        raise NotImplementedError
+        return [v.decode(value[idx]) for idx, v in enumerate(self._children_)]
+
+    def dimension(self) -> int:
+        return len(self.lower_bounds)
+
+    def has_children(self) -> bool:
+        return True
 
 
-def task_decorator(f):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        variables = kwargs.get("variables")
-        if not isinstance(variables, list) and not isinstance(variables, MultiObjectiveVariable):
-            raise ValueError("Variables must be a list or a multi-objective variable")
+class BinaryVariable(Variable):
+    n_vars: int
+    _children_: list[DiscreteVariable] = field(default_factory=list)
 
-        kwargs["is_multi_objective"] = isinstance(variables, MultiObjectiveVariable)
-        if kwargs["is_multi_objective"]:
-            lower_bounds, upper_bounds = variables.get_bounds()
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
+        self._children_ = [DiscreteVariable(name=f"{self.name}{i}", choices=[0, 1]) for i in range(self.n_vars)]
 
-            variables = [ContinuousVariable(
-                name=f"{variables.name}{i}", lower_bound=lb, upper_bound=ub
-            ) for i, (lb, ub) in enumerate(zip(lower_bounds, upper_bounds))]
-        kwargs["variables"] = variables
-        kwargs["space_dimension"] = len(variables)
-        return f(*args, **kwargs)
+    @field_validator("n_vars")
+    def validate_n_vars(cls, v):
+        if v <= 0:
+            raise ValueError(f"\"n_vars\" must be greater than zero. Got {v}")
+        return v
 
-    return wrapper
+    def get(self) -> list["DiscreteVariable"]:
+        return self._children_
+
+    def randomize(self):
+        return [v.randomize() for v in self._children_]
+
+    def get_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+        lb = np.zeros(self.n_vars)
+        ub = (2 - np.finfo(float).eps) * np.ones(self.n_vars)
+        return lb, ub
+
+    def correct(self, value: list):
+        return [v.correct(value[idx]) for idx, v in enumerate(self._children_)]
+
+    def decode(self, value: list) -> list:
+        return [v.decode(value[idx]) for idx, v in enumerate(self._children_)]
+
+    def dimension(self) -> int:
+        return self.n_vars
+
+    def has_children(self) -> bool:
+        return True
 
 
 class Task(BaseModel, ABC):
@@ -281,15 +346,10 @@ class Task(BaseModel, ABC):
     minmax: TaskType = TaskType.MIN
     data: dict | None = None
     objective_weights: list[float] | None = None
-    is_multi_objective: bool = False
 
-    @task_decorator
     def __init__(self, **kwargs: Any):
-        tt = kwargs.get("minmax", TaskType.MIN)
-        if tt not in TaskType:
-            raise ValueError(f"Invalid task type: {tt}")
-        kwargs["minmax"] = TaskType(tt)
-
+        variables = kwargs.get("variables")
+        kwargs["space_dimension"] = sum([v.dimension() for v in variables])
         super().__init__(**kwargs)
 
     @model_validator(mode="after")
@@ -304,7 +364,129 @@ class Task(BaseModel, ABC):
     def objective_function(self, x: list[float | int]) -> float | list[float]:
         pass
 
-    def transform_position(self, x: list[float | int]) -> dict[str, Any]:
+    def get_variables(self) -> list[Variable]:
+        return [item for v in self.variables for item in (v.get() if v.has_children() else [v.get()])]
+
+    def get_bounds(self) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Get the lower and upper bounds of the search space.
+        :return: the lower and upper bounds
+        :rtype: tuple[np.ndarray, np.ndarray]
+        """
+        lb = []
+        ub = []
+        for v in self.variables:
+            lb_, ub_ = v.get_bounds()
+            lb += lb_ if v.has_children() else [lb_]
+            ub += ub_ if v.has_children() else [ub_]
+
+        return np.array(lb), np.array(ub)
+
+    def correct_solution(self, solution: list[float | int] | np.ndarray) -> list[float | int]:
+        """
+        Correct the solution if it is outside the bounds by setting the solution to the closest bound. This function is
+        used to correct the solution after the solution update.
+        :param solution: the solution
+        :return: the corrected solution
+        :rtype: list[Any]
+        """
+        variables = self.get_variables()
+        return [v.correct(c) for c, v in zip(solution, variables)]
+
+    def empty_solution(self) -> list[float]:
+        """
+        This method generates a uniform random solution in the search space.
+        :return: the random solution
+        :rtype: list[float]
+        """
+        solution = [item for v in self.variables for item in (v.randomize() if v.has_children() else [v.randomize()])]
+        return solution
+
+    def initial_solution(self, solution: list[float] | np.ndarray | None = None) -> list[float]:
+        """
+        This method initializes the solution of the agent of the optimization algorithm. The solution is randomly
+        generated if it is not provided.
+        :param solution: the solution to initialize
+        :return: the initialized solution
+        :rtype: list[float]
+        """
+        solution = solution.tolist() if isinstance(solution, np.ndarray) else solution
+        return self.correct_solution(solution if solution is not None else self.empty_solution())
+
+    def amend_solution(self, solution: list[float | int] | np.ndarray) -> np.ndarray:
+        solution = solution if isinstance(solution, np.ndarray) else np.array(solution)
+        lb, ub = self.get_bounds()
+        return np.where(np.logical_and(lb <= solution <= ub), solution, np.array(self.initial_solution()))
+
+    def random_solution(self) -> list[float]:
+        """
+        This method generates a random solution in the search space.
+        :return: the random solution
+        :rtype: list[float]
+        """
+        lb, _ = self.get_bounds()
+        variables = self.get_variables()
+        return np.where(
+            isinstance(variables, ContinuousVariable), np.random.random() * self.bandwidth() + lb, self.empty_solution()
+        ).tolist()
+
+    def increase_solution(self, solution: list[float], scale_factor: float | None = None) -> np.ndarray:
+        """
+        This method increases the solution in the search space.
+        :param solution: the solution to increase
+        :param scale_factor: the scale factor
+        :return: the increased solution
+        :rtype: np.ndarray
+        """
+        scale_factor = scale_factor if scale_factor is not None else 1.0
+        variables = self.get_variables()
+        return np.where(
+            isinstance(variables, ContinuousVariable),
+            np.array(solution) + np.array(self.random_solution()) / scale_factor,
+            self.empty_solution()
+        )
+
+    def uniform_coordinates(self, dimensions: int | list[int]) -> list[float]:
+        """
+        This method generates uniform random coordinates in the search space.
+        :param dimensions: the dimensions to generate
+        :return: the random coordinates
+        :rtype: list[float]
+        """
+        return np.array(self.empty_solution())[dimensions].tolist()
+
+    def bandwidth(self) -> np.ndarray:
+        """
+        This method calculates the bandwidth in the search space for each dimension.
+        :return: the bandwidth
+        :rtype: np.ndarray
+        """
+        lb, ub = self.get_bounds()
+        return ub - lb
+
+    def sum_bounds(self) -> np.ndarray:
+        """
+        This method calculates the sum of the lower and upper bounds in the search space for each dimension.
+        :return: the sum of the lower and upper bounds
+        :rtype: np.ndarray
+        """
+        lb, ub = self.get_bounds()
+        return lb + ub
+
+    def is_valid_solution(self, solution: list[float] | np.ndarray) -> bool:
+        """
+        Check whether the solution is valid or not.
+        :param solution: the solution to check
+        :return: whether the solution is valid or not
+        """
+        lb, ub = self.get_bounds()
+        return np.all(np.less_equal(lb, solution)) and np.all(np.less_equal(solution, ub))
+
+    def solve(self, x: list[float | int]) -> float | list[float]:
+        solution = self.correct_solution(x)
+        return self.objective_function(solution)
+
+    def transform_solution(self, x: list[float | int]) -> dict[str, Any]:
         return {v.name: v.decode(x[i]) for i, v in enumerate(self.variables)}
 
 

@@ -33,11 +33,11 @@ class CatSwarmOptimization(OptimizationAbstract):
     ) -> Cat:
         agent = super()._init_agent(position=position)
 
-        velocity = self._uniform_position() if velocity is None else (
-            velocity.tolist() if isinstance(velocity, np.ndarray) else velocity
-        )
         flag = np.random.uniform() < self._config.mixture_ratio if flag is None else flag
+        if velocity is None:
+            return Cat(**agent.model_dump(), velocity=self._task.empty_solution(), flag=flag)
 
+        velocity = self._task.correct_solution(velocity.tolist() if isinstance(velocity, np.ndarray) else velocity)
         return Cat(**agent.model_dump(), velocity=velocity, flag=flag)
 
     def optimization_step(self):
@@ -72,7 +72,7 @@ class CatSwarmOptimization(OptimizationAbstract):
                 pos + w * np.array(cat.velocity) + np.random.uniform() * self._config.c1 * (best_position - pos)
                 if cat.flag else seeking_mode(cat)
             )
-            return self._init_agent(pos_new, cat.velocity)
+            return self._greedy_select_agent(cat, self._init_agent(pos_new, cat.velocity))
 
         n_dims = self._task.space_dimension
         smp = self._config.smp

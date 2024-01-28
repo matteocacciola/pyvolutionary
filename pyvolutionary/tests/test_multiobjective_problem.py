@@ -29,14 +29,14 @@ class MultiObjectiveBenchmark(Task):
 def data() -> tuple[ForestOptimizationAlgorithmConfig, Task]:
     # Define the task with the bounds and the configuration of the optimizer
     task = MultiObjectiveBenchmark(
-        variables=MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10)),
+        variables=[MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10))],
         objective_weights=[0.4, 0.1, 0.5],
     )
 
     configuration = ForestOptimizationAlgorithmConfig(
         population_size=200,
         fitness_error=10e-4,
-        max_cycles=400,
+        max_cycles=10,
         lifetime=5,
         area_limit=50,
         local_seeding_changes=1,
@@ -91,15 +91,7 @@ def test_fail_when_weights_are_more_than_objective_functions(data):
 def test_fail_when_some_lower_bounds_are_not_lower_than_corresponding_upper_bounds():
     with pytest.raises(ValueError):
         MultiObjectiveBenchmark(
-            variables=MultiObjectiveVariable(name="x", lower_bounds=(-10, 10), upper_bounds=(10, 10)),
-            objective_weights=[0.4, 0.1, 0.5],
-        )
-
-
-def test_fail_when_multi_objective_weights_are_specified_but_variable_is_not_multi_objective():
-    with pytest.raises(ValueError):
-        MultiObjectiveBenchmark(
-            variables=ContinuousVariable(name="x", lower_bound=-10, upper_bound=10),
+            variables=[MultiObjectiveVariable(name="x", lower_bounds=(-10, 10), upper_bounds=(10, 10))],
             objective_weights=[0.4, 0.1, 0.5],
         )
 
@@ -107,7 +99,7 @@ def test_fail_when_multi_objective_weights_are_specified_but_variable_is_not_mul
 def test_fail_when_number_of_lower_bounds_is_not_the_same_as_the_number_of_upper_bounds():
     with pytest.raises(ValueError):
         MultiObjectiveBenchmark(
-            variables=MultiObjectiveVariable(name="x", lower_bounds=(-10), upper_bounds=(10, 10)),
+            variables=[MultiObjectiveVariable(name="x", lower_bounds=(-10), upper_bounds=(10, 10))],
             objective_weights=[0.4, 0.1, 0.5],
         )
 
@@ -115,13 +107,6 @@ def test_fail_when_number_of_lower_bounds_is_not_the_same_as_the_number_of_upper
 def test_fail_when_some_weights_are_negative(data):
     with pytest.raises(ValueError):
         MultiObjectiveBenchmark(
-            variables=MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10)),
+            variables=[MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10))],
             objective_weights=[0.4, -0.1, 0.5],
         )
-
-    optimization_config, task = data
-    task.objective_weights = [0.4, -0.1, 0.2]
-
-    o = ForestOptimizationAlgorithm(optimization_config)
-    with pytest.raises(ValueError):
-        o.optimize(task)

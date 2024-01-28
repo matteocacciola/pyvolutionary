@@ -12,7 +12,7 @@ from pyvolutionary.tests.fixtures import task
 def optimization_config() -> ImperialistCompetitiveOptimizationConfig:
     return ImperialistCompetitiveOptimizationConfig(
         population_size=20,
-        max_cycles=30,
+        max_cycles=10,
         fitness_error=0.01,
         assimilation_rate=0.4,
         revolution_rate=0.1,

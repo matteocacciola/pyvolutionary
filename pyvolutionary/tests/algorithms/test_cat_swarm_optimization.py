@@ -9,7 +9,7 @@ def optimization_config() -> CatSwarmOptimizationConfig:
     return CatSwarmOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         mixture_ratio=0.5,
         smp=10,
         cdc=0.5,

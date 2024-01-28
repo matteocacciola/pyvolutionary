@@ -32,7 +32,7 @@ class WalrusOptimization(OptimizationAbstract):
             agent = Walrus(**self._init_agent(pos_new).model_dump())
             walrus = self._greedy_select_agent(walrus, agent)
             # phase 2 Exploitation
-            pos_new = self._increase_position(walrus.position, self._current_cycle)  # Eq. 7
+            pos_new = self._task.increase_solution(walrus.position, self._current_cycle)  # Eq. 7
             agent = Walrus(**self._init_agent(pos_new).model_dump())
             return self._greedy_select_agent(walrus, agent)
 

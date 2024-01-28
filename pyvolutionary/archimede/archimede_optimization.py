@@ -31,13 +31,13 @@ class ArchimedeOptimization(OptimizationAbstract):
     ) -> Object:
         agent = super()._init_agent(position=position)
 
-        density = self._uniform_position() if density is None else (
+        density = self._task.empty_solution() if density is None else (
             density.tolist() if isinstance(density, np.ndarray) else density
         )
-        volume = self._uniform_position() if volume is None else (
+        volume = self._task.empty_solution() if volume is None else (
             volume.tolist() if isinstance(volume, np.ndarray) else volume
         )
-        acceleration = self._uniform_position() if acceleration is None else (
+        acceleration = self._task.empty_solution() if acceleration is None else (
             acceleration.tolist() if isinstance(acceleration, np.ndarray) else acceleration
         )
         return Object(**agent.model_dump(), density=density, volume=volume, acceleration=acceleration)

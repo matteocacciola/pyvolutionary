@@ -9,7 +9,7 @@ def optimization_config() -> ForestOptimizationAlgorithmConfig:
     return ForestOptimizationAlgorithmConfig(
         population_size=10,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         lifetime=10,
         area_limit=5,
         local_seeding_changes=1,

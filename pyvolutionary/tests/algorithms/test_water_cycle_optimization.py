@@ -9,7 +9,7 @@ def optimization_config() -> WaterCycleOptimizationConfig:
     return WaterCycleOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         nsr=4,
         wc=2.0,
     )

@@ -34,7 +34,7 @@ class PathfinderAlgorithmOptimization(OptimizationAbstract):
                 beta * np.random.uniform() * (self._population[idx - 1].position - pathfinder_position)
             ) + np.random.uniform() * t * (dist / space)
 
-            pos_new = self._correct_position(pos_new)
+            pos_new = self._task.correct_solution(pos_new)
             agent = Pathfinder(**self._init_agent(pos_new).model_dump())
 
             return self._greedy_select_agent(agent, pathfinder)
@@ -42,9 +42,9 @@ class PathfinderAlgorithmOptimization(OptimizationAbstract):
         alpha, beta = np.random.uniform(1, 2, 2)
         best_position = np.array(self._best_agent.position)
 
-        A = self._uniform_position() * np.exp(-2 * self._current_cycle / self._config.max_cycles)
+        A = np.array(self._task.empty_solution()) * np.exp(-2 * self._current_cycle / self._config.max_cycles)
         t = 1. - self._current_cycle / (self._config.max_cycles + 1)
-        space = self._bandwidth()
+        space = self._task.bandwidth()
         
         # update the position of pathfinder and check the bound
         new_pathfinder = self._init_agent(np.array(self._population[0].position) + 2 * np.random.uniform() * (

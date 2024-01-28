@@ -9,7 +9,7 @@ def optimization_config() -> BrainStormOptimizationConfig:
     return BrainStormOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         m_clusters=5,
         p1=0.2,
         p2=0.8,

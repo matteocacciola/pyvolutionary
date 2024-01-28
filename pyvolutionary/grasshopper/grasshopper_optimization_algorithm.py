@@ -66,7 +66,7 @@ class GrasshopperOptimization(OptimizationAbstract):
 
         # Eq.(2.8)
         c = self._config.c_max - self._current_cycle * ((self._config.c_max - self._config.c_min) / self._config.max_cycles)
-        ran = (c / 2) * self._bandwidth()
+        ran = (c / 2) * self._task.bandwidth()
 
         best_pos = np.array(self._best_agent.position)
         self._population = [evolve(grasshopper) for grasshopper in self._population]

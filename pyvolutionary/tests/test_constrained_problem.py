@@ -56,7 +56,7 @@ def data() -> tuple[AntLionOptimizationConfig, Task]:
         )
     )
 
-    configuration = AntLionOptimizationConfig(population_size=200, fitness_error=10e-4, max_cycles=400)
+    configuration = AntLionOptimizationConfig(population_size=200, fitness_error=10e-4, max_cycles=10)
     return configuration, task
 
 

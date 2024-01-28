@@ -88,11 +88,11 @@ class KrillHerdOptimization(OptimizationAbstract):
             # induced physical diffusion operator
             diffusion = config_diffusion_speed * (1 - (current_cycle + 1) / max_cycles) * np.random.uniform(-1, 1, dims)
             # get a new position by a new delta factor
-            new_pos = self._correct_position(
+            new_pos = self._task.correct_solution(
                 krill.position + (c_t * sum_bandwidth * (induced_speed[idx] + foraging_speed[idx] + diffusion))
             )
             # crossover
-            new_pos = self._correct_position(np.where(
+            new_pos = self._task.correct_solution(np.where(
                 [np.random.random() < config_crossover_rate * get_k(krill, g_best) for _ in range(0, dims)],
                 pos,
                 new_pos
@@ -130,6 +130,6 @@ class KrillHerdOptimization(OptimizationAbstract):
         induced_speed = [induce_neighbours_motion(idx, krill) for idx, krill in enumerate(self._population)]
         foraging_speed = [induce_foraging_motion(krill) for krill in self._population]
 
-        sum_bandwidth = np.sum(self._bandwidth())
+        sum_bandwidth = np.sum(self._task.bandwidth())
 
         self._greedy_select_population([new_population(idx, krill) for idx, krill in enumerate(self._population)])

@@ -9,7 +9,7 @@ def optimization_config() -> VirusColonySearchOptimizationConfig:
     return VirusColonySearchOptimizationConfig(
         population_size=10,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         lamda=0.1,
         sigma=2.5,
     )

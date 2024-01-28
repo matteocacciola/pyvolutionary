@@ -60,12 +60,13 @@ continuous and discrete variables. In order to do so, you need to define a `Task
 `Task` class of the library. The list of variables in the problem must be specified in the constructor of the class
 inheriting from `Task`. The following table describes the types of variables currently implemented in the library.
 
-| Variable type   | Class name               | Description                                          | Example                                                                                       |
-|-----------------|--------------------------|------------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| Continuous      | `ContinuousVariable`     | A continuous variable                                | `ContinuousVariable(name="x0", lower_bound=-100.0, upper_bound=100.0)`                        |
-| Discrete        | `DiscreteVariable`       | A discrete variable                                  | `DiscreteVariable(choices=["scale", "auto", 0.01, 0.1, 0.5, 1.0], name="gamma")`              |
-| Permutation     | `PermutationVariable`    | A permutation of the specified choices               | `PermutationVariable(items=[[60, 200], [180, 200], [80, 180]], name="routes")`                |
-| Multi-objective | `MultiObjectiveVariable` | A type of variable used for multi-objective problems | `MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10))`            |
+| Variable type   | Class name               | Description                                                    | Example                                                                            |
+|-----------------|--------------------------|----------------------------------------------------------------|------------------------------------------------------------------------------------|
+| Continuous      | `ContinuousVariable`     | A continuous variable                                          | `ContinuousVariable(name="x0", lower_bound=-100.0, upper_bound=100.0)`             |
+| Discrete        | `DiscreteVariable`       | A discrete variable                                            | `DiscreteVariable(choices=["scale", "auto", 0.01, 0.1, 0.5, 1.0], name="gamma")`   |
+| Permutation     | `PermutationVariable`    | A permutation of the specified choices                         | `PermutationVariable(items=[[60, 200], [180, 200], [80, 180]], name="routes")`     |
+| Binary          | `BinaryVariable`         | A type of variable used for problems where the data are binary | `BinaryVariable(name="x", n_vars=10)`                                              |
+| Multi-objective | `MultiObjectiveVariable` | A type of variable used for multi-objective problems           | `MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10))` |
 
 An example of a custom `Task` class is the following:
 
@@ -253,7 +254,7 @@ X_test_std = sc.transform(X_test)
 
 class SvmOptimizedProblem(Task):
     def objective_function(self, x: list[Any]):
-        x_transformed = self.transform_position(x)
+        x_transformed = self.transform_solution(x)
         C, kernel = x_transformed["C"], x_transformed["kernel"]
         degree, gamma = x_transformed["degree"], x_transformed["gamma"]
 
@@ -285,7 +286,7 @@ configuration = ParticleSwarmOptimizationConfig(
 result = ParticleSwarmOptimization(configuration).optimize(task)
 best = best_agent(result.evolution[-1].agents, task.minmax)
 
-print(f"Best parameters: {task.transform_position(best.position)}")
+print(f"Best parameters: {task.transform_solution(best.position)}")
 print(f"Best accuracy: {best.cost}")
 ```
 
@@ -314,9 +315,10 @@ from pyvolutionary import (
 )
 from pyvolutionary.helpers import distance
 
+
 class TspProblem(Task):
     def objective_function(self, x: list[Any]) -> float:
-        x_transformed = self.transform_position(x)
+        x_transformed = self.transform_solution(x)
         routes = x_transformed["routes"]
         city_pos = self.data["city_positions"]
         n_routes = len(routes)
@@ -345,7 +347,7 @@ configuration = VirusColonySearchOptimizationConfig(
 result = VirusColonySearchOptimization(configuration).optimize(task)
 best = best_agent(result.evolution[-1].agents, task.minmax)
 
-print(f"Best real scheduling: {task.transform_position(best.position)}")
+print(f"Best real scheduling: {task.transform_solution(best.position)}")
 print(f"Best fitness: {best.cost}")
 ```
 
@@ -377,7 +379,7 @@ class MultiObjectiveBenchmark(Task):
 
 # Define the task with the bounds and the configuration of the optimizer
 task = MultiObjectiveBenchmark(
-    variables=MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10)),
+    variables=[MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10))],
     objective_weights=[0.4, 0.1, 0.5],
 )
 

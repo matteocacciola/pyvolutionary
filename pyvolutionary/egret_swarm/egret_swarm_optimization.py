@@ -92,7 +92,7 @@ class EgretSwarmOptimization(OptimizationAbstract):
 
         beta1 = 0.9
         beta2 = 0.99
-        hop = self._bandwidth()
+        hop = self._task.bandwidth()
 
         best_position = np.array(self._best_agent.position)
         best_cost = self._best_agent.cost

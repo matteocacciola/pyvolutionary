@@ -9,7 +9,7 @@ def optimization_config() -> FishSchoolSearchOptimizationConfig:
     return FishSchoolSearchOptimizationConfig(
         population_size=20,
         fitness_error=0.01,
-        max_cycles=100,
+        max_cycles=10,
         step_individual_init=0.1,
         step_individual_final=0.0001,
         step_volitive_init=0.01,

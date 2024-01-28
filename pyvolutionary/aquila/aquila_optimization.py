@@ -37,7 +37,7 @@ class AquilaOptimization(OptimizationAbstract):
                 )  # Eq. 5
             else:
                 pos_new = alpha * (best_position - x_mean) - (
-                    np.random.random() * self._random_position() * delta
+                    np.random.random() * np.array(self._task.random_solution()) * delta
                 ) if np.random.random() < 0.5 else QF * best_position - (
                     g2 * pos * np.random.random()
                 ) - g2 * levy_step + np.random.random() * g1  # Eq. 13, 14

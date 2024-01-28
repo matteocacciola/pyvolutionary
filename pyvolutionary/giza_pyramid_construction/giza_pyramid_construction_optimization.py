@@ -28,7 +28,7 @@ class GizaPyramidConstructionOptimization(OptimizationAbstract):
             # substitution
             new_pos = np.where(
                 np.logical_or(first_condition, second_condition),
-                self._uniform_position() * x * (np.array(worker.position) + d),
+                np.array(self._task.empty_solution()) * x * (np.array(worker.position) + d),
                 np.array(worker.position)
             )
             new_agent = Worker(**self._init_agent(new_pos).model_dump())

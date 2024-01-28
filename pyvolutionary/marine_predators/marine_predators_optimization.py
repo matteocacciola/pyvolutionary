@@ -45,7 +45,7 @@ class MarinePredatorsOptimization(OptimizationAbstract):
 
         def evolve(idx: int, predator: MarinePredator) -> MarinePredator:
             pos = np.array(predator.position)
-            pos_new = self._correct_position(get_new_position(idx, predator))
+            pos_new = self._task.correct_solution(get_new_position(idx, predator))
             if np.random.random() < FADS:
                 u = np.where(np.random.random(n_dims) < FADS, 1, 0)
                 pos_new += CF * (lb + np.random.random(n_dims) * bandwidth) * u
@@ -62,8 +62,8 @@ class MarinePredatorsOptimization(OptimizationAbstract):
         n_dims = self._task.space_dimension
         pop_size = self._config.population_size
 
-        lb, _ = self._get_bounds()
-        bandwidth = self._bandwidth()
+        lb, _ = self._task.get_bounds()
+        bandwidth = self._task.bandwidth()
 
         P, FADS = self.__P, self.__FADS
 

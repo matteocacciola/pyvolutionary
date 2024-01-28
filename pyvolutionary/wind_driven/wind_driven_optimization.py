@@ -24,7 +24,7 @@ class WindDrivenOptimization(OptimizationAbstract):
 
     def after_initialization(self):
         self.__dyn_list_velocity = self._config.max_v * np.array([
-            self._init_position() for _ in range(self._config.population_size)
+            self._task.initial_solution() for _ in range(self._config.population_size)
         ])
 
     def optimization_step(self):
