@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -30,7 +31,7 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
         _, ub = self._task.get_bounds()
         self.__dx = np.absolute(ub) / 5.0
 
-    def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Tree:
+    def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Tree:
         agent = super()._init_agent(position)
         return Tree(**agent.model_dump())
 

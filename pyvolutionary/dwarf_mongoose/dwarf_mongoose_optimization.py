@@ -24,9 +24,6 @@ class DwarfMongooseOptimization(OptimizationAbstract):
     def __init__(self, config: DwarfMongooseOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 
-    def _init_agent(self, position: list[float] | np.ndarray | None = None) -> DwarfMongoose:
-        return DwarfMongoose(**super()._init_agent(position).model_dump())
-
     def optimization_step(self):
         def foraging(idx: int, agent: DwarfMongoose) -> DwarfMongoose:
             agent.C += 1
@@ -36,7 +33,7 @@ class DwarfMongooseOptimization(OptimizationAbstract):
             phi = (peep / 2) * np.random.uniform(-1, 1, n_dims)
             pos_alpha = np.array(self._population[alpha].position)
             new_pos = pos_alpha + phi * (pos_alpha - np.array(self._population[k].position))
-            new_agent = self._init_agent(new_pos)
+            new_agent = DwarfMongoose(**self._init_agent(new_pos).model_dump())
             return self._greedy_select_agent(agent, new_agent)
         
         def scouting(idx: int, agent: DwarfMongoose) -> tuple[DwarfMongoose, float]:
@@ -46,14 +43,14 @@ class DwarfMongooseOptimization(OptimizationAbstract):
             # define vocalization coefficient
             phi = (peep / 2) * np.random.uniform(-1, 1, n_dims)
             new_pos = pos + phi * (pos - np.array(self._population[k].position))
-            new_agent = self._init_agent(new_pos)
+            new_agent = DwarfMongoose(**self._init_agent(new_pos).model_dump())
             # sleeping mould
             SM = (new_agent.cost - agent.cost) / (np.max([new_agent.cost, agent.cost]) + self.EPS)
             return self._greedy_select_agent(agent, new_agent), SM
 
         def babysitting(idx: int, agent: DwarfMongoose) -> DwarfMongoose:
             if agent.C >= L and idx < n_baby_sitter:
-                return self._init_agent()
+                return DwarfMongoose(**self._init_agent().model_dump())
             return agent
 
         def evolve(idx: int, agent: DwarfMongoose) -> DwarfMongoose:

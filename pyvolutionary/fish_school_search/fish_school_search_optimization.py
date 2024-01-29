@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -28,7 +29,7 @@ class FishSchoolSearchOptimization(OptimizationAbstract):
         self.__step_individual = self._config.step_individual_init * self._task.bandwidth()
         self.__step_volitive = self._config.step_volitive_init * self._task.bandwidth()
 
-    def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Fish:
+    def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Fish:
         agent = super()._init_agent(position)
         return Fish(**agent.model_dump(), weight=self._config.w_scale / 2.0)
 

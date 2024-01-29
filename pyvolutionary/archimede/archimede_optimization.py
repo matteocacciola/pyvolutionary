@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -24,10 +25,10 @@ class ArchimedeOptimization(OptimizationAbstract):
 
     def _init_agent(
         self,
-        position: list[float] | np.ndarray | None = None,
-        density: list[float] | np.ndarray | None = None,
-        volume: list[float] | np.ndarray | None = None,
-        acceleration: list[float] | np.ndarray | None = None,
+        position: list[Any] | np.ndarray | None = None,
+        density: list[Any] | np.ndarray | None = None,
+        volume: list[Any] | np.ndarray | None = None,
+        acceleration: list[Any] | np.ndarray | None = None,
     ) -> Object:
         agent = super()._init_agent(position=position)
 
@@ -59,7 +60,9 @@ class ArchimedeOptimization(OptimizationAbstract):
                     self._population[id_rand].volume
                 )) * np.array(self._population[id_rand].acceleration) / (new_density * new_volume)
             else:
-                new_acceleration = (g_best_density + g_best_volume * g_best_acceleration) / (new_density * new_volume)
+                new_acceleration = (g_best_density + g_best_volume * g_best_acceleration) / (
+                    new_density * new_volume + self.EPS
+                )
             return new_density, new_volume, new_acceleration
 
         def evolve(idx: int, obj: Object) -> Object:

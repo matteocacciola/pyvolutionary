@@ -1,3 +1,4 @@
+from typing import Any
 from pydantic import field_validator
 
 from ..models import Agent, BaseOptimizationConfig
@@ -5,7 +6,7 @@ from ..models import Agent, BaseOptimizationConfig
 
 class Cell(Agent):
     local_cost: float
-    local_best: list[float]
+    local_best: list[Any]
     nutrients: float = 0.0
 
 

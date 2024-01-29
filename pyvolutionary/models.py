@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import field
-from typing import TypeVar, Any
+from typing import TypeVar, Any, Final
 import numpy as np
 from pydantic import BaseModel, field_validator, model_validator, ConfigDict, PrivateAttr
 
@@ -13,11 +13,11 @@ class LabelEncoder:
     Especially, it can encode a list of mixed types include integer, float, and string. Better than scikit-learn module.
     """
     def __init__(self):
-        self.unique_labels = None
-        self.label_to_index = {}
+        self.__unique_labels__ = None
+        self.__label_to_index__ = {}
 
     @staticmethod
-    def set_y(y):
+    def __set_y__(y):
         if type(y) not in (list, tuple, np.ndarray):
             y = (y,)
         return y
@@ -27,8 +27,8 @@ class LabelEncoder:
         Fit label encoder to a given set of labels.
         :param y: labels to encode
         """
-        self.unique_labels = sorted(set(y), key=lambda x: (isinstance(x, (int, float)), x))
-        self.label_to_index = {label: i for i, label in enumerate(self.unique_labels)}
+        self.__unique_labels__ = sorted(set(y), key=lambda x: (isinstance(x, (int, float)), x))
+        self.__label_to_index__ = {label: i for i, label in enumerate(self.__unique_labels__)}
         return self
 
     def transform(self, y: list | tuple) -> list:
@@ -38,10 +38,10 @@ class LabelEncoder:
         :return: encoded integer labels
         :rtype: list
         """
-        if self.unique_labels is None:
+        if self.__unique_labels__ is None:
             raise ValueError("Label encoder has not been fit yet.")
-        y = self.set_y(y)
-        return [self.label_to_index[label] for label in y]
+        y = self.__set_y__(y)
+        return [self.__label_to_index__[label] for label in y]
 
     def fit_transform(self, y: list | tuple) -> list:
         """
@@ -50,7 +50,7 @@ class LabelEncoder:
         :return: encoded labels
         :rtype: list
         """
-        y = self.set_y(y)
+        y = self.__set_y__(y)
         self.fit(y)
         return self.transform(y)
 
@@ -61,10 +61,10 @@ class LabelEncoder:
         :return: original labels
         :rtype: list
         """
-        if self.unique_labels is None:
+        if self.__unique_labels__ is None:
             raise ValueError("Label encoder has not been fit yet.")
-        y = self.set_y(y)
-        return [self.unique_labels[i] if i in self.label_to_index.values() else "unknown" for i in y]
+        y = self.__set_y__(y)
+        return [self.__unique_labels__[i] if i in self.__label_to_index__.values() else "unknown" for i in y]
 
 
 class BaseOptimizationConfig(BaseModel):
@@ -157,7 +157,7 @@ class Variable(BaseModel, ABC):
         pass
 
     @abstractmethod
-    def dimension(self) -> int:
+    def size(self) -> int:
         pass
 
     @abstractmethod
@@ -190,7 +190,7 @@ class ContinuousVariable(Variable):
     def decode(self, value: float) -> float:
         return value
 
-    def dimension(self) -> int:
+    def size(self) -> int:
         return 1
 
     def has_children(self) -> bool:
@@ -216,7 +216,7 @@ class DiscreteVariable(Variable):
     def decode(self, value: float | int) -> Any:
         return self.choices[int(value)]
 
-    def dimension(self) -> int:
+    def size(self) -> int:
         return 1
 
     def has_children(self) -> bool:
@@ -224,14 +224,15 @@ class DiscreteVariable(Variable):
 
 
 class PermutationVariable(Variable):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     items: list[Any]
-    label_encoder: LabelEncoder = LabelEncoder()
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    _label_encoder_: LabelEncoder = PrivateAttr()
 
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
-        self.label_encoder.fit(self.items)
+        self._label_encoder_ = LabelEncoder()
+        self._label_encoder_.fit(self.items)
 
     def get(self) -> "PermutationVariable":
         return self
@@ -250,9 +251,9 @@ class PermutationVariable(Variable):
 
     def decode(self, value: tuple | list | np.ndarray) -> Any:
         value = self.correct(value)
-        return self.label_encoder.inverse_transform(value)
+        return self._label_encoder_.inverse_transform(value)
 
-    def dimension(self) -> int:
+    def size(self) -> int:
         return 1
 
     def has_children(self) -> bool:
@@ -262,6 +263,7 @@ class PermutationVariable(Variable):
 class MultiObjectiveVariable(Variable):
     lower_bounds: tuple[float] | list[float]
     upper_bounds: tuple[float] | list[float]
+
     _children_: list[ContinuousVariable] = PrivateAttr()
 
     def __init__(self, **kwargs: Any):
@@ -294,7 +296,7 @@ class MultiObjectiveVariable(Variable):
     def decode(self, value: list) -> list:
         return [v.decode(value[idx]) for idx, v in enumerate(self._children_)]
 
-    def dimension(self) -> int:
+    def size(self) -> int:
         return len(self.lower_bounds)
 
     def has_children(self) -> bool:
@@ -303,7 +305,8 @@ class MultiObjectiveVariable(Variable):
 
 class BinaryVariable(Variable):
     n_vars: int
-    _children_: list[DiscreteVariable] = field(default_factory=list)
+
+    _children_: list[DiscreteVariable] = PrivateAttr()
 
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
@@ -332,7 +335,7 @@ class BinaryVariable(Variable):
     def decode(self, value: list) -> list:
         return [v.decode(value[idx]) for idx, v in enumerate(self._children_)]
 
-    def dimension(self) -> int:
+    def size(self) -> int:
         return self.n_vars
 
     def has_children(self) -> bool:
@@ -347,10 +350,14 @@ class Task(BaseModel, ABC):
     data: dict | None = None
     objective_weights: list[float] | None = None
 
+    _EPS_ = PrivateAttr()
+
     def __init__(self, **kwargs: Any):
         variables = kwargs.get("variables")
-        kwargs["space_dimension"] = sum([v.dimension() for v in variables])
+        kwargs["space_dimension"] = sum([v.size() for v in variables])
         super().__init__(**kwargs)
+
+        self._EPS_ = np.finfo(float).eps
 
     @model_validator(mode="after")
     def validate_objective_weights(self) -> "Task":
@@ -377,8 +384,8 @@ class Task(BaseModel, ABC):
         ub = []
         for v in self.variables:
             lb_, ub_ = v.get_bounds()
-            lb += lb_ if v.has_children() else [lb_]
-            ub += ub_ if v.has_children() else [ub_]
+            lb.extend(lb_ if v.has_children() else [lb_])
+            ub.extend(ub_ if v.has_children() else [ub_])
 
         return np.array(lb), np.array(ub)
 
@@ -487,7 +494,15 @@ class Task(BaseModel, ABC):
         return self.objective_function(solution)
 
     def transform_solution(self, x: list[float | int]) -> dict[str, Any]:
-        return {v.name: v.decode(x[i]) for i, v in enumerate(self.variables)}
+        if len(x) == 1:
+            return {self.variables[0].name: self.variables[0].decode(x[0])}
+        counter = 0
+        solution = {}
+        for v in self.variables:
+            temp = x[counter:(counter + v.size())]
+            solution[v.name] = v.decode(temp if len(temp) > 1 else temp[0])
+            counter += v.size()
+        return solution
 
 
 T = TypeVar("T", Agent, Agent)

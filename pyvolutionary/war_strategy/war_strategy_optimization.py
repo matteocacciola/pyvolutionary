@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -25,7 +26,7 @@ class WarStrategyOptimization(OptimizationAbstract):
         super().__init__(config, debug)
 
     def _init_agent(
-        self, position: list[float] | np.ndarray | None = None, wl: float | None = None, wg: float | None = None
+        self, position: list[Any] | np.ndarray | None = None, wl: float | None = None, wg: float | None = None
     ) -> Soldier:
         agent = super()._init_agent(position=position)
         return Soldier(**agent.model_dump(), wl=wl, wg=wg)

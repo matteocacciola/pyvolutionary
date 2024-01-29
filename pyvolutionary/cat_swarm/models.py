@@ -1,10 +1,11 @@
+from typing import Any
 from pydantic import conlist, field_validator
 
 from ..models import Agent, BaseOptimizationConfig
 
 
 class Cat(Agent):
-    velocity: list[float]
+    velocity: list[Any]
     flag: bool = False
 
 

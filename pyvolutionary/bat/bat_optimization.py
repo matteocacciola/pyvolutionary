@@ -1,7 +1,6 @@
+from typing import Any
 import numpy as np
-import concurrent.futures as parallel
 
-from ..enums import ModeSolver
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
 from .models import Bat, BatOptimizationConfig
@@ -26,8 +25,8 @@ class BatOptimization(OptimizationAbstract):
 
     def _init_agent(
         self,
-        position: list[float] | np.ndarray | None = None,
-        velocity: list[float] | np.ndarray | None = None,
+        position: list[Any] | np.ndarray | None = None,
+        velocity: list[Any] | np.ndarray | None = None,
         loudness: float | None = None,
         pulse_rate: float | None = None,
     ) -> Bat:

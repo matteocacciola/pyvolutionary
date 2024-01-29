@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..models import ContinuousVariable
@@ -33,7 +34,7 @@ class ParticleSwarmOptimization(OptimizationAbstract):
         self.__v = 0.2 * self._task.bandwidth()
 
     def _init_agent(
-        self, position: list[float] | np.ndarray | None = None, velocity: list[float] | np.ndarray | None = None
+        self, position: list[Any] | np.ndarray | None = None, velocity: list[Any] | np.ndarray | None = None
     ) -> Particle:
         agent = super()._init_agent(position=position)
 

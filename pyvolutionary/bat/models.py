@@ -1,10 +1,11 @@
+from typing import Any
 from pydantic import field_validator, conlist
 
 from ..models import Agent, BaseOptimizationConfig
 
 
 class Bat(Agent):
-    velocity: list[float]
+    velocity: list[Any]
     loudness: float
     pulse_rate: float
 

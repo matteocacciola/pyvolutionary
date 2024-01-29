@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -27,7 +28,7 @@ class EgretSwarmOptimization(OptimizationAbstract):
 
     def _init_agent(
         self,
-        position: list[float] | np.ndarray | None = None,
+        position: list[Any] | np.ndarray | None = None,
         m: list[float] | None = None,
         v: list[float] | None = None,
         weights: list[float] | None = None,

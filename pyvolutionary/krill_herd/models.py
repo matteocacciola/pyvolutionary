@@ -1,11 +1,12 @@
+from typing import Any
 from pydantic import field_validator
 
 from ..models import Agent, BaseOptimizationConfig
 
 
 class Krill(Agent):
-    induced_speed: list[float]
-    foraging_speed: list[float]
+    induced_speed: list[Any]
+    foraging_speed: list[Any]
 
 
 class KrillHerdOptimizationConfig(BaseOptimizationConfig):

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -24,7 +25,7 @@ class CoronavirusHerdImmunityOptimization(OptimizationAbstract):
         super().__init__(config, debug)
 
     def _init_agent(
-        self, position: list[float] | np.ndarray | None = None, status: int | None = 0, age: int | None = 0
+        self, position: list[Any] | np.ndarray | None = None, status: int | None = 0, age: int | None = 0
     ) -> Patient:
         agent = super()._init_agent(position)
 

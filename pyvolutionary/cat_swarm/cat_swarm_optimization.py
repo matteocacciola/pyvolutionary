@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -27,8 +28,8 @@ class CatSwarmOptimization(OptimizationAbstract):
 
     def _init_agent(
         self,
-        position: list[float] | np.ndarray | None = None,
-        velocity: list[float] | np.ndarray | None = None,
+        position: list[Any] | np.ndarray | None = None,
+        velocity: list[Any] | np.ndarray | None = None,
         flag: bool | None = None,
     ) -> Cat:
         agent = super()._init_agent(position=position)

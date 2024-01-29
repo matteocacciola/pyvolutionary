@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from .classes import QTable
@@ -23,7 +24,7 @@ class QleSineCosineAlgorithmOptimization(OptimizationAbstract):
     def __init__(self, config: QleSineCosineAlgorithmOptimizationConfig, debug: bool | None = False):
         super().__init__(config, debug)
 
-    def _init_agent(self, position: list[float] | np.ndarray | None = None) -> QleCandidate:
+    def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> QleCandidate:
         agent = super()._init_agent(position)
         return QleCandidate(**agent.model_dump(), qtable=QTable(n_states=9, n_actions=9))
 

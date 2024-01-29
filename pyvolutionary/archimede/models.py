@@ -1,12 +1,13 @@
+from typing import Any
 from pydantic import conlist, field_validator
 
 from ..models import Agent, BaseOptimizationConfig
 
 
 class Object(Agent):
-    density: list[float]
-    volume: list[float]
-    acceleration: list[float]
+    density: list[Any]
+    volume: list[Any]
+    acceleration: list[Any]
 
 
 class ArchimedeOptimizationConfig(BaseOptimizationConfig):

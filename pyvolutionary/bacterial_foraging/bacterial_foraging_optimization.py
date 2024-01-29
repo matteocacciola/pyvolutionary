@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -30,7 +31,7 @@ class BacterialForagingOptimization(OptimizationAbstract):
         self.__C_s = self._config.C_s * self._task.bandwidth()
         self.__C_e = self._config.C_e * self._task.bandwidth()
 
-    def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Cell:
+    def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Cell:
         agent = super()._init_agent(position)
         return Cell(**agent.model_dump(), local_best=agent.position.copy(), local_cost=agent.cost)
 

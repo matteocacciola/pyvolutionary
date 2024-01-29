@@ -81,6 +81,7 @@ from .models import (
     DiscreteVariable,
     PermutationVariable,
     MultiObjectiveVariable,
+    BinaryVariable,
 )
 from .helpers import best_agent, worst_agent, best_agents, worst_agents, special_agents, get_levy_flight_step
 from .utils import agent_trend, best_agent_trend, agent_position, best_agent_position

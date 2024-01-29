@@ -1,4 +1,4 @@
-from typing import Final
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -35,7 +35,7 @@ class KrillHerdOptimization(OptimizationAbstract):
 
     def _init_agent(
         self,
-        position: list[float] | np.ndarray | None = None,
+        position: list[Any] | np.ndarray | None = None,
         induced_speed: list[float] | None = None,
         foraging_speed: list[float] | None = None,
     ) -> Krill:

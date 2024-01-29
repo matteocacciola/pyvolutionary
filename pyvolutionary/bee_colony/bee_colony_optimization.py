@@ -30,10 +30,6 @@ class BeeColonyOptimization(OptimizationAbstract):
         super().__init__(config, debug)
         self._config.population_size = int(self._config.population_size / 2)
 
-    def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Bee:
-        agent = super()._init_agent(position)
-        return Bee(**agent.model_dump())
-
     def _greedy_select_agent(self, agent: Bee, new_agent: Bee) -> Bee:
         """
         Perform the greedy selection between the current agent and the new one. The greedy selection is performed by
@@ -53,7 +49,7 @@ class BeeColonyOptimization(OptimizationAbstract):
             partner = self._population[partner_index]
             # generate a mutant solution by perturbing the current solution "index" with a random number
             pos_new = np.array(bee.position) + phi * (np.array(bee.position) - np.array(partner.position))
-            return self._greedy_select_agent(bee, self._init_agent(pos_new))
+            return self._greedy_select_agent(bee, Bee(**self._init_agent(pos_new).model_dump()))
 
         def send_onlooker_bees(idx: int) -> Bee:
             """

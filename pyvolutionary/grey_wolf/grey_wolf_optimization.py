@@ -28,8 +28,7 @@ class GreyWolfOptimization(OptimizationAbstract):
         self.__beta_wolf: GreyWolf | None = None
         self.__gamma_wolf: GreyWolf | None = None
 
-    def _init_population(self):
-        super()._init_population()
+    def after_initialization(self):
         self.__alpha_wolf, self.__beta_wolf, self.__gamma_wolf = best_agents(self._population, 3)
 
     def optimization_step(self):

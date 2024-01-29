@@ -26,8 +26,7 @@ class ElephantHerdOptimization(OptimizationAbstract):
         self.__n_individuals: int = int(self._config.population_size / self._config.n_clans)
         self.__groups: list[list[Elephant]] = []
 
-    def _init_population(self):
-        super()._init_population()
+    def after_initialization(self):
         self.__groups = self._generate_group_population(self._config.n_clans, self.__n_individuals)
 
     def optimization_step(self):

@@ -37,7 +37,11 @@ algorithms. However, the implementation of nature-inspired algorithms can often 
 by complexity and tedium. **pyVolutionary** is specifically crafted to surmount this challenge, offering a streamlined and
 expedited approach to leveraging these algorithms without the need for arduous, time-consuming implementations from scratch.
 
-The list of algorithms currently implemented in **pyVolutionary** can be consulted in the [Algorithms](#Algorithms) section.
+The list of algorithms currently implemented in **pyVolutionary** can be consulted in the [Algorithms](#Algorithms) section,
+where you can also find the corresponding references to the scientific papers as well as the corresponding demo for each algorithm.
+
+A number of practical examples are provided in the [Practical examples](#Practical-examples) section.
+
 The library is continuously updated with new algorithms and problems, and contributions are welcome.
 
 ## Installation
@@ -600,3 +604,17 @@ The following algorithms are currently implemented in **pyVolutionary**:
 | Wildebeest Herd Optimization                | `WildebeestHerdOptimization`             | 2019 | [paper](https://content.iospress.com/articles/journal-of-intelligent-and-fuzzy-systems/ifs190495)                                                                                                                             | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/wdo.py)     |
 | Wind Driven Optimization                    | `WindDrivenOptimization`                 | 2013 | [paper](https://ieeexplore.ieee.org/abstract/document/6407788)                                                                                                                                                                | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/who.py)     |
 | Zebra Optimization                          | `ZebraOptimization`                      | 2022 | [paper](https://ieeexplore.ieee.org/document/9768820)                                                                                                                                                                         | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/zoa.py)     |
+
+## Practical examples
+The following examples show how to use **pyVolutionary** to solve some practical problems.
+
+| Problem                                  | Example                                                                                                                     |
+|------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| Employee Rostering Problem               | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/examples/employee_rostering_problem.py)               |
+| Healthcare Workflow Optimization Problem | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/examples/healthcare_workflow_optimization_problem.py) |
+| Job Shop Scheduling Problem              | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/examples/job_shop_scheduling_problem.py)              |
+| Location Optimization Problem            | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/examples/location_optimization_problem.py)            |
+| Maintenance Scheduling Problem           | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/examples/maintenance_scheduling_problem.py)           |
+| Production Optimization Problem          | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/examples/production_optimization_problem.py)          |
+| Shortest Path Problem                    | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/examples/shortest_path_problem.py)                    |
+| Supply Chain Problem                     | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/examples/supply_chain_problem.py)                     |

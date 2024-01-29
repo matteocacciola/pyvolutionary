@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -33,7 +34,7 @@ class CoyotesOptimization(OptimizationAbstract):
         self.__ps = 1. / self._task.space_dimension  # Probability of selecting a dimension
         self.__p_leave = 0.005 * (self._config.num_coyotes ** 2)  # Probability of leaving a pack
 
-    def _init_agent(self, position: list[float] | np.ndarray | None = None, age: int | None = None) -> Coyote:
+    def _init_agent(self, position: list[Any] | np.ndarray | None = None, age: int | None = None) -> Coyote:
         agent = super()._init_agent(position)
         return Coyote(**agent.model_dump(), age=age if age is not None else 0)
 

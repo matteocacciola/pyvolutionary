@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Final
+from typing import Generic, Final, Any
 import numpy as np
 
 from .enums import ModeSolver
@@ -56,7 +56,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         """
         return self._task.solve(x) if self._task.minmax == TaskType.MIN else -1 * self._task.solve(x)
 
-    def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Agent:
+    def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Agent:
         """
         This method initializes the agent of the optimization algorithm. The position is randomly generated if it is
         not provided. The other properties of the agent.
