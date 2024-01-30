@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,11 +19,14 @@ class SpottedHyenaOptimization(OptimizationAbstract):
     [1] Dhiman, G. and Kumar, V., 2017. Spotted hyena optimizer: a novel bio-inspired based metaheuristic
         technique for engineering applications. Advances in Engineering Software, 114, pp.48-70.
     """
-    def __init__(self, config: SpottedHyenaOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: SpottedHyenaOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__population_delta: list[SpottedHyena] | None = None
         self.__radius: np.ndarray | None = None
         self.__delta_max: np.ndarray | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = SpottedHyenaOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def get_n() -> int:

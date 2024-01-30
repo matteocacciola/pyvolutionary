@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -17,8 +18,11 @@ class WalrusOptimization(OptimizationAbstract):
     ----------
     [1] Trojovský, P., & Dehghani, M. (2022). Walrus Optimization Algorithm: A New Bio-Inspired Metaheuristic Algorithm.
     """
-    def __init__(self, config: WalrusOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: WalrusOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = WalrusOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(walrus: Walrus) -> Walrus:

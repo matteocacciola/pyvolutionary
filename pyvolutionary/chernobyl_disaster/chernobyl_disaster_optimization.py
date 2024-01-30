@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -21,8 +22,11 @@ class ChernobylDisasterOptimization(OptimizationAbstract):
     [1] Shehadeh, H. A. (2023). Chernobyl disaster optimizer (CDO): a novel meta-heuristic method for global
         optimization. Neural Computing and Applications, 1-17.
     """
-    def __init__(self, config: ChernobylDisasterOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ChernobylDisasterOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ChernobylDisasterOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(radiation: SearchRadiation) -> SearchRadiation:

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -21,8 +22,11 @@ class SwarmHillClimbingOptimization(OptimizationAbstract):
     [1] Mitchell, M., Holland, J. and Forrest, S., 1993. When will a genetic algorithm outperform hill climbing.
         Advances in neural information processing systems, 6.
     """
-    def __init__(self, config: SwarmHillClimbingOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: SwarmHillClimbingOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = SwarmHillClimbingOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(idx: int, climber: Climber) -> Climber:

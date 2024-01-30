@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -25,8 +26,11 @@ class WildebeestHerdOptimization(OptimizationAbstract):
     [1] Amali, D. and Dinakaran, M., 2019. Wildebeest herd optimization: a new global optimization algorithm inspired
         by wildebeest herding behaviour. Journal of Intelligent & Fuzzy Systems, 37(6), pp.8063-8076.
     """
-    def __init__(self, config: WildebeestHerdOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: WildebeestHerdOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = WildebeestHerdOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def get_best_local(wb: Wildebeest) -> Wildebeest:

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -23,8 +24,11 @@ class AfricanVultureOptimization(OptimizationAbstract):
         nature-inspired metaheuristic algorithm for global optimization problems. Computers & Industrial Engineering,
         158, 107408.
     """
-    def __init__(self, config: AfricanVultureOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: AfricanVultureOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = AfricanVultureOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def exploration_position_phase1(rand_pos: np.ndarray, position: np.ndarray) -> np.ndarray:

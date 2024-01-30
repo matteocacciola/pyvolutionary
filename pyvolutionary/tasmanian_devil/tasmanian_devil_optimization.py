@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,11 @@ class TasmanianDevilOptimization(OptimizationAbstract):
     [1] Dehghani, M., Hubálovský, Š., & Trojovský, P. (2022). Tasmanian devil optimization: a new bio-inspired
         optimization algorithm for solving optimization algorithm. IEEE Access, 10, 19599-19620.
     """
-    def __init__(self, config: TasmanianDevilOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: TasmanianDevilOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = TasmanianDevilOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def strategy(idx: int, tasmanian_devil: TasmanianDevil) -> TasmanianDevil:

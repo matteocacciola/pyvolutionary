@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,11 @@ class TunaSwarmOptimization(OptimizationAbstract):
     [1] Xie, L., Han, T., Zhou, H., Zhang, Z. R., Han, B., & Tang, A. (2021). Tuna swarm optimization: a novel
         swarm-based metaheuristic algorithm for global optimization. Computational intelligence and Neuroscience.
     """
-    def __init__(self, config: TunaSwarmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: TunaSwarmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = TunaSwarmOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def get_new_local_pos(pos: list[float], prev_pos: list[float]) -> list[float] | None:

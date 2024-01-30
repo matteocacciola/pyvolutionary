@@ -25,10 +25,13 @@ class ParticleSwarmOptimization(OptimizationAbstract):
         Proceedings of the 2001 Congress on Evolutionary Computation (IEEE Cat. No.01TH8546), 1, 81–86.
         https://doi.org/10.1109/CEC.2001.934374
     """
-    def __init__(self, config: ParticleSwarmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ParticleSwarmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__v: np.ndarray | None = None
         self.__pbest: list[Particle] = []
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ParticleSwarmOptimizationConfig(**parameters)
 
     def before_initialization(self):
         self.__v = 0.2 * self._task.bandwidth()

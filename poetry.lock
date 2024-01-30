@@ -964,6 +964,26 @@ files = [
 ]
 
 [[package]]
+name = "opfunu"
+version = "1.0.1"
+description = "Opfunu: An Open-source Python Library for Optimization Benchmark Functions"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "opfunu-1.0.1-py3-none-any.whl", hash = "sha256:eee5de220417a74adc3bd22499149e5f34365d36c8ad1682a298ec40ade96d7b"},
+    {file = "opfunu-1.0.1.tar.gz", hash = "sha256:845167c9a15703badb5a2b81a1108510cad29b425c8b59ce284db09e70244332"},
+]
+
+[package.dependencies]
+matplotlib = ">=3.3.0"
+numpy = ">=1.16.5"
+Pillow = ">=9.1.0"
+requests = ">=2.27.0"
+
+[package.extras]
+dev = ["pytest (>=7.0)", "twine (>=4.0.1)"]
+
+[[package]]
 name = "packaging"
 version = "23.2"
 description = "Core utilities for Python packages"
@@ -1914,4 +1934,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "e79c734071ffb9f5a94a035fbff68fe14cf150b3368301dc2c38131e84b6c880"
+content-hash = "b92ee0e70fa584984edf0b5f8a044427d2316552e632e0aba9210780cccf2fd9"

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -21,8 +22,11 @@ class MothFlameOptimization(OptimizationAbstract):
     [1] Mirjalili, S., 2015. Moth-flame optimization algorithm: A novel nature-inspired heuristic paradigm.
         Knowledge-based systems, 89, pp.228-249.
     """
-    def __init__(self, config: MothFlameOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: MothFlameOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = MothFlameOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(idx: int, moth_flame: MothFlame, moth_flame_sorted: MothFlame) -> MothFlame:

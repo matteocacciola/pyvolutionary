@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -25,11 +26,14 @@ class WaterCycleOptimization(OptimizationAbstract):
         optimization method for solving constrained engineering optimization problems. Computers & Structures, 110,
         pp.151-166.
     """
-    def __init__(self, config: WaterCycleOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: WaterCycleOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__ecc = 1e-6  # Evaporation condition
         self.__pop_best: list[Stream] = []  # Including sea and river (1st solution is sea)
         self.__streams: dict = {}
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = WaterCycleOptimizationConfig(**parameters)
 
     def after_initialization(self):
         n_stream = self._config.population_size - self._config.nsr

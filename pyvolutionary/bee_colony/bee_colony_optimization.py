@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -26,9 +27,18 @@ class BeeColonyOptimization(OptimizationAbstract):
     [3] D. Karaboga, B. Basturk, A Powerful And Efficient Algorithm For Numerical Function Optimization: Artificial Bee
         Colony (ABC) Algorithm, Journal of Global Optimization, 39(3), 459-471, 2007.
     """
-    def __init__(self, config: BeeColonyOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: BeeColonyOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = BeeColonyOptimizationConfig(**parameters)
+
+    def before_initialization(self):
         self._config.population_size = int(self._config.population_size / 2)
+
+    def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Bee:
+        agent = super()._init_agent(position)
+        return Bee(**agent.model_dump())
 
     def _greedy_select_agent(self, agent: Bee, new_agent: Bee) -> Bee:
         """
@@ -49,14 +59,14 @@ class BeeColonyOptimization(OptimizationAbstract):
             partner = self._population[partner_index]
             # generate a mutant solution by perturbing the current solution "index" with a random number
             pos_new = np.array(bee.position) + phi * (np.array(bee.position) - np.array(partner.position))
-            return self._greedy_select_agent(bee, Bee(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(bee, self._init_agent(pos_new))
 
         def send_onlooker_bees(idx: int) -> Bee:
             """
-            Send onlooker bees to search for food sources. Each onlooker bee will dance on a food source. The probability of
-            each onlooker bee to dance on a food source is proportional to the quality of the food source. The better the
-            food source, the higher the probability of being selected. The probability of each food source is calculated
-            using the following formula:
+            Send onlooker bees to search for food sources. Each onlooker bee will dance on a food source. The
+            probability of each onlooker bee to dance on a food source is proportional to the quality of the food
+            source. The better the food source, the higher the probability of being selected. The probability of each
+            food source is calculated using the following formula:
                 p_i = cost_i / sum(costs)
             where p_i is the probability of the i-th food source, and cost_i is the cost of the i-th food source. The
             probability of each food source is calculated using the costs of the employed bees. The onlooker bees will

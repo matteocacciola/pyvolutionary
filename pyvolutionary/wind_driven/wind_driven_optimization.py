@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,9 +19,12 @@ class WindDrivenOptimization(OptimizationAbstract):
     [1] Bayraktar, Z., Komurcu, M., Bossard, J.A. and Werner, D.H., 2013. The wind driven optimization technique and its
         application in electromagnetics. IEEE transactions on antennas and propagation, 61(5), pp.2745-2757.
     """
-    def __init__(self, config: WindDrivenOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: WindDrivenOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__dyn_list_velocity: np.ndarray | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = WindDrivenOptimizationConfig(**parameters)
 
     def after_initialization(self):
         self.__dyn_list_velocity = self._config.max_v * np.array([

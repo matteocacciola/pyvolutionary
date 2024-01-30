@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,19 +23,29 @@ class CoralReefOptimization(OptimizationAbstract):
         The coral reefs optimization algorithm: a novel metaheuristic for efficiently solving optimization problems.
         The Scientific World Journal, 2014.
     """
-    def __init__(self, config: CoralReefOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: CoralReefOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         _, self.__G1 = self._config.gamma
+        self.__alpha: float | None = None
+        self.__gamma: float | None = None
+        self.__num_occupied: int | None = None
+        self.__dyn_Pd = 0
+        self.__occupied_list: np.ndarray | None = None
+        self.__occupied_idx_list: np.ndarray | None = None
+        self.__reset_count = 0
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = CoralReefOptimizationConfig(**parameters)
+
+    def before_initialization(self):
         self.__alpha = 10 * self._config.Pd / self._config.max_cycles
         self.__gamma = 10 * (self._config.gamma[1] - self._config.gamma[0]) / self._config.max_cycles
         self.__num_occupied = int(self._config.population_size / (1 + self._config.po))
-        self.__dyn_Pd = 0
         self.__occupied_list = np.zeros(self._config.population_size, dtype=int)
         self.__occupied_idx_list = np.random.choice(
             list(range(self._config.population_size)), self.__num_occupied, replace=False
         )
         self.__occupied_list[self.__occupied_idx_list] = 1
-        self.__reset_count = 0
 
     def __broadcast_spawning_brooding__(self) -> list[Coral]:
         """

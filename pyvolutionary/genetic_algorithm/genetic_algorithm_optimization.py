@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -22,10 +23,13 @@ class GeneticAlgorithmOptimization(OptimizationAbstract):
     [3] Holland, John H. (1975). Adaptation in Natural and Artificial Systems. University of Michigan Press.
         ISBN 978-0262581110. OCLC 1635804.
     """
-    def __init__(self, config: GeneticAlgorithmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: GeneticAlgorithmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__p_mutation: float | None = None
         self.__bit_genes: list[BitGene] | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = GeneticAlgorithmOptimizationConfig(**parameters)
 
     def before_initialization(self):
         self.__bit_genes = [BitGene(self._task.space_dimension) for _ in range(0, self._config.population_size)]

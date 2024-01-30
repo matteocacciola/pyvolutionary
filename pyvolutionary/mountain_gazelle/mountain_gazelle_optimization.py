@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -20,8 +21,11 @@ class MountainGazelleOptimization(OptimizationAbstract):
         new nature-inspired metaheuristic algorithm for global optimization problems. Advances in Engineering Software,
         174, 103282.
     """
-    def __init__(self, config: MountainGazelleOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: MountainGazelleOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = MountainGazelleOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def random_solution() -> np.ndarray:

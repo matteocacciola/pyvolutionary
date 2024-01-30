@@ -1,4 +1,4 @@
-from typing import Final
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -30,8 +30,11 @@ class FireworksOptimization(OptimizationAbstract):
     [6] Yang, X. S. (2015). Fireworks Algorithm: A Survey. International Journal of Swarm Intelligence Research,
         5(1), 1–18. https://doi.org/10.4018/IJSIR.2015010101
     """
-    def __init__(self, config: FireworksOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: FireworksOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = FireworksOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def get_num_sparks(firework: Firework) -> int:

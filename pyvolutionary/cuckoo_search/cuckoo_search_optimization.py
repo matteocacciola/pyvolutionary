@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,8 +23,14 @@ class CuckooSearchOptimization(OptimizationAbstract):
     [1] Yang, X.S. and Deb, S., 2009, December. Cuckoo search via Lévy flights. In 2009 World congress on nature &
         biologically inspired computing (NaBIC) (pp. 210-214). Ieee.
     """
-    def __init__(self, config: CuckooSearchOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: CuckooSearchOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+        self.__n_cut: int | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = CuckooSearchOptimizationConfig(**parameters)
+
+    def before_initialization(self):
         self.__n_cut = int(self._config.p_a * self._config.population_size)
 
     def optimization_step(self):

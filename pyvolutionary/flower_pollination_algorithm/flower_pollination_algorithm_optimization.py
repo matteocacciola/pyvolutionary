@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,8 +23,11 @@ class FlowerPollinationAlgorithmOptimization(OptimizationAbstract):
     [1] Yang, X.S., 2012, September. Flower pollination algorithm for global optimization. In International
         conference on unconventional computing and natural computation (pp. 240-249). Springer, Berlin, Heidelberg.
     """
-    def __init__(self, config: FlowerPollinationAlgorithmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: FlowerPollinationAlgorithmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = FlowerPollinationAlgorithmOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(pollinator: Pollinator, idx: int) -> Pollinator:

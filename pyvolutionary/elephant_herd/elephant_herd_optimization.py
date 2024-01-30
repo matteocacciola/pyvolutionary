@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -21,10 +22,16 @@ class ElephantHerdOptimization(OptimizationAbstract):
     [1] Wang, G.G., Deb, S. and Coelho, L.D.S., 2015, December. Elephant herding optimization.
         In 2015 3rd international symposium on computational and business intelligence (ISCBI) (pp. 1-5). IEEE.
     """
-    def __init__(self, config: ElephantHerdOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ElephantHerdOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
-        self.__n_individuals: int = int(self._config.population_size / self._config.n_clans)
+        self.__n_individuals: int | None = None
         self.__groups: list[list[Elephant]] = []
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ElephantHerdOptimizationConfig(**parameters)
+
+    def before_initialization(self):
+        self.__n_individuals = int(self._config.population_size / self._config.n_clans)
 
     def after_initialization(self):
         self.__groups = self._generate_group_population(self._config.n_clans, self.__n_individuals)

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -19,9 +20,12 @@ class ElectromagneticFieldOptimization(OptimizationAbstract):
         optimization: a physics-inspired metaheuristic optimization algorithm. Swarm and Evolutionary Computation, 26,
         pp.8-22.
     """
-    def __init__(self, config: ElectromagneticFieldOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ElectromagneticFieldOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__phi = (1 + np.sqrt(5)) / 2  # golden ratio
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ElectromagneticFieldOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(electromagnet: Electromagnet) -> Electromagnet:

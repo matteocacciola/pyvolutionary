@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,9 +19,12 @@ class OspreyOptimization(OptimizationAbstract):
     [1] Trojovský, P., & Dehghani, M. Osprey (2023) Optimization Algorithm: A new bio-inspired metaheuristic algorithm
         for solving engineering optimization problems. Frontiers in Mechanical Engineering, 8, 136.
     """
-    def __init__(self, config: OspreyOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: OspreyOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__phi = (1 + np.sqrt(5)) / 2  # golden ratio
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = OspreyOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def get_indexes_better(osprey: Osprey) -> np.ndarray:

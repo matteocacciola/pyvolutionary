@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,9 +19,12 @@ class FoxOptimization(OptimizationAbstract):
     [1] Mohammed, H., & Rashid, T. (2023). FOX: a FOX-inspired optimization algorithm. Applied Intelligence, 53(1),
         1030-1050.
     """
-    def __init__(self, config: FoxOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: FoxOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__mint = np.inf
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = FoxOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(fox: Fox) -> Fox:

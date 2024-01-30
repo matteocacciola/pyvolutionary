@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,8 +23,11 @@ class AquilaOptimization(OptimizationAbstract):
         Aquila optimizer: a novel meta-heuristic optimization algorithm. Computers & Industrial Engineering, 157,
         p.107250.
     """
-    def __init__(self, config: AquilaOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: AquilaOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = AquilaOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def move(idx: int, aquila: Aquila) -> Aquila:

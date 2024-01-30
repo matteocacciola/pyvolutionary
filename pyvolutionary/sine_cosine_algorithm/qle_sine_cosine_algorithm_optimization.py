@@ -21,8 +21,11 @@ class QleSineCosineAlgorithmOptimization(OptimizationAbstract):
     [1] Hamad, Q. S., Samma, H., Suandi, S. A., & Mohamad-Saleh, J. (2022). Q-learning embedded sine cosine algorithm
         (QLESCA). Expert Systems with Applications, 193, 116417.
     """
-    def __init__(self, config: QleSineCosineAlgorithmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: QleSineCosineAlgorithmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = QleSineCosineAlgorithmOptimizationConfig(**parameters)
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> QleCandidate:
         agent = super()._init_agent(position)

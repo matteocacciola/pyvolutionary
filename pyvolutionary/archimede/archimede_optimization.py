@@ -20,8 +20,11 @@ class ArchimedeOptimization(OptimizationAbstract):
         algorithm: a new metaheuristic algorithm for solving optimization problems. Applied Intelligence, 51(3),
         pp.1531-1551.
     """
-    def __init__(self, config: ArchimedeOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ArchimedeOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ArchimedeOptimizationConfig(**parameters)
 
     def _init_agent(
         self,

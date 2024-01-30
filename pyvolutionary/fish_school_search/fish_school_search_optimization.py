@@ -19,13 +19,17 @@ class FishSchoolSearchOptimization(OptimizationAbstract):
     [1] Bastos Filho, Lima Neto, Lins, D. O. Nascimento and P. Lima, A novel search algorithm based on fish school
         behavior, in 2008 IEEE International Conference on Systems, Man and Cybernetics, Oct 2008, pp. 2646–2651.
     """
-    def __init__(self, config: FishSchoolSearchOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: FishSchoolSearchOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
-        self.__school_weight = self._config.population_size * self._config.w_scale / 2.0
+        self.__school_weight: float | None = None
         self.__step_individual: np.ndarray | None = None
         self.__step_volitive: np.ndarray | None = None
 
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = FishSchoolSearchOptimizationConfig(**parameters)
+
     def before_initialization(self):
+        self.__school_weight = self._config.population_size * self._config.w_scale / 2.0
         self.__step_individual = self._config.step_individual_init * self._task.bandwidth()
         self.__step_volitive = self._config.step_volitive_init * self._task.bandwidth()
 

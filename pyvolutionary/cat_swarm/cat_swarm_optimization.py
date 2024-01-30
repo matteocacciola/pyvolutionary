@@ -23,8 +23,11 @@ class CatSwarmOptimization(OptimizationAbstract):
     [1] Chu, S.C., Tsai, P.W. and Pan, J.S., 2006, August. Cat swarm optimization. In Pacific Rim international
         conference on artificial intelligence (pp. 854-858). Springer, Berlin, Heidelberg.
     """
-    def __init__(self, config: CatSwarmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: CatSwarmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = CatSwarmOptimizationConfig(**parameters)
 
     def _init_agent(
         self,

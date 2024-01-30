@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,14 @@ class CoatiOptimization(OptimizationAbstract):
     [1] Dehghani, M., Montazeri, Z., Trojovská, E., & Trojovský, P. (2023). Coati Optimization Algorithm: A new
         bio-inspired metaheuristic algorithm for solving optimization problems. Knowledge-Based Systems, 259, 110011.
     """
-    def __init__(self, config: CoatiOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: CoatiOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+        self.__size2: int | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = CoatiOptimizationConfig(**parameters)
+
+    def before_initialization(self):
         self.__size2 = int(self._config.population_size / 2)
 
     def optimization_step(self):

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,8 +23,11 @@ class GoldenJackalOptimization(OptimizationAbstract):
     [1] Chopra, N., & Ansari, M. M. (2022). Golden jackal optimization: A novel nature-inspired optimizer for
         engineering applications. Expert Systems with Applications, 198, 116924.
     """
-    def __init__(self, config: GoldenJackalOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: GoldenJackalOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = GoldenJackalOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(idx: int, jackal: GoldenJackal) -> GoldenJackal:

@@ -22,9 +22,12 @@ class EgretSwarmOptimization(OptimizationAbstract):
     [1] Chen, Z., Francis, A., Li, S., Liao, B., Xiao, D., Ha, T. T., ... & Cao, X. (2022). Egret Swarm Optimization
         Algorithm: An Evolutionary Computation Approach for Model Free Optimization. Biomimetics, 7(4), 144.
     """
-    def __init__(self, config: EgretSwarmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: EgretSwarmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__ebest: list[Egret] = []
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = EgretSwarmOptimizationConfig(**parameters)
 
     def _init_agent(
         self,

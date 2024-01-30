@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,11 @@ class SiberianTigerOptimization(OptimizationAbstract):
     [1] Trojovský, P., Dehghani, M., & Hanuš, P. (2022). Siberian Tiger Optimization: A New Bio-Inspired
         Metaheuristic Algorithm for Solving Engineering Optimization Problems. IEEE Access, 10, 132396-132431.
     """
-    def __init__(self, config: SiberianTigerOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: SiberianTigerOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = SiberianTigerOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def get_indexes_better(siberian_tiger: SiberianTiger) -> np.ndarray:

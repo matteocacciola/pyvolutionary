@@ -1,5 +1,5 @@
 import math
-
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -23,8 +23,11 @@ class NuclearReactionOptimization(OptimizationAbstract):
         Nuclear Reaction Processes for Numerical Optimization. In Journal of Physics: Conference Series (Vol. 1213,
         No. 3, p. 032009). IOP Publishing.
     """
-    def __init__(self, config: NuclearReactionOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: NuclearReactionOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = NuclearReactionOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def nfi_phase(idx: int, reaction: NuclearReaction) -> NuclearReaction:

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,11 @@ class ZebraOptimization(OptimizationAbstract):
     [1] Trojovská, E., Dehghani, M., & Trojovský, P. (2022). Zebra optimization algorithm: A new bio-inspired
         optimization algorithm for solving optimization algorithm. IEEE Access, 10, 49445-49473.
     """
-    def __init__(self, config: ZebraOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ZebraOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ZebraOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def foraging(zebra: Zebra) -> Zebra:

@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import Final
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -20,8 +20,11 @@ class EnergyValleyOptimization(OptimizationAbstract):
     [1] Azizi, M., Aickelin, U., A. Khorshidi, H., & Baghalzadeh Shishehgarkhaneh, M. (2023). Energy valley optimizer:
         a novel metaheuristic algorithm for global and engineering optimization. Scientific Reports, 13(1), 226.
     """
-    def __init__(self, config: EnergyValleyOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: EnergyValleyOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = EnergyValleyOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(idx: int, particle: Particle) -> list[Particle]:

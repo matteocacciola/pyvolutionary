@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,8 +23,15 @@ class BiogeographyBasedOptimization(OptimizationAbstract):
     [1] Simon, D., 2008. Biogeography-based optimization. IEEE transactions on evolutionary computation, 12(6),
         pp.702-713.
     """
-    def __init__(self, config: BiogeographyBasedOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: BiogeographyBasedOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+        self.__mu: np.ndarray | None = None
+        self.__mr: np.ndarray | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = BiogeographyBasedOptimizationConfig(**parameters)
+
+    def before_initialization(self):
         self.__mu = (
             self._config.population_size + 1 - np.array(range(1, self._config.population_size + 1))
         ) / (self._config.population_size + 1)

@@ -21,7 +21,7 @@ class OptimizationAbstract(ABC, Generic[T]):
     """
     EPS: Final[float] = np.finfo(float).eps
 
-    def __init__(self, config: BaseOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: BaseOptimizationConfig | None = None, debug: bool | None = False):
         """
         The constructor of the class.
         :param config: The configuration of the optimization algorithm.
@@ -41,6 +41,10 @@ class OptimizationAbstract(ABC, Generic[T]):
     def optimization_step(self):
         pass
 
+    @abstractmethod
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        pass
+
     def before_initialization(self):
         pass
 
@@ -48,7 +52,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         pass
 
     @property
-    def configuration(self) -> BaseOptimizationConfig:
+    def configuration(self) -> BaseOptimizationConfig | None:
         """
         This property returns the configuration of the optimization algorithm.
         :return: the configuration
@@ -197,6 +201,9 @@ class OptimizationAbstract(ABC, Generic[T]):
         :return: the result of the optimization
         :rtype: OptimizationResult
         """
+        if not self._config:
+            raise ValueError("Invalid configuration")
+
         np.random.seed(task.seed)
         evolution: list[Population] = []
 
@@ -209,7 +216,7 @@ class OptimizationAbstract(ABC, Generic[T]):
             try:
                 self._mode = ModeSolver(mode)
             except ValueError:
-                raise ValueError("Invalid mode. Possible values are 'serial', 'thread' and 'process'")
+                raise ValueError("Invalid mode. Possible values are \"serial\", \"thread\" and \"process\"")
 
         self._task = task
         self.before_initialization()

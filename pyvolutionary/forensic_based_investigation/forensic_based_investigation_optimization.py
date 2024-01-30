@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,11 @@ class ForensicBasedInvestigationOptimization(OptimizationAbstract):
     ----------
     [1] Chou, J.S. and Nguyen, N.M., 2020. FBI inspired meta-optimization. Applied Soft Computing, 93, p.106339.
     """
-    def __init__(self, config: ForensicBasedInvestigationOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ForensicBasedInvestigationOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ForensicBasedInvestigationOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def investigation_a1(idx: int, detective: Detective) -> Detective:

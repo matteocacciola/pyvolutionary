@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,8 +23,11 @@ class GrasshopperOptimization(OptimizationAbstract):
     [1] Saremi, S., Mirjalili, S. and Lewis, A., 2017. Grasshopper optimisation algorithm: theory and application.
         Advances in Engineering Software, 105, pp.30-47.
     """
-    def __init__(self, config: GrasshopperOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: GrasshopperOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = GrasshopperOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def f(r_vector: np.ndarray):

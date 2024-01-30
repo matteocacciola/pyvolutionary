@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,11 @@ class ServalOptimization(OptimizationAbstract):
     [1] Dehghani, M., & Trojovský, P. (2022). Serval Optimization Algorithm: A New Bio-Inspired Approach for Solving
         Optimization Problems. Biomimetics, 7(4), 204.
     """
-    def __init__(self, config: ServalOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ServalOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ServalOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(serval: Serval) -> Serval:

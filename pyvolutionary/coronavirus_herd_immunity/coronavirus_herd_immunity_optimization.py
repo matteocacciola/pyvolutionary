@@ -21,8 +21,11 @@ class CoronavirusHerdImmunityOptimization(OptimizationAbstract):
         Comput & Applic 33, 5011–5042 (2021).
     """
 
-    def __init__(self, config: CoronavirusHerdImmunityOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: CoronavirusHerdImmunityOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = CoronavirusHerdImmunityOptimizationConfig(**parameters)
 
     def _init_agent(
         self, position: list[Any] | np.ndarray | None = None, status: int | None = 0, age: int | None = 0

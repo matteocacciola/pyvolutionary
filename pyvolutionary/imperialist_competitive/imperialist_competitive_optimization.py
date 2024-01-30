@@ -1,4 +1,5 @@
 import math
+from typing import Any
 import numpy as np
 
 from .classes import Country
@@ -28,10 +29,13 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
         by imperialistic competition. Applied Soft Computing Journal, 14, 240–256.
         https://doi.org/10.1016/j.asoc.2013.08.006
     """
-    def __init__(self, config: ImperialistCompetitiveOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ImperialistCompetitiveOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__countries: list[Country] = []
         self.__empires: list[EmpireClass] = []
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ImperialistCompetitiveOptimizationConfig(**parameters)
 
     def _init_population(self):
         # Create countries

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,8 +23,11 @@ class GiantTrevallyOptimization(OptimizationAbstract):
     [1] Sadeeq, H. T., & Abdulazeez, A. M. (2022). Giant Trevally Optimizer (GTO): A Novel Metaheuristic Algorithm for
         Global Optimization and Challenging Engineering Problems. IEEE Access, 10, 121
     """
-    def __init__(self, config: GiantTrevallyOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: GiantTrevallyOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = GiantTrevallyOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def extensive_search(trevally: GiantTrevally) -> GiantTrevally:

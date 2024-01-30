@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -20,8 +21,11 @@ class AntLionOptimization(OptimizationAbstract):
     ----------
     [1] Mirjalili, S., 2015. The ant lion optimizer. Advances in engineering software, 83, pp.80-98.
     """
-    def __init__(self, config: AntLionOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: AntLionOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = AntLionOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def get_i_ratio() -> float:

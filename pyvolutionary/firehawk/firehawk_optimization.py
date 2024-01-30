@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -23,8 +24,14 @@ class FireHawkOptimization(OptimizationAbstract):
     [1] Azizi, M., Talatahari, S. & Gandomi, A.H. Fire Hawk Optimizer: a novel metaheuristic algorithm. Artif Intell
         Rev 56, 287–363 (2023). https://doi.org/10.1007/s10462-022-10173-w
     """
-    def __init__(self, config: FireHawkOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: FireHawkOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+        self.__hn = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = FireHawkOptimizationConfig(**parameters)
+
+    def before_initialization(self):
         self.__hn = np.random.randint(1, np.ceil(self._config.population_size / 5))
 
     def optimization_step(self):

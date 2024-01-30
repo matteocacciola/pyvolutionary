@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -19,8 +20,11 @@ class ChaosGameOptimization(OptimizationAbstract):
     [1] Talatahari, S. and Azizi, M., 2021. Chaos Game Optimization: a novel metaheuristic algorithm. Artificial
         Intelligence Review, 54(2), pp.917-1004.
     """
-    def __init__(self, config: ChaosGameOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ChaosGameOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ChaosGameOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(agent: Seed) -> list[Seed]:

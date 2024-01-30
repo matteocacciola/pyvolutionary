@@ -22,8 +22,11 @@ class CamelCaravanOptimization(OptimizationAbstract):
     [1] Ali, Ramzy. (2016). Novel Optimization Algorithm Inspired by Camel Traveling Behavior.
         Iraq J. Electrical and Electronic Engineering. 12. 167-177.
     """
-    def __init__(self, config: CamelCaravanOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: CamelCaravanOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = CamelCaravanOptimizationConfig(**parameters)
 
     def _init_agent(
         self,

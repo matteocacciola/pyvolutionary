@@ -22,8 +22,11 @@ class WarStrategyOptimization(OptimizationAbstract):
     [1] Ayyarao, Tummala SLV, and Polamarasetty P. Kumar. "Parameter estimation of solar PV models with a new proposed
         war strategy optimization algorithm." International Journal of Energy Research (2022).
     """
-    def __init__(self, config: WarStrategyOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: WarStrategyOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = WarStrategyOptimizationConfig(**parameters)
 
     def _init_agent(
         self, position: list[Any] | np.ndarray | None = None, wl: float | None = None, wg: float | None = None

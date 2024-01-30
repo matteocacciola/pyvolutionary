@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,8 +23,11 @@ class InvasiveWeedOptimization(OptimizationAbstract):
     [1] Mehrabian, A.R. and Lucas, C., 2006. A novel numerical optimization algorithm inspired from weed colonization.
         Ecological informatics, 1(4), pp.355-366.
     """
-    def __init__(self, config: InvasiveWeedOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: InvasiveWeedOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = InvasiveWeedOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(weed: InvasiveWeed) -> list[InvasiveWeed]:

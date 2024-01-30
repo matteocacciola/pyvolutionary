@@ -22,8 +22,11 @@ class GerminalCenterOptimization(OptimizationAbstract):
     [1] Villaseñor, C., Arana-Daniel, N., Alanis, A.Y., López-Franco, C. and Hernandez-Vargas, E.A., 2018.
     Germinal center optimization algorithm. International Journal of Computational Intelligence Systems, 12(1), p.13.
     """
-    def __init__(self, config: GerminalCenterOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: GerminalCenterOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = GerminalCenterOptimizationConfig(**parameters)
 
     def _init_agent(
         self, position: list[Any] | np.ndarray | None = None, cc: float | None = None, ls: float | None = None

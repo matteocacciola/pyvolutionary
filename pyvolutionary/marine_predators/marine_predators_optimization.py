@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -21,10 +22,13 @@ class MarinePredatorsOptimization(OptimizationAbstract):
     [1] Faramarzi, A., Heidarinejad, M., Mirjalili, S., & Gandomi, A. H. (2020). Marine Predators Algorithm: A
         nature-inspired metaheuristic. Expert systems with applications, 152, 113377.
     """
-    def __init__(self, config: MarinePredatorsOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: MarinePredatorsOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__FADS = 0.2
         self.__P = 0.5
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = MarinePredatorsOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def get_new_position(idx: int, predator: MarinePredator) -> np.ndarray:

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -27,8 +28,11 @@ class FireflySwarmOptimization(OptimizationAbstract):
         systems XXVI. Springer, London, 2010. 209-218. https://doi.org/10.1007/978-1-84996-153-4_15
     """
 
-    def __init__(self, config: FireflySwarmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: FireflySwarmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = FireflySwarmOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def update_firefly(idx: int, firefly: Firefly) -> Firefly:

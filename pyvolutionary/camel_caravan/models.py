@@ -1,4 +1,3 @@
-import numpy as np
 from pydantic import field_validator
 
 from ..models import Agent, BaseOptimizationConfig

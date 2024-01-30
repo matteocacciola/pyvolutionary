@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,11 @@ class SeagullOptimization(OptimizationAbstract):
     [1] Dhiman, G., & Kumar, V. (2019). Seagull optimization algorithm: Theory and its applications for large-scale
         industrial engineering problems. Knowledge-based systems, 165, 169-196.
     """
-    def __init__(self, config: SeagullOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: SeagullOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = SeagullOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(seagull: Seagull) -> Seagull:

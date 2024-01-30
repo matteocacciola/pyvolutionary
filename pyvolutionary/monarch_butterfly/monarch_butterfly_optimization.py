@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -23,8 +24,16 @@ class MonarchButterflyOptimization(OptimizationAbstract):
     [1] Wang, G. G., Deb, S., & Cui, Z. (2019). Monarch butterfly optimization. Neural computing and applications,
         31(7), 1995-2014.
     """
-    def __init__(self, config: MonarchButterflyOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: MonarchButterflyOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+        self.__bar: float | None = None
+        self.__np1: int | None = None
+        self.__np2: int | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = MonarchButterflyOptimizationConfig(**parameters)
+
+    def before_initialization(self):
         self.__bar = self._config.partition
         self.__np1 = int(np.ceil(self._config.partition * self._config.population_size))
         self.__np2 = self._config.population_size - self.__np1

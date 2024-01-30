@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,8 +23,11 @@ class AntColonyOptimization(OptimizationAbstract):
         européenne sur la vie artificielle, Paris, France, Elsevier Publishing, 134-142, 1991.
     [2] M. Dorigo, Optimization, Learning and Natural Algorithms, PhD thesis, Politecnico di Milano, Italy, 1992.
     """
-    def __init__(self, config: AntColonyOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: AntColonyOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = AntColonyOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def compute_sigma(ant: Ant) -> float:

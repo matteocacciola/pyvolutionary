@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import field
-from typing import TypeVar, Any, Final
+from typing import TypeVar
+from typing import Any
 import numpy as np
 from pydantic import BaseModel, field_validator, model_validator, ConfigDict, PrivateAttr
 
@@ -69,7 +70,7 @@ class LabelEncoder:
 
 class BaseOptimizationConfig(BaseModel):
     population_size: int
-    fitness_error: float | None = None
+    fitness_error: float | None = 0.1
     max_cycles: int
 
 

@@ -20,8 +20,11 @@ class BatOptimization(OptimizationAbstract):
         optimization" (NICSO 2010). Springer, Berlin, Heidelberg, 2010. 65-74.
     """
 
-    def __init__(self, config: BatOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: BatOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = BatOptimizationConfig(**parameters)
 
     def _init_agent(
         self,

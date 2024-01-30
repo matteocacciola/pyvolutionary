@@ -22,12 +22,15 @@ class CoyotesOptimization(OptimizationAbstract):
     [1] Pierezan, J. and Coelho, L.D.S., 2018, July. Coyote optimization algorithm: a new metaheuristic
         for global optimization problems. In 2018 IEEE congress on evolutionary computation (CEC) (pp. 1-8). IEEE.
     """
-    def __init__(self, config: CoyotesOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: CoyotesOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__n_packs: int = 0
         self.__ps: float = 0.
         self.__p_leave: float = 0.
         self.__packs: list[list[Coyote]] = []
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = CoyotesOptimizationConfig(**parameters)
 
     def before_initialization(self):
         self.__n_packs = int(self._config.population_size / self._config.num_coyotes)

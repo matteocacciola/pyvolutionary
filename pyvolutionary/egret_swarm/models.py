@@ -7,8 +7,6 @@ class Egret(Agent):
     m: list[float]
     v: list[float]
     weights: list[float]
-    # local_position: list[float] | None = None
-    # local_cost: float | None = None
     g: list[float] | None = None
 
     def __init__(self, **kwargs):

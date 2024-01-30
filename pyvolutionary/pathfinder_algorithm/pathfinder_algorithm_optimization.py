@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -21,8 +22,11 @@ class PathfinderAlgorithmOptimization(OptimizationAbstract):
     [1] Yapici, H. and Cetinkaya, N., 2019. A new meta-heuristic optimizer: Pathfinder algorithm. Applied soft
         computing, 78, pp.545-568.
     """
-    def __init__(self, config: PathfinderAlgorithmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: PathfinderAlgorithmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = PathfinderAlgorithmOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(idx: int, pathfinder: Pathfinder) -> Pathfinder:

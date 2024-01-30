@@ -24,10 +24,13 @@ class KrillHerdOptimization(OptimizationAbstract):
         in Nonlinear Science and Numerical Simulation, Volume 17, Issue 12, 2012, Pages 4831-4845, ISSN 1007-5704,
         https://doi.org/10.1016/j.cnsns.2012.05.010.
     """
-    def __init__(self, config: KrillHerdOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: KrillHerdOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__w_neighbour: np.ndarray | None = None
         self.__w_foraging: np.ndarray | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = KrillHerdOptimizationConfig(**parameters)
 
     def before_initialization(self):
         self.__w_neighbour = np.full(self._task.space_dimension, self._config.w_neighbour)

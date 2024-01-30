@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -21,8 +22,14 @@ class VirusColonySearchOptimization(OptimizationAbstract):
     [1] Li, M.D., Zhao, H., Weng, X.W. and Han, T., 2016. A novel nature-inspired algorithm for optimization: Virus
         colony search. Advances in Engineering Software, 92, pp.65-88.
     """
-    def __init__(self, config: VirusColonySearchOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: VirusColonySearchOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+        self.__n_best: int | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = VirusColonySearchOptimizationConfig(**parameters)
+
+    def before_initialization(self):
         self.__n_best = int(self._config.lamda * self._config.population_size)
 
     def optimization_step(self):

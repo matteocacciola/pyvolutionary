@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,11 @@ class SineCosineAlgorithmOptimization(OptimizationAbstract):
     [1] Mirjalili, S., 2016. SCA: a sine cosine algorithm for solving optimization problems. Knowledge-based systems,
         96, pp.120-133.
     """
-    def __init__(self, config: SineCosineAlgorithmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: SineCosineAlgorithmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = SineCosineAlgorithmOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(idx: int, candidate: Candidate) -> Candidate:

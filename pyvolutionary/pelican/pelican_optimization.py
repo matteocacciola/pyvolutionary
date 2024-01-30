@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,8 +19,11 @@ class PelicanOptimization(OptimizationAbstract):
     [1] Trojovský, P., & Dehghani, M. (2022). Pelican optimization algorithm: A novel nature-inspired algorithm for
         engineering applications. Sensors, 22(3), 855.
     """
-    def __init__(self, config: PelicanOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: PelicanOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = PelicanOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(pelican: Pelican) -> Pelican:

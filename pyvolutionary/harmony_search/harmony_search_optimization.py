@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -18,11 +19,14 @@ class HarmonySearchOptimization(OptimizationAbstract):
     [1] Zong Woo Geem, Joong Hoon Kim, Loganathan GV. A New Heuristic Optimization Algorithm: Harmony Search.
         SIMULATION. 2001;76(2):60-68. doi:10.1177/003754970107600201
     """
-    def __init__(self, config: HarmonySearchOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: HarmonySearchOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__fw: np.ndarray | None = None
         self.__dyn_fw: np.ndarray | None = None
         self.__fw_damp = 0.9995  # Damp Ratio
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = HarmonySearchOptimizationConfig(**parameters)
 
     def before_initialization(self):
         self.__fw = 0.0001 * self._task.bandwidth()  # Bandwidth

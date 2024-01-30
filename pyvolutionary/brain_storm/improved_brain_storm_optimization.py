@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -23,11 +24,17 @@ class ImprovedBrainStormOptimization(OptimizationAbstract):
     [1] El-Abd, M. (2017). Global-best brain storm optimization algorithm. Swarm and evolutionary computation, 37,
         27-44.
     """
-    def __init__(self, config: ImprovedBrainStormOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: ImprovedBrainStormOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
-        self.__m_solution = int(self._config.population_size / self._config.m_clusters)
+        self.__m_solution: int | None = None
         self.__clusters: list[list[Person]] = []
         self.__centers: list[Person] = []
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ImprovedBrainStormOptimizationConfig(**parameters)
+
+    def before_initialization(self):
+        self.__m_solution = int(self._config.population_size / self._config.m_clusters)
 
     def after_initialization(self):
         self.__clusters = self._generate_group_population(self._config.m_clusters, self.__m_solution, False)

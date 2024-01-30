@@ -23,9 +23,12 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
     [1] Manizheh Ghaemi, Mohammad-Reza Feizi-Derakhshi, Forest Optimization Algorithm, Expert Systems with Applications,
         Volume 41, Issue 15, 2014, Pages 6676-6687, ISSN 0957-4174, https://doi.org/10.1016/j.eswa.2014.05.009.
     """
-    def __init__(self, config: ForestOptimizationAlgorithmConfig, debug: bool | None = False):
+    def __init__(self, config: ForestOptimizationAlgorithmConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__dx: np.ndarray | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = ForestOptimizationAlgorithmConfig(**parameters)
 
     def before_initialization(self):
         _, ub = self._task.get_bounds()

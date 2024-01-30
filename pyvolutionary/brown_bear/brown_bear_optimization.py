@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -19,8 +20,11 @@ class BrownBearOptimization(OptimizationAbstract):
         Solving Economic Dispatch Problem. In Advanced Control & Optimization Paradigms for Energy System Operation and
         Management (pp. 137-164). River Publishers.
     """
-    def __init__(self, config: BrownBearOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: BrownBearOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = BrownBearOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def pedal_marking(bear: BrownBear) -> BrownBear:

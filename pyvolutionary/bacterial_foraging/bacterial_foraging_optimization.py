@@ -22,10 +22,13 @@ class BacterialForagingOptimization(OptimizationAbstract):
         neural network and adaptive bacterial foraging optimization. In International Conference on
         Theory and Applications of Models of Computation (pp. 501-517). Springer, Cham.
     """
-    def __init__(self, config: BacterialForagingOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: BacterialForagingOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__C_s: np.ndarray | None = None
         self.__C_e: np.ndarray | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = BacterialForagingOptimizationConfig(**parameters)
 
     def before_initialization(self):
         self.__C_s = self._config.C_s * self._task.bandwidth()

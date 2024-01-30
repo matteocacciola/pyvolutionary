@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,9 +23,12 @@ class SuccessHistoryIntelligentOptimization(OptimizationAbstract):
     [1] Fakhouri, H. N., Hamad, F., & Alawamrah, A. (2022). Success history intelligent optimizer. The Journal of
         Supercomputing, 1-42.
     """
-    def __init__(self, config: SuccessHistoryIntelligentOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: SuccessHistoryIntelligentOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__a = 1.5
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = SuccessHistoryIntelligentOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(solution: Solution) -> Solution:

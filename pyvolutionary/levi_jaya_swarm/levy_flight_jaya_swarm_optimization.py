@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -21,8 +22,11 @@ class LeviFlightJayaSwarmOptimization(OptimizationAbstract):
     [1] Iacca, G., dos Santos Junior, V.C. and de Melo, V.V., 2021. An improved Jaya optimization
         algorithm with Lévy flight. Expert Systems with Applications, 165, p.113902.
     """
-    def __init__(self, config: LeviFlightJayaSwarmOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: LeviFlightJayaSwarmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = LeviFlightJayaSwarmOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(jaya: Jaya) -> Jaya:

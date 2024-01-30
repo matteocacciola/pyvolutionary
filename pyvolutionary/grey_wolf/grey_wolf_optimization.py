@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,11 +23,14 @@ class GreyWolfOptimization(OptimizationAbstract):
         46-61. Chicago
     """
 
-    def __init__(self, config: GreyWolfOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: GreyWolfOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__alpha_wolf: GreyWolf | None = None
         self.__beta_wolf: GreyWolf | None = None
         self.__gamma_wolf: GreyWolf | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = GreyWolfOptimizationConfig(**parameters)
 
     def after_initialization(self):
         self.__alpha_wolf, self.__beta_wolf, self.__gamma_wolf = best_agents(self._population, 3)

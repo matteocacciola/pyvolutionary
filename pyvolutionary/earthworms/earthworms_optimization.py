@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -24,8 +25,14 @@ class EarthwormsOptimization(OptimizationAbstract):
         metaheuristic algorithm for global optimization problems. International Journal of Bio-Inspired Computation.
         DOI: 10.1504/IJBIC.2015.10004283.
     """
-    def __init__(self, config: EarthwormsOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: EarthwormsOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+        self.__dyn_beta: float | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = EarthwormsOptimizationConfig(**parameters)
+
+    def before_initialization(self):
         self.__dyn_beta = self._config.beta
 
     def optimization_step(self):

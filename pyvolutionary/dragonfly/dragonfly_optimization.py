@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import (
@@ -22,11 +23,14 @@ class DragonflyOptimization(OptimizationAbstract):
         single-objective, discrete, and multi-objective problems. Neural computing and applications, 27(4),
         pp.1053-1073.
     """
-    def __init__(self, config: DragonflyOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: DragonflyOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
         self.__population_delta: list[Dragonfly] | None = None
         self.__radius: np.ndarray | None = None
         self.__delta_max: np.ndarray | None = None
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = DragonflyOptimizationConfig(**parameters)
 
     def after_initialization(self):
         self.__population_delta = self._generate_agents(self._config.population_size)

@@ -1,3 +1,4 @@
+from typing import Any
 import numpy as np
 
 from ..helpers import parse_obj_doc  # type: ignore
@@ -20,8 +21,11 @@ class GizaPyramidConstructionOptimization(OptimizationAbstract):
         metaheuristic algorithm for optimization. Evol. Intel. 14, 1743–1761 (2021).
         https://doi.org/10.1007/s12065-020-00451-3
     """
-    def __init__(self, config: GizaPyramidConstructionOptimizationConfig, debug: bool | None = False):
+    def __init__(self, config: GizaPyramidConstructionOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+
+    def set_config_parameters(self, parameters: dict[str, Any]):
+        self._config = GizaPyramidConstructionOptimizationConfig(**parameters)
 
     def optimization_step(self):
         def evolve(worker: Worker) -> Worker | None:
