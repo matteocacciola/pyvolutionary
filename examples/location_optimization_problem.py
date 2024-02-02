@@ -54,7 +54,7 @@ class LocationOptProblem(Task):
         total_coverage = np.sum(x_transformed)
         total_dist = np.sum(x_transformed[:, np.newaxis] * distance_matrix)
         if total_dist == 0 or total_coverage < self.data["num_stores"]:  # Penalize solutions with fewer stores
-            return self._EPS_
+            return self._EPS
         return total_dist
 
 

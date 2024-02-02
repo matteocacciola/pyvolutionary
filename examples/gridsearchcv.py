@@ -29,7 +29,7 @@ params_bbo_grid = {
 model = BiogeographyBasedOptimization()
 tuner = GridSearchCV(model, params_bbo_grid)
 
-tuner.execute(task=task)
+tuner.execute(task=task, debug=True, n_trials=2, n_jobs=2)
 
 print(f"Best row {tuner.best_row}")
 print(f"Best score {tuner.best_score}")
@@ -37,3 +37,7 @@ print(f"Best parameters {tuner.best_parameters}")
 
 best_result = tuner.resolve()
 print(f"Best solution after tuning {best_result.best_solution}")
+
+tuner.export_results("csv")
+tuner.export_results("dataframe")
+tuner.export_results("json")

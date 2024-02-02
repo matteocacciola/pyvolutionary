@@ -62,7 +62,7 @@ class OptimizationAbstract(ABC, Generic[T]):
 
     @property
     def name(self):
-        return self.__class__.__name__.lower()
+        return self.__class__.__name__
 
     def _fcn(self, x: list[float] | np.ndarray) -> float | list[float]:
         """

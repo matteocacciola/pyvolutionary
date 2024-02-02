@@ -1,6 +1,7 @@
 import operator
 import os
 from collections.abc import Iterable, Mapping, Sequence
+from datetime import datetime
 from functools import partial, reduce
 from itertools import product
 from pathlib import Path
@@ -9,7 +10,7 @@ import pandas as pd
 import concurrent.futures as parallel
 
 from .abstract import OptimizationAbstract
-from .enums import ModeSolver, TaskType
+from .enums import ModeSolver, TaskType, ExportType
 from .models import Task, Agent, OptimizationResult
 
 
@@ -168,15 +169,17 @@ class GridSearchCV:
 
     def __init__(self, algorithm: OptimizationAbstract, param_grid: dict | list = None, **kwargs: object) -> None:
         self.__set_keyword_arguments__(kwargs)
-        self._algorithm_ = algorithm
-        self._param_grid_ = param_grid
-        self._problem_: Task | None = None
-        self._results_ = None
-        self._debug_: bool | None = None
-        self._best_row_: pd.DataFrame | None = None
-        self._best_params_, self._best_score_ = None, None
-        self.df_fit: pd.DataFrame | None = None
-        self.df_loss: pd.DataFrame | None = None
+        self._algorithm = algorithm
+        self._param_grid = param_grid
+
+        self._problem: Task | None = None
+        self._results = None
+        self._debug: bool | None = None
+
+        self._best_row: pd.DataFrame | None = None
+        self._best_params, self._best_score = None, None
+        self._df_fit: pd.DataFrame | None = None
+        self._df_loss: pd.DataFrame | None = None
 
     def __set_keyword_arguments__(self, kwargs):
         for key, value in kwargs.items():
@@ -184,46 +187,46 @@ class GridSearchCV:
 
     @property
     def best_parameters(self) -> dict:
-        return self._best_params_
+        return self._best_params
 
     @best_parameters.setter
     def best_parameters(self, x):
-        self._best_params_ = x
+        self._best_params = x
 
     @property
     def best_row(self) -> dict:
-        return self._best_row_.to_dict()
+        return self._best_row.to_dict()
 
     @property
     def best_score(self) -> float:
-        return self._best_score_
+        return self._best_score
 
-    def export_results(self, save_path: str | None = None, file_name: str | None = "tuning_best_fit.csv"):
+    def export_results(self, save_as: str, save_path: str | None = None):
         """
         Export results to various file type
-        :param save_path: The path to the folder, default None
-        :param file_name: The file name (with file type, e.g. dataframe, json, csv; default: "tuning_best_fit.csv") that
-            hold results
-        :return: None
-        :raises: TypeError: raises TypeError if export type is not supported
+        :param save_as: the file name (with file type, e.g. dataframe, json, csv) that hold results
+        :param save_path: the path to the folder, default: "best_fit/{algorithm_name}"
+        :raises: ValueError: raises ValueError if export type is not supported
         """
-        if type(file_name) is not str:
-            raise ValueError("file_name should be a string and contains the extensions, e.g. dataframe, json, csv")
+        if save_as not in ExportType:
+            raise ValueError(f"Export type {save_as} is not supported")
+
         # check parent directories
-        save_path = save_path if save_path is not None else f"history/{self._algorithm_.name}"
+        save_path = save_path if save_path is not None else f"best_fit/{self._algorithm.name}"
         Path(save_path).mkdir(parents=True, exist_ok=True)
-        fileparts = file_name.split(".")
-        filename, ext = "-".join(fileparts[:-1]), fileparts[-1]
-        if ext == "json":
-            self.df_fit.to_json(f"{save_path}/{filename}.json")
+
+        filename = f"tuning_best_fit_{self._algorithm.name}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+        if save_as == str(ExportType.JSON):
+            self._df_fit.to_json(f"{save_path}/{filename}.json")
             return
-        if ext == "dataframe":
-            self.df_fit.to_pickle(f"{save_path}/{filename}.pkl")
+        if save_as == str(ExportType.DATAFRAME):
+            self._df_fit.to_pickle(f"{save_path}/{filename}.pkl")
             return
-        self.df_fit.to_csv(f"{save_path}/{filename}.csv", header=True, index=False)
+        self._df_fit.to_csv(f"{save_path}/{filename}.csv", header=True, index=False)
 
     def __run__(self, id_trial: int, mode: ModeSolver, n_workers: int | None = None) -> tuple[int, Agent, list]:
-        result = self._algorithm_.optimize(self._problem_, mode=str(mode), workers=n_workers)
+        result = self._algorithm.optimize(self._problem, mode=str(mode), workers=n_workers)
         return id_trial, result.best_solution, result.rates
 
     @staticmethod
@@ -238,7 +241,7 @@ class GridSearchCV:
         self,
         task: Task,
         n_trials: int | None = 2,
-        n_jobs: int | None = None,
+        n_jobs: int | None = 2,
         mode: str | None = "serial",
         n_workers: int | None = 2,
         debug: bool | None = False,
@@ -247,72 +250,30 @@ class GridSearchCV:
         Execute Tuner utility
         :param task: the task to solve
         :param n_trials: number of trials on the Task, default=2
-        :param n_jobs: Speed up this task (run multiple trials at the same time) by using multiple processes
-            (<=1 or None: sequential, >=2: parallel), default=None
+        :param n_jobs: number of jobs to run to speed this task up (run multiple trials at the same time), default=2,
+            max = os.cpu_count() - 1
         :param mode: apply on current Task ("serial", "thread", "process"), default="serial"
         :param n_workers: apply on current Task, number of processes if mode is "thread" or "process", default=2
         :param debug: switch for verbose logging, default=False
+        :raises: ValueError: raises ValueError if mode is not supported
         """
-        self._problem_ = task
-        self._debug_ = debug
+        self._problem = task
+        self._debug = debug
         try:
             mode = ModeSolver(mode)
         except ValueError:
             raise ValueError("Invalid mode. Possible values are \"serial\", \"thread\" and \"process\"")
 
-        n_cpus = None if n_jobs is None or n_jobs <= 1 else np.clip(n_jobs, 2, os.cpu_count() - 1, dtype=int)
+        n_cpus = np.clip(n_jobs, 2, os.cpu_count() - 1, dtype=int)
 
-        list_params_grid = list(ParameterGrid(self._param_grid_))
+        list_params_grid = list(ParameterGrid(self._param_grid))
         trial_columns = [f"trial_{id_trial}" for id_trial in range(1, n_trials + 1)]
-        ascending = True if self._problem_.minmax == TaskType.MIN else False
+        ascending = True if self._problem.minmax == TaskType.MIN else False
 
-        best_fit_results, loss_results = self.__serial_execute__(
-            list_params_grid, n_trials, trial_columns
-        ) if n_cpus is None else self.__parallel_execute__(
-            list_params_grid, n_trials, n_cpus, trial_columns, mode, n_workers
-        )
-
-        self.df_fit = pd.DataFrame(best_fit_results)
-        self.df_fit["trial_mean"] = self.df_fit[trial_columns].mean(axis=1)
-        self.df_fit["trial_std"] = self.df_fit[trial_columns].std(axis=1)
-        self.df_fit["rank_mean"] = self.df_fit["trial_mean"].rank(ascending=ascending)
-        self.df_fit["rank_std"] = self.df_fit["trial_std"].rank(ascending=ascending)
-        self.df_fit["rank_mean_std"] = self.df_fit[["rank_mean", "rank_std"]].apply(tuple, axis=1).rank(
-            method="dense", ascending=ascending
-        )
-        self._best_row_ = self.df_fit[self.df_fit["rank_mean_std"] == self.df_fit["rank_mean_std"].min()]
-        self._best_params_ = self._best_row_["params"].values[0]
-        self._best_score_ = self._best_row_["trial_mean"].values[0]
-        self.df_loss = pd.DataFrame(loss_results)
-
-    def __serial_execute__(self, list_params_grid: list, n_trials: int, trial_columns: list) -> tuple[list, list]:
         best_fit_results = []
         loss_results = []
         for id_params, params in enumerate(list_params_grid):
-            self._algorithm_.set_config_parameters(params)
-            best_fit_results.append({"params": params})
-            for idx in list(range(0, n_trials)):
-                idx, g_best, loss_epoch = self.__run__(idx, mode=ModeSolver.SERIAL)
-                best_fit_results[-1][trial_columns[idx]] = g_best.cost
-                loss_results.append(self.__generate_dict_result__(params, idx, loss_epoch))
-                
-                self.__debug_results__(params, idx, g_best)
-                    
-        return best_fit_results, loss_results
-
-    def __parallel_execute__(
-        self,
-        list_params_grid: list,
-        n_trials: int,
-        n_cpus: int,
-        trial_columns: list,
-        mode: ModeSolver,
-        n_workers: int,
-    ) -> tuple[list, list]:
-        best_fit_results = []
-        loss_results = []
-        for id_params, params in enumerate(list_params_grid):
-            self._algorithm_.set_config_parameters(params)
+            self._algorithm.set_config_parameters(params)
             best_fit_results.append({"params": params})
             with parallel.ProcessPoolExecutor(n_cpus) as executor:
                 list_results = executor.map(
@@ -321,14 +282,26 @@ class GridSearchCV:
                 for (idx, g_best, loss_epoch) in list_results:
                     best_fit_results[-1][trial_columns[idx]] = g_best.cost
                     loss_results.append(self.__generate_dict_result__(params, idx, loss_epoch))
-                    
+
                     self.__debug_results__(params, idx, g_best)
-        return best_fit_results, loss_results
+
+        self._df_fit = pd.DataFrame(best_fit_results)
+        self._df_fit["trial_mean"] = self._df_fit[trial_columns].mean(axis=1)
+        self._df_fit["trial_std"] = self._df_fit[trial_columns].std(axis=1)
+        self._df_fit["rank_mean"] = self._df_fit["trial_mean"].rank(ascending=ascending)
+        self._df_fit["rank_std"] = self._df_fit["trial_std"].rank(ascending=ascending)
+        self._df_fit["rank_mean_std"] = self._df_fit[["rank_mean", "rank_std"]].apply(tuple, axis=1).rank(
+            method="dense", ascending=ascending
+        )
+        self._best_row = self._df_fit[self._df_fit["rank_mean_std"] == self._df_fit["rank_mean_std"].min()]
+        self._best_params = self._best_row["params"].values[0]
+        self._best_score = self._best_row["trial_mean"].values[0]
+        self._df_loss = pd.DataFrame(loss_results)
     
     def __debug_results__(self, params, idx: int, g_best: Agent):
-        if self._debug_:
+        if self._debug:
             print(
-                f"Algorithm: {self._algorithm_.name}, params: {params}, trial: {idx + 1}, best cost: {g_best.cost}"
+                f"Algorithm: {self._algorithm.name}, params: {params}, trial: {idx + 1}, best cost: {g_best.cost}"
             )
 
     def resolve(self, mode: str = "serial", n_workers: int = None) -> OptimizationResult:
@@ -342,5 +315,5 @@ class GridSearchCV:
         :return: the result of the optimization
         :rtype: OptimizationResult
         """
-        self._algorithm_.set_config_parameters(self.best_parameters)
-        return self._algorithm_.optimize(task=self._problem_, mode=mode, workers=n_workers)
+        self._algorithm.set_config_parameters(self.best_parameters)
+        return self._algorithm.optimize(task=self._problem, mode=mode, workers=n_workers)

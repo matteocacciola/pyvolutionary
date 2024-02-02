@@ -37,3 +37,12 @@ class ModeSolver(Enum):
     SERIAL = "serial"
     THREAD = "thread"
     PROCESS = "process"
+
+
+class ExportType(Enum):
+    """
+    The type of export that the user wants to perform.
+    """
+    CSV = "csv"
+    JSON = "json"
+    DATAFRAME = "dataframe"

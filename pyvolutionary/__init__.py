@@ -73,6 +73,7 @@ from .wind_driven import *
 from .zebra import *
 from .gridsearchcv import GridSearchCV
 from .enums import TaskType
+from .multitask import Multitask
 from .models import (
     OptimizationResult,
     Population,

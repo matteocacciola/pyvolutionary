@@ -23,7 +23,7 @@ class ShortestPathProblem(Task):
             end_node = individual[idx + 1]
             weight = self.data["graph"][start_node, end_node]
             if weight == 0:
-                return self._EPS_
+                return self._EPS
             total_distance += weight
         return total_distance
 

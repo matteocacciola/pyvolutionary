@@ -135,3 +135,5 @@ dmypy.json
 
 # package
 demos/images
+**/best_fit
+**/multitask

@@ -228,12 +228,12 @@ class PermutationVariable(Variable):
     items: list[Any]
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    _label_encoder_: LabelEncoder = PrivateAttr()
+    _label_encoder: LabelEncoder = PrivateAttr()
 
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
-        self._label_encoder_ = LabelEncoder()
-        self._label_encoder_.fit(self.items)
+        self._label_encoder = LabelEncoder()
+        self._label_encoder.fit(self.items)
 
     def get(self) -> "PermutationVariable":
         return self
@@ -252,7 +252,7 @@ class PermutationVariable(Variable):
 
     def decode(self, value: tuple | list | np.ndarray) -> Any:
         value = self.correct(value)
-        return self._label_encoder_.inverse_transform(value)
+        return self._label_encoder.inverse_transform(value)
 
     def size(self) -> int:
         return 1
@@ -265,12 +265,12 @@ class MultiObjectiveVariable(Variable):
     lower_bounds: tuple[float] | list[float]
     upper_bounds: tuple[float] | list[float]
 
-    _children_: list[ContinuousVariable] = PrivateAttr()
+    _children: list[ContinuousVariable] = PrivateAttr()
 
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         lower_bounds, upper_bounds = self.get_bounds()
-        self._children_ = [ContinuousVariable(
+        self._children = [ContinuousVariable(
             name=f"{self.name}{i}", lower_bound=lb, upper_bound=ub
         ) for i, (lb, ub) in enumerate(zip(lower_bounds, upper_bounds))]
 
@@ -283,19 +283,19 @@ class MultiObjectiveVariable(Variable):
         return self
 
     def get(self) -> list["ContinuousVariable"]:
-        return self._children_
+        return self._children
 
     def randomize(self):
-        return [v.randomize() for v in self._children_]
+        return [v.randomize() for v in self._children]
 
     def get_bounds(self) -> tuple[tuple[float] | list[float], tuple[float] | list[float]]:
         return self.lower_bounds, self.upper_bounds
 
     def correct(self, value: list):
-        return [v.correct(value[idx]) for idx, v in enumerate(self._children_)]
+        return [v.correct(value[idx]) for idx, v in enumerate(self._children)]
 
     def decode(self, value: list) -> list:
-        return [v.decode(value[idx]) for idx, v in enumerate(self._children_)]
+        return [v.decode(value[idx]) for idx, v in enumerate(self._children)]
 
     def size(self) -> int:
         return len(self.lower_bounds)
@@ -307,11 +307,11 @@ class MultiObjectiveVariable(Variable):
 class BinaryVariable(Variable):
     n_vars: int
 
-    _children_: list[DiscreteVariable] = PrivateAttr()
+    _children: list[DiscreteVariable] = PrivateAttr()
 
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
-        self._children_ = [DiscreteVariable(name=f"{self.name}{i}", choices=[0, 1]) for i in range(self.n_vars)]
+        self._children = [DiscreteVariable(name=f"{self.name}{i}", choices=[0, 1]) for i in range(self.n_vars)]
 
     @field_validator("n_vars")
     def validate_n_vars(cls, v):
@@ -320,10 +320,10 @@ class BinaryVariable(Variable):
         return v
 
     def get(self) -> list["DiscreteVariable"]:
-        return self._children_
+        return self._children
 
     def randomize(self):
-        return [v.randomize() for v in self._children_]
+        return [v.randomize() for v in self._children]
 
     def get_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         lb = np.zeros(self.n_vars)
@@ -331,10 +331,10 @@ class BinaryVariable(Variable):
         return lb, ub
 
     def correct(self, value: list):
-        return [v.correct(value[idx]) for idx, v in enumerate(self._children_)]
+        return [v.correct(value[idx]) for idx, v in enumerate(self._children)]
 
     def decode(self, value: list) -> list:
-        return [v.decode(value[idx]) for idx, v in enumerate(self._children_)]
+        return [v.decode(value[idx]) for idx, v in enumerate(self._children)]
 
     def size(self) -> int:
         return self.n_vars
@@ -351,14 +351,14 @@ class Task(BaseModel, ABC):
     data: dict | None = None
     objective_weights: list[float] | None = None
 
-    _EPS_ = PrivateAttr()
+    _EPS = PrivateAttr()
 
     def __init__(self, **kwargs: Any):
         variables = kwargs.get("variables")
         kwargs["space_dimension"] = sum([v.size() for v in variables])
         super().__init__(**kwargs)
 
-        self._EPS_ = np.finfo(float).eps
+        self._EPS = np.finfo(float).eps
 
     @model_validator(mode="after")
     def validate_objective_weights(self) -> "Task":
@@ -504,6 +504,10 @@ class Task(BaseModel, ABC):
             solution[v.name] = v.decode(temp if len(temp) > 1 else temp[0])
             counter += v.size()
         return solution
+
+    @property
+    def name(self):
+        return self.__class__.__name__
 
 
 T = TypeVar("T", Agent, Agent)
