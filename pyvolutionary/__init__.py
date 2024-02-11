@@ -43,6 +43,7 @@ from .golden_jackal import *
 from .grasshopper import *
 from .grey_wolf import *
 from .harmony_search import *
+from .heap_based import *
 from .imperialist_competitive import *
 from .invasive_weed import *
 from .krill_herd import *
