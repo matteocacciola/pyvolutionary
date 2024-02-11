@@ -219,6 +219,7 @@ class OptimizationAbstract(ABC, Generic[T]):
                 raise ValueError("Invalid mode. Possible values are \"serial\", \"thread\" and \"process\"")
 
         self._task = task
+
         self.before_initialization()
         self._init_population()
         self.after_initialization()

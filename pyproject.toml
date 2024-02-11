@@ -24,6 +24,7 @@ matplotlib = "^3.8.1"
 sphynx = "^0.0.3"
 pandas = "^2.2.0"
 opfunu = "^1.0.1"
+scipy = "^1.12.0"
 
 
 [tool.poetry.group.test.dependencies]

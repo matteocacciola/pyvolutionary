@@ -5,6 +5,7 @@ from .aquila import *
 from .archimede import *
 from .bacterial_foraging import *
 from .bat import *
+from .battle_royale import *
 from .bee_colony import *
 from .biogeography_based import *
 from .brain_storm import *

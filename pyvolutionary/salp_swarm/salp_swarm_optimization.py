@@ -11,7 +11,7 @@ class SalpSwarmOptimization(OptimizationAbstract):
     Implementation of the Salp Swarm Optimization algorithm.
 
     Args:
-        config (SalpSwarmOptimizationConfig): an instance of ZebraOptimizationConfig class.
+        config (SalpSwarmOptimizationConfig): an instance of SalpSwarmOptimizationConfig class.
             {parse_obj_doc(SalpSwarmOptimizationConfig)}
 
     Bibliography

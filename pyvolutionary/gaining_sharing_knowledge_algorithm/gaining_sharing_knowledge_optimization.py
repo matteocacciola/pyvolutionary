@@ -11,7 +11,8 @@ class GainingSharingKnowledgeOptimization(OptimizationAbstract):
     Implementation of the Gaining Sharing Knowledge-based Optimization algorithm.
 
     Args:
-        config (GainingSharingKnowledgeOptimizationConfig): an instance of ParticleSwarmOptimizationConfig class.
+        config (GainingSharingKnowledgeOptimizationConfig): an instance of GainingSharingKnowledgeOptimizationConfig
+            class.
             {parse_obj_doc(GainingSharingKnowledgeOptimizationConfig)}
 
     Bibliography

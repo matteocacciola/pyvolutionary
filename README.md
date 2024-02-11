@@ -1,7 +1,7 @@
 # pyVolutionary
 
 <p align="center">
-    <img style="height: 400px; width: 400px; object-fit: contain;"
+    <img style="width: 400px; object-fit: contain;"
     src="https://github.com/matteocacciola/pyvolutionary/blob/master/logo.png" alt="pyVolutionary"/>
 </p>
 
@@ -661,6 +661,7 @@ The following algorithms are currently implemented in **pyVolutionary**:
 | Artificial Bee Colony Optimization                     | `BeeColonyOptimization`                  | 2007 | [paper](https://api.semanticscholar.org/CorpusID:8215393)                                                                                                                                                                     | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bco.py)     |
 | Bacterial Foraging Optimization                        | `BacterialForagingOptimization`          | 2002 | [paper](https://api.semanticscholar.org/CorpusID:108291966)                                                                                                                                                                   | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bfo.py)     |
 | Bat Optimization                                       | `BatOptimization`                        | 2010 | [paper](https://link.springer.com/chapter/10.1007/978-3-642-12538-6_6)                                                                                                                                                        | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bo.py)      |
+| Battle Royale Optimization                             | `BattleRoyaleOptimization`               | 2021 | [paper](https://doi.org/10.1007/s00521-020-05004-4)                                                                                                                                                                           | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bro.py)     |
 | Biogeography-Based Optimization                        | `BiogeographyBasedOptimization`          | 2008 | [paper](https://ieeexplore.ieee.org/abstract/document/4475427)                                                                                                                                                                | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bgbo.py)    |
 | Brain Storm Optimization (Original)                    | `BrainStormOptimization`                 | 2011 | [paper](https://doi.org/10.1007/978-3-642-21515-5_36)                                                                                                                                                                         | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/bso.py)     |
 | Brain Storm Optimization (Improved)                    | `ImprovedBrainStormOptimization`         | 2017 | [paper](https://doi.org/10.1016/j.swevo.2017.05.001)                                                                                                                                                                          | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/ibso.py)    |
