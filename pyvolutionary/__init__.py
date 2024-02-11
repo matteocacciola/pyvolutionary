@@ -33,6 +33,7 @@ from .flower_pollination_algorithm import *
 from .forensic_based_investigation import *
 from .forest_algorithm import *
 from .fox import *
+from .gaining_sharing_knowledge_algorithm import *
 from .genetic_algorithm import *
 from .germinal_center import *
 from .giant_trevally import *
