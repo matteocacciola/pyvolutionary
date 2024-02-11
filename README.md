@@ -64,13 +64,15 @@ continuous and discrete variables. In order to do so, you need to define a `Task
 `Task` class of the library. The list of variables in the problem must be specified in the constructor of the class
 inheriting from `Task`. The following table describes the types of variables currently implemented in the library.
 
-| Variable type   | Class name               | Description                                                    | Example                                                                            |
-|-----------------|--------------------------|----------------------------------------------------------------|------------------------------------------------------------------------------------|
-| Continuous      | `ContinuousVariable`     | A continuous variable                                          | `ContinuousVariable(name="x0", lower_bound=-100.0, upper_bound=100.0)`             |
-| Discrete        | `DiscreteVariable`       | A discrete variable                                            | `DiscreteVariable(choices=["scale", "auto", 0.01, 0.1, 0.5, 1.0], name="gamma")`   |
-| Permutation     | `PermutationVariable`    | A permutation of the specified choices                         | `PermutationVariable(items=[[60, 200], [180, 200], [80, 180]], name="routes")`     |
-| Binary          | `BinaryVariable`         | A type of variable used for problems where the data are binary | `BinaryVariable(name="x", n_vars=10)`                                              |
-| Multi-objective | `MultiObjectiveVariable` | A type of variable used for multi-objective problems           | `MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10))` |
+| Variable type    | Class name                | Description                                                    | Example                                                                                                  |
+|------------------|---------------------------|----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| Continuous       | `ContinuousVariable`      | A continuous variable                                          | `ContinuousVariable(name="x0", lower_bound=-100.0, upper_bound=100.0)`                                   |
+| Continuous (set) | `ContinuousMultiVariable` | A set of continuous variables                                  | `ContinuousMultiVariable(name="x0", lower_bounds=[-100.0, -200.0], upper_bounds=[100.0, 50.0])`          |
+| Discrete         | `DiscreteVariable`        | A discrete variable                                            | `DiscreteVariable(choices=["scale", "auto", 0.01, 0.1, 0.5, 1.0], name="gamma")`                         |
+| Discrete (set)   | `DiscreteMultiVariable`   | A set of discrete variables                                    | `DiscreteMultiVariable(choices=[[0.1, 10, 100], ["scale", "auto", 0.01, 0.1, 0.5, 1.0]], name="params")` |
+| Permutation      | `PermutationVariable`     | A permutation of the specified choices                         | `PermutationVariable(items=[[60, 200], [180, 200], [80, 180]], name="routes")`                           |
+| Binary           | `BinaryVariable`          | A type of variable used for problems where the data are binary | `BinaryVariable(name="x", n_vars=10)`                                                                    |
+| Multi-objective  | `MultiObjectiveVariable`  | A type of variable used for multi-objective problems           | `MultiObjectiveVariable(name="x", lower_bounds=(-10, -10), upper_bounds=(10, 10))`                       |
 
 An example of a custom `Task` class is the following:
 
@@ -147,7 +149,7 @@ task = Sphere(
 For example, let us inspect how you can solve the continuous _sphere_ problem with the Particle Swarm Optimization algorithm.
 
 ```python
-from pyvolutionary import ContinuousVariable, ParticleSwarmOptimization, ParticleSwarmOptimizationConfig, Task
+from pyvolutionary import ContinuousMultiVariable, ParticleSwarmOptimization, ParticleSwarmOptimizationConfig, Task
 
 # Define the problem, you can replace the following class with your custom problem to optimize
 class Sphere(Task):
@@ -159,22 +161,14 @@ class Sphere(Task):
 
 
 # Define the task with the bounds and the configuration of the optimizer
-population = 200
-dimension = 2
-position_min = -100.0
-position_max = 100.0
-generation = 400
-fitness_error = 10e-4
 task = Sphere(
-    variables=[ContinuousVariable(
-        name=f"x{i}", lower_bound=position_min, upper_bound=position_max
-    ) for i in range(dimension)],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=[-100.0, -100.0], upper_bound=[100.0, 100.0])],
 )
 
 configuration = ParticleSwarmOptimizationConfig(
-    population_size=population,
-    fitness_error=fitness_error,
-    max_cycles=generation,
+    population_size=200,
+    fitness_error=10e-4,
+    max_cycles=400,
     c1=0.1,
     c2=0.1,
     w=[0.35, 1],
@@ -409,7 +403,7 @@ implemented in the library):
 
 ```python
 import numpy as np
-from pyvolutionary import Task, ContinuousVariable, AntLionOptimization, AntLionOptimizationConfig
+from pyvolutionary import Task, ContinuousMultiVariable, AntLionOptimization, AntLionOptimizationConfig
 
 ## Link: https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781119136507.app2
 class ConstrainedBenchmark(Task):
@@ -453,12 +447,10 @@ class ConstrainedBenchmark(Task):
 
 
 # Define the task with the bounds and the configuration of the optimizer
+lower_bounds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+upper_bounds = [1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100, 1]
 task = ConstrainedBenchmark(
-    variables=(
-        [ContinuousVariable(name=f"x{i}", lower_bound=0, upper_bound=1) for i in range(9)] + [
-            ContinuousVariable(name=f"x{i}", lower_bound=0, upper_bound=100) for i in range(9, 12)
-        ] + [ContinuousVariable(name=f"x12", lower_bound=0, upper_bound=1)]
-    )
+    variables=([ContinuousMultiVariable(name="x", lower_bounds=lower_bounds, upper_bounds=upper_bounds)])
 )
 
 configuration = AntLionOptimizationConfig(population_size=200, fitness_error=10e-4, max_cycles=400)
@@ -504,7 +496,7 @@ but it uses the algorithms implemented in the library to perform the search. The
 ```python
 from opfunu.cec_based.cec2017 import F52017
 
-from pyvolutionary import ContinuousVariable, Task, BiogeographyBasedOptimization, GridSearchCV
+from pyvolutionary import ContinuousMultiVariable, Task, BiogeographyBasedOptimization, GridSearchCV
 
 f1 = F52017(30, f_bias=0)
 
@@ -517,9 +509,7 @@ class Problem(Task):
 
 # Define the task with the bounds and the configuration of the optimizer
 task = Problem(
-    variables=[
-        ContinuousVariable(name=f"x{i}", lower_bound=f1.lb[i], upper_bound=f1.ub[i]) for i in range(0, f1.ndim)
-    ],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=f1.lb, upper_bounds=f1.ub)],
 )
 
 params_bbo_grid = {
@@ -558,7 +548,7 @@ to use the `Multitask` class:
 from opfunu.cec_based.cec2017 import F52017, F102017, F292017
 
 from pyvolutionary import (
-    ContinuousVariable,
+    ContinuousMultiVariable,
     Task,
     NuclearReactionOptimization,
     Multitask,
@@ -592,19 +582,13 @@ class Problem3(Task):
 
 
 task1 = Problem1(
-    variables=[
-        ContinuousVariable(name=f"x{i}", lower_bound=f1.lb[i], upper_bound=f1.ub[i]) for i in range(0, f1.ndim)
-    ],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=f1.lb, upper_bounds=f1.ub)],
 )
 task2 = Problem2(
-    variables=[
-        ContinuousVariable(name=f"x{i}", lower_bound=f2.lb[i], upper_bound=f2.ub[i]) for i in range(0, f2.ndim)
-    ],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=f2.lb, upper_bounds=f2.ub)],
 )
 task3 = Problem3(
-    variables=[
-        ContinuousVariable(name=f"x{i}", lower_bound=f3.lb[i], upper_bound=f3.ub[i]) for i in range(0, f3.ndim)
-    ],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=f3.lb, upper_bounds=f3.ub)],
 )
 
 model1 = NuclearReactionOptimization(

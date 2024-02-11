@@ -1,7 +1,13 @@
 import numpy as np
 import pytest
 
-from pyvolutionary import Task, ContinuousVariable, AntLionOptimization, AntLionOptimizationConfig, OptimizationResult
+from pyvolutionary import (
+    Task,
+    ContinuousMultiVariable,
+    AntLionOptimization,
+    AntLionOptimizationConfig,
+    OptimizationResult,
+)
 
 
 class ConstrainedBenchmark(Task):
@@ -48,12 +54,10 @@ class ConstrainedBenchmark(Task):
 @pytest.fixture
 def data() -> tuple[AntLionOptimizationConfig, Task]:
     # Define the task with the bounds and the configuration of the optimizer
+    lower_bounds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    upper_bounds = [1, 1, 1, 1, 1, 1, 1, 1, 1, 100, 100, 100, 1]
     task = ConstrainedBenchmark(
-        variables=(
-            [ContinuousVariable(name=f"x{i}", lower_bound=0, upper_bound=1) for i in range(9)] + [
-                ContinuousVariable(name=f"x{i}", lower_bound=0, upper_bound=100) for i in range(9, 12)
-            ] + [ContinuousVariable(name=f"x12", lower_bound=0, upper_bound=1)]
-        )
+        variables=([ContinuousMultiVariable(name="x", lower_bounds=lower_bounds, upper_bounds=upper_bounds)])
     )
 
     configuration = AntLionOptimizationConfig(population_size=200, fitness_error=10e-4, max_cycles=10)

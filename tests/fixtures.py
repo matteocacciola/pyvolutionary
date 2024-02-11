@@ -1,5 +1,5 @@
 import numpy as np
-from pyvolutionary.models import Task, ContinuousVariable
+from pyvolutionary.models import Task, ContinuousMultiVariable
 
 
 class Rastrigin(Task):
@@ -16,6 +16,8 @@ class Sphere(Task):
 
 
 dimension = 3
+lower_bounds = np.repeat(-10, dimension).tolist()
+upper_bounds = np.repeat(10, dimension).tolist()
 task = Rastrigin(
-    variables=[ContinuousVariable(name=f"x{i}", lower_bound=-10, upper_bound=10) for i in range(dimension)],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=lower_bounds, upper_bounds=upper_bounds)],
 )

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import field
-from typing import TypeVar
+from typing import TypeVar, List, Tuple
 from typing import Any
 import numpy as np
 from pydantic import BaseModel, field_validator, model_validator, ConfigDict, PrivateAttr
@@ -198,6 +198,49 @@ class ContinuousVariable(Variable):
         return False
 
 
+class ContinuousMultiVariable(Variable):
+    lower_bounds: list[float]
+    upper_bounds: list[float]
+
+    _children: list[ContinuousVariable] = PrivateAttr()
+
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
+        lower_bounds, upper_bounds = self.get_bounds()
+        self._children = [ContinuousVariable(
+            name=f"{self.name}{i}", lower_bound=lb, upper_bound=ub
+        ) for i, (lb, ub) in enumerate(zip(lower_bounds, upper_bounds))]
+
+    @model_validator(mode="after")
+    def validate_bounds(self) -> "ContinuousMultiVariable":
+        if len(self.lower_bounds) != len(self.upper_bounds):
+            raise ValueError("Lower and upper bounds must have the same length")
+        if np.any(np.array([ub <= lb for lb, ub in zip(self.lower_bounds, self.upper_bounds)])):
+            raise ValueError("Upper bound must be greater than lower bound")
+        return self
+
+    def get(self) -> list["ContinuousVariable"]:
+        return self._children
+
+    def randomize(self):
+        return [v.randomize() for v in self._children]
+
+    def get_bounds(self) -> tuple[tuple[float] | list[float], tuple[float] | list[float]]:
+        return self.lower_bounds, self.upper_bounds
+
+    def correct(self, value: list):
+        return [v.correct(value[idx]) for idx, v in enumerate(self._children)]
+
+    def decode(self, value: list) -> list:
+        return [v.decode(value[idx]) for idx, v in enumerate(self._children)]
+
+    def size(self) -> int:
+        return len(self.lower_bounds)
+
+    def has_children(self) -> bool:
+        return True
+
+
 class DiscreteVariable(Variable):
     choices: list[Any]
 
@@ -222,6 +265,39 @@ class DiscreteVariable(Variable):
 
     def has_children(self) -> bool:
         return False
+
+
+class DiscreteMultiVariable(Variable):
+    choices: list[list[Any]]
+
+    _children: list[DiscreteVariable] = PrivateAttr()
+
+    def __init__(self, **kwargs: Any):
+        super().__init__(**kwargs)
+        self._children = [
+            DiscreteVariable(name=f"{self.name}{i}", choices=self.choices[i]) for i in range(len(self.choices))
+        ]
+
+    def get(self) -> list["DiscreteVariable"]:
+        return self._children
+
+    def randomize(self):
+        return [v.randomize() for v in self._children]
+
+    def get_bounds(self) -> list[tuple[int, int]]:
+        return [v.get_bounds() for v in self._children]
+
+    def correct(self, value: list):
+        return [v.correct(value[idx]) for idx, v in enumerate(self._children)]
+
+    def decode(self, value: list) -> list:
+        return [v.decode(value[idx]) for idx, v in enumerate(self._children)]
+
+    def size(self) -> int:
+        return len(self.choices)
+
+    def has_children(self) -> bool:
+        return True
 
 
 class PermutationVariable(Variable):

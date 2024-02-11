@@ -1,6 +1,6 @@
 from opfunu.cec_based.cec2017 import F52017
 
-from pyvolutionary import ContinuousVariable, Task, BiogeographyBasedOptimization, GridSearchCV
+from pyvolutionary import Task, BiogeographyBasedOptimization, GridSearchCV, ContinuousMultiVariable
 
 f1 = F52017(30, f_bias=0)
 
@@ -13,9 +13,7 @@ class Problem(Task):
 
 # Define the task with the bounds and the configuration of the optimizer
 task = Problem(
-    variables=[
-        ContinuousVariable(name=f"x{i}", lower_bound=f1.lb[i], upper_bound=f1.ub[i]) for i in range(0, f1.ndim)
-    ],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=f1.lb, upper_bounds=f1.ub)],
 )
 
 params_bbo_grid = {

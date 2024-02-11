@@ -1,7 +1,7 @@
 from opfunu.cec_based.cec2017 import F52017, F102017, F292017
 
 from pyvolutionary import (
-    ContinuousVariable,
+    ContinuousMultiVariable,
     Task,
     NuclearReactionOptimization,
     Multitask,
@@ -35,19 +35,13 @@ class Problem3(Task):
 
 
 task1 = Problem1(
-    variables=[
-        ContinuousVariable(name=f"x{i}", lower_bound=f1.lb[i], upper_bound=f1.ub[i]) for i in range(0, f1.ndim)
-    ],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=f1.lb, upper_bounds=f1.ub)],
 )
 task2 = Problem2(
-    variables=[
-        ContinuousVariable(name=f"x{i}", lower_bound=f2.lb[i], upper_bound=f2.ub[i]) for i in range(0, f2.ndim)
-    ],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=f2.lb, upper_bounds=f2.ub)],
 )
 task3 = Problem3(
-    variables=[
-        ContinuousVariable(name=f"x{i}", lower_bound=f3.lb[i], upper_bound=f3.ub[i]) for i in range(0, f3.ndim)
-    ],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=f3.lb, upper_bounds=f3.ub)],
 )
 
 model1 = NuclearReactionOptimization(

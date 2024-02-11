@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pyvolutionary import ContinuousVariable, Task, BiogeographyBasedOptimization, OptimizationResult, GridSearchCV
+from pyvolutionary import ContinuousMultiVariable, Task, BiogeographyBasedOptimization, OptimizationResult, GridSearchCV
 
 
 class Problem(Task):
@@ -12,7 +12,11 @@ class Problem(Task):
 @pytest.fixture
 def data() -> tuple[Task, dict[str, list]]:
     # Define the task with the bounds and the configuration of the optimizer
-    task = Problem(variables=[ContinuousVariable(name=f"x{i}", lower_bound=-10, upper_bound=10) for i in range(0, 5)])
+    lower_bounds = np.repeat(-10, 5).tolist()
+    upper_bounds = np.repeat(10, 5).tolist()
+    task = Problem(
+        variables=[ContinuousMultiVariable(name="x", lower_bounds=lower_bounds, upper_bounds=upper_bounds)],
+    )
 
     paras_bbo_grid = {
         "max_cycles": [10, 20, 30, 40],

@@ -1,4 +1,4 @@
-from pyvolutionary import Task, ContinuousVariable
+from pyvolutionary import Task, ContinuousMultiVariable
 
 
 class Sphere(Task):
@@ -10,14 +10,9 @@ class Sphere(Task):
 
 
 population = 200
-dimension = 2
-position_min = -100.0
-position_max = 100.0
 generation = 400
 fitness_error = 0.01
 task = Sphere(
-    variables=[ContinuousVariable(
-        name=f"x{i}", lower_bound=position_min, upper_bound=position_max
-    ) for i in range(dimension)],
+    variables=[ContinuousMultiVariable(name="x", lower_bounds=[-100.0, -100.0], upper_bounds=[100.0, 100.0])],
 )
 name = "sphere"

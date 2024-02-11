@@ -12,7 +12,7 @@
 # and so on.
 
 import numpy as np
-from pyvolutionary import DiscreteVariable, Task, FireflySwarmOptimization, FireflySwarmOptimizationConfig
+from pyvolutionary import Task, FireflySwarmOptimization, FireflySwarmOptimizationConfig, DiscreteMultiVariable
 
 shift_requirements = np.array([[2, 1, 3], [4, 2, 1], [3, 3, 2]])
 shift_costs = np.array([10, 8, 12])
@@ -30,8 +30,7 @@ data = {
 
 class EmployeeRosteringProblem(Task):
     def objective_function(self, x):
-        x_decoded = self.transform_solution(x)
-        x_decoded = [x_decoded[f"shift_var_{i}"] for i in range(self.data["num_employees"])]
+        x_decoded = self.transform_solution(x)["shift_var"]
         shifts_covered = np.zeros(self.data["num_shifts"])
         total_cost = 0
         for idx in range(self.data["num_employees"]):
@@ -43,8 +42,9 @@ class EmployeeRosteringProblem(Task):
         return total_cost + coverage_penalty
 
 
+choices = [[*range(0, num_shifts)] for _ in range(num_employees)]
 problem = EmployeeRosteringProblem(
-    variables=[DiscreteVariable(choices=[*range(0, num_shifts)], name=f"shift_var_{i}") for i in range(num_employees)],
+    variables=[DiscreteMultiVariable(choices=choices, name="shift_var")],
     minmax="min",
     data=data
 )
