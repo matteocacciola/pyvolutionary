@@ -38,6 +38,8 @@ class GreyWolfOptimization(OptimizationAbstract):
     def optimization_step(self):
         def evolve(wolf: GreyWolf) -> GreyWolf:
             pos = np.array(wolf.position)
+            a1, a2, a3 = (a * (2 * np.random.random(3) - 1)).tolist()
+            c1, c2, c3 = (2 * np.random.random(3)).tolist()
             x1 = np.array(self.__alpha_wolf.position) - a1 * np.abs(c1 * np.array(self.__alpha_wolf.position) - pos)
             x2 = np.array(self.__beta_wolf.position) - a2 * np.abs(c2 * np.array(self.__beta_wolf.position) - pos)
             x3 = np.array(self.__gamma_wolf.position) - a3 * np.abs(c3 * np.array(self.__gamma_wolf.position) - pos)
@@ -46,8 +48,6 @@ class GreyWolfOptimization(OptimizationAbstract):
 
         # linearly decreased from 2 to 0
         a = 2 * (1 - self._current_cycle / self._config.max_cycles)
-        a1, a2, a3 = (a * (2 * np.random.random(3) - 1)).tolist()
-        c1, c2, c3 = (2 * np.random.random(3)).tolist()
 
         # updating each population member with the help of best three members
         self._population = [evolve(wolf) for wolf in self._population]
