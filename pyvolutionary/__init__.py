@@ -52,6 +52,7 @@ from .marine_predators import *
 from .monarch_butterfly import *
 from .moth_flame import *
 from .mountain_gazelle import *
+from .multi_verse import *
 from .nuclear_reaction import *
 from .osprey import *
 from .particle_swarm import *
