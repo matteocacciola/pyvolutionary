@@ -10,11 +10,13 @@
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/matteocacciola/pyvolutionary/master)
 ![GitHub issues](https://img.shields.io/github/issues/matteocacciola/pyvolutionary)
 [![Wheel](https://img.shields.io/pypi/wheel/gensim.svg)](https://pypi.python.org/pypi/pyvolutionary) 
-[![PyPI version](https://badge.fury.io/py/pyvolutionary.svg)](https://badge.fury.io/py/pyvolutionary)
+![PyPI - Version](https://img.shields.io/pypi/v/pyvolutionary)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyvolutionary)
 ![PyPI - Status](https://img.shields.io/pypi/status/pyvolutionary)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pyvolutionary.svg)
 [![Downloads](https://static.pepy.tech/badge/pyvolutionary)](https://pepy.tech/project/pyvolutionary)
+[![Downloads](https://static.pepy.tech/badge/pyvolutionary/month)](https://pepy.tech/project/pyvolutionary)
+[![Downloads](https://static.pepy.tech/badge/pyvolutionary/week)](https://pepy.tech/project/pyvolutionary)
 ![GitHub Release Date](https://img.shields.io/github/release-date/matteocacciola/pyvolutionary.svg)
 ![GitHub contributors](https://img.shields.io/github/contributors/matteocacciola/pyvolutionary.svg)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/matteocacciola/pyvolutionary.svg)](http://isitmaintained.com/project/matteocacciola/pyvolutionary "Average time to resolve an issue")
@@ -713,6 +715,7 @@ The following algorithms are currently implemented in **pyVolutionary**:
 | Particle Swarm Optimization                            | `ParticleSwarmOptimization`              | 1995 | [paper](https://ieeexplore.ieee.org/document/488968)                                                                                                                                                                          | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/pso.py)     |
 | Pathfinder Algorithm Optimization                      | `PathfinderAlgorithmOptimization`        | 2019 | [paper](https://doi.org/10.1016/j.asoc.2019.03.012)                                                                                                                                                                           | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/pfao.py)    |
 | Pelican Optimization                                   | `PelicanOptimization`                    | 2022 | [paper](https://www.mdpi.com/1424-8220/22/3/855)                                                                                                                                                                              | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/poa.py)     |
+| Runge Kutta Optimization                               | `RungeKuttaOptimization`                 | 2021 | [paper](https://doi.org/10.1016/j.eswa.2021.115079)                                                                                                                                                                           | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/rko.py)     |
 | Salp Swarm Optimization                                | `SalpSwarmOptimization`                  | 2017 | [paper](https://doi.org/10.1016/j.advengsoft.2017.07.002)                                                                                                                                                                     | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/sso.py)     |
 | Seagull Optimization                                   | `SeagullOptimization`                    | 2019 | [paper](https://doi.org/10.1016/j.knosys.2018.11.024)                                                                                                                                                                         | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/so.py)      |
 | Serval Optimization                                    | `ServalOptimization`                     | 2022 | [paper](https://www.mdpi.com/2313-7673/7/4/204)                                                                                                                                                                               | [example](https://github.com/matteocacciola/pyvolutionary/tree/master/demos/servo.py)   |

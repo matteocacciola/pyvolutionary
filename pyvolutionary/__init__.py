@@ -57,6 +57,7 @@ from .osprey import *
 from .particle_swarm import *
 from .pathfinder_algorithm import *
 from .pelican import *
+from .runge_kutta import *
 from .salp_swarm import *
 from .seagull import *
 from .serval import *
