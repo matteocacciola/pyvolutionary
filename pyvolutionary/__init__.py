@@ -44,6 +44,7 @@ from .grasshopper import *
 from .grey_wolf import *
 from .harmony_search import *
 from .heap_based import *
+from .henry_gas_solubility import *
 from .hunger_games_search import *
 from .imperialist_competitive import *
 from .invasive_weed import *
