@@ -221,11 +221,12 @@ class OptimizationAbstract(ABC, Generic[T]):
         self._task = task
 
         self.before_initialization()
-        self._init_population()
-        self.after_initialization()
 
+        self._init_population()
         evolution.append(Population(agents=self._population, task_type=task.minmax))
         (self._best_agent, ), (self._worst_agent, ) = special_agents(self._population, n_best=1, n_worst=1)
+
+        self.after_initialization()
 
         errors: list[float] = []
         while True:

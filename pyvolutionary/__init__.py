@@ -26,6 +26,7 @@ from .egret_swarm import *
 from .electromagnetic_field import *
 from .elephant_herd import *
 from .energy_valley import *
+from .ficks_law import *
 from .firefly_swarm import *
 from .fireworks import *
 from .fish_school_search import *
