@@ -1,8 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
+from demos.utils.utils import animate
 from pyvolutionary import GreyWolfOptimization, GreyWolfOptimizationConfig
-from pyvolutionary.utils import animate
 
 configuration = GreyWolfOptimizationConfig(
     population_size=population,

@@ -1,8 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
+from demos.utils.utils import animate
 from pyvolutionary import DwarfMongooseOptimization, DwarfMongooseOptimizationConfig
-from pyvolutionary.utils import animate
 
 configuration = DwarfMongooseOptimizationConfig(
     population_size=population,

@@ -1,8 +1,8 @@
 from demos.functions.sphere import (
     fitness_error, task, generation, name, position_min, position_max, population,
 )
+from demos.utils.utils import animate
 from pyvolutionary import ParticleSwarmOptimization, ParticleSwarmOptimizationConfig
-from pyvolutionary.utils import animate
 
 configuration = ParticleSwarmOptimizationConfig(
     population_size=population,
