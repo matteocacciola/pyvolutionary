@@ -68,10 +68,22 @@ class LabelEncoder:
         return [self.__unique_labels__[i] if i in self.__label_to_index__.values() else "unknown" for i in y]
 
 
+class EarlyStopping(BaseModel):
+    patience: int | None = 1
+    min_delta: float | None = 1e-4
+
+    @field_validator("patience")
+    def validate_patience(cls, v):
+        if v is not None and v < 1:
+            raise ValueError(f"\"patience\" must be greater than or equal to one. Got {v}")
+        return v
+
+
 class BaseOptimizationConfig(BaseModel):
     population_size: int
     fitness_error: float | None = 0.1
     max_cycles: int
+    early_stopping: EarlyStopping | None = None
 
 
 class Agent(BaseModel):

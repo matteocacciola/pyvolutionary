@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from pyvolutionary import ContinuousMultiVariable, Task, BiogeographyBasedOptimization, OptimizationResult, GridSearchCV
+from pyvolutionary import ContinuousMultiVariable, Task, BiogeographyBasedOptimization, OptimizationResult, HyperTuner
 
 
 class Problem(Task):
@@ -31,7 +31,7 @@ def data() -> tuple[Task, dict[str, list]]:
 def test_valid_serial(data):
     task, params_grid = data
     model = BiogeographyBasedOptimization()
-    tuner = GridSearchCV(model, params_grid)
+    tuner = HyperTuner(model, params_grid)
 
     tuner.execute(task=task)
 
@@ -47,7 +47,7 @@ def test_valid_serial(data):
 def test_valid_parallel(data):
     task, params_grid = data
     model = BiogeographyBasedOptimization()
-    tuner = GridSearchCV(model, params_grid)
+    tuner = HyperTuner(model, params_grid)
 
     tuner.execute(task=task, n_trials=2, n_jobs=4)
 

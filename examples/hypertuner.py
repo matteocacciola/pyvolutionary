@@ -1,6 +1,6 @@
 from opfunu.cec_based.cec2017 import F52017
 
-from pyvolutionary import Task, BiogeographyBasedOptimization, GridSearchCV, ContinuousMultiVariable
+from pyvolutionary import Task, BiogeographyBasedOptimization, HyperTuner, ContinuousMultiVariable
 
 f1 = F52017(30, f_bias=0)
 
@@ -25,7 +25,7 @@ params_bbo_grid = {
 
 
 model = BiogeographyBasedOptimization()
-tuner = GridSearchCV(model, params_bbo_grid)
+tuner = HyperTuner(model, params_bbo_grid)
 
 tuner.execute(task=task, debug=True, n_trials=2, n_jobs=2)
 

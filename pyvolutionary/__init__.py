@@ -80,21 +80,22 @@ from .whales import *
 from .wildebeest_herd import *
 from .wind_driven import *
 from .zebra import *
-from .gridsearchcv import GridSearchCV
+from .hypertuner import HyperTuner
 from .enums import TaskType
 from .multitask import Multitask
 from .models import (
+    Agent,
+    EarlyStopping,
     OptimizationResult,
     Population,
-    Agent,
     Task,
+    BinaryVariable,
     ContinuousVariable,
     ContinuousMultiVariable,
     DiscreteVariable,
     DiscreteMultiVariable,
-    PermutationVariable,
     MultiObjectiveVariable,
-    BinaryVariable,
+    PermutationVariable,
 )
 from .helpers import best_agent, worst_agent, best_agents, worst_agents, special_agents, get_levy_flight_step
 from .utils import agent_trend, best_agent_trend, agent_position, best_agent_position

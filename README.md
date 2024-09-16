@@ -493,15 +493,15 @@ Once you created your new classes, you can run the algorithm by calling the `opt
 ## Utilities
 **pyVolutionary** provides a set of utilities to facilitate the use of the library.
 
-### GridSearchCV Hyper-parameter tuning
-**pyVolutionary** provides a `GridSearchCV` class to perform hyperparameter tuning of a model. The class is similar to
-the one provided by [scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html),
-but it uses the algorithms implemented in the library to perform the search. The class can be used as follows:
+### HyperTuner Hyper-parameter tuning
+**pyVolutionary** provides a `HyperTuner` class to perform hyperparameter tuning of a model, by means of the algorithms
+implemented in the library. The class can be used to replace the `GridSearchCV` of
+[scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html):
 
 ```python
 from opfunu.cec_based.cec2017 import F52017
 
-from pyvolutionary import ContinuousMultiVariable, Task, BiogeographyBasedOptimization, GridSearchCV
+from pyvolutionary import ContinuousMultiVariable, Task, BiogeographyBasedOptimization, HyperTuner
 
 f1 = F52017(30, f_bias=0)
 
@@ -524,9 +524,8 @@ params_bbo_grid = {
     "p_m": [0.01, 0.02, 0.05]
 }
 
-
 model = BiogeographyBasedOptimization()
-tuner = GridSearchCV(model, params_bbo_grid)
+tuner = HyperTuner(model, params_bbo_grid)
 
 tuner.execute(task=task)
 

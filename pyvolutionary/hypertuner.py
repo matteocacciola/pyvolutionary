@@ -25,7 +25,7 @@ class ParameterGrid:
 
     Parameters
     ----------
-    param_grid : dict of str to sequence, or sequence of such
+    param_grid: dict of str to sequence, or sequence of such
         The parameter grid to explore, as a dictionary mapping estimator
         parameters to sequences of allowed values.
 
@@ -37,8 +37,7 @@ class ParameterGrid:
 
     See Also
     --------
-    GridSearchCV : Uses :class:`ParameterGrid` to perform a full parallelized
-        parameter search.
+    HyperTuner: Uses :class:`ParameterGrid` to perform a full parallelized parameter search.
     """
 
     def __init__(self, param_grid):
@@ -148,9 +147,9 @@ class ParameterGrid:
         raise IndexError("ParameterGrid index out of range")
 
 
-class GridSearchCV:
+class HyperTuner:
     """
-    GridSearchCV utility.
+    HyperTuner utility.
 
     This is a feature that enables the tuning of hyperparameters for an algorithm.
     It also supports exporting results in various formats, such as Pandas DataFrame, JSON, and CSV.

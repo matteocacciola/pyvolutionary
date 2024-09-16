@@ -36,6 +36,8 @@ class OptimizationAbstract(ABC, Generic[T]):
         self._best_agent: T | None = None
         self._worst_agent: T | None = None
         self._current_cycle = 1
+        self._errors = []
+        self._error_diffs = []
 
     @abstractmethod
     def optimization_step(self):
@@ -228,7 +230,6 @@ class OptimizationAbstract(ABC, Generic[T]):
 
         self.after_initialization()
 
-        errors: list[float] = []
         while True:
             self.optimization_step()
             # append the current population to the evolution, being sure that costs and fitness are updated
@@ -237,8 +238,7 @@ class OptimizationAbstract(ABC, Generic[T]):
             (self._best_agent, ), (self._worst_agent, ) = special_agents(self._population, n_best=1, n_worst=1)
 
             # stop when the error is below the error criteria or when the maximum number of cycles is reached
-            error, fitness, has_to_stop = self.__should_stop__()
-            errors.append(error)
+            error, fitness, has_to_stop = self.__error_check__()
             if self._debug:
                 print(f"Cycle {self._current_cycle} - Best position {self._best_agent.position}, "
                       f"cost {self._best_agent.cost if task.minmax == TaskType.MIN else -self._best_agent.cost} - "
@@ -253,10 +253,10 @@ class OptimizationAbstract(ABC, Generic[T]):
                   f"Error criteria reached - Fitness error: {error}")
 
         return OptimizationResult(
-            evolution=evolution, rates=errors, best_solution=self._best_agent, task_type=task.minmax
+            evolution=evolution, rates=self._errors, best_solution=self._best_agent, task_type=task.minmax
         )
 
-    def __should_stop__(self) -> tuple[float, float, bool]:
+    def __error_check__(self) -> tuple[float, float, bool]:
         """
         Check whether the optimization algorithm has to stop or not based on the error criteria and the current cycle.
         :return: a tuple containing the current error, the average fitness and a boolean indicating whether the
@@ -264,15 +264,36 @@ class OptimizationAbstract(ABC, Generic[T]):
         :rtype: tuple[float, float, bool]
         """
         # Get the optimal population
-        fitness_error = self._config.fitness_error
         avg_fit = average_fitness(self._population)
-        cycle = self._current_cycle
-        max_cycles = self._config.max_cycles
-
         current_error = abs(1 - avg_fit)
+        previous_error = self._errors[-1] if len(self._errors) > 0 else 0
 
-        # Stop when the error is below the error criteria or when the maximum number of cycles is reached
-        if fitness_error is None:
-            return current_error, avg_fit, cycle >= max_cycles
+        # Append the current error to the list of errors
+        self._errors.append(current_error)
 
-        return current_error, avg_fit, current_error <= fitness_error or cycle >= max_cycles
+        # Append the difference between the current error and the previous one to the list of error differences
+        self._error_diffs.append(current_error - previous_error)
+
+        return current_error, avg_fit, self.__should_stop__(current_error)
+
+    def __should_stop__(self, current_error: float) -> bool:
+        fitness_error = self._config.fitness_error
+        max_cycles = self._config.max_cycles
+        early_stopping = self._config.early_stopping
+
+        cycle = self._current_cycle
+
+        # Stop when the maximum number of cycles is reached
+        has_to_stop = cycle >= max_cycles
+
+        # Evaluate the early stopping criteria
+        if early_stopping is not None:
+            min_delta, patience = early_stopping.min_delta, early_stopping.patience
+            print(min_delta, patience, self._error_diffs[-patience:])
+            has_to_stop |= all([diff < 0 and abs(diff) < min_delta for diff in self._error_diffs[-patience:]])
+
+        # Stop when the error is below the error criteria
+        if fitness_error is not None:
+            has_to_stop |= current_error <= fitness_error
+
+        return has_to_stop
