@@ -23,10 +23,10 @@ abstract: >-
 keywords:
   - Evolutionary Computation
   - Heuristic algorithms
-  - 'Optimization problems '
-  - 'Natural Computation '
+  - Optimization problems
+  - Natural Computation
   - Python
-  - 'Artificial Intelligence '
+  - Artificial Intelligence
 license: GPL-3.0-only
 version: 2.5.1
 date-released: '2024-09-16'
