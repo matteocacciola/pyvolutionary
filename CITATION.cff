@@ -1,0 +1,32 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: pyVolutionary
+message: Please cite this software using these metadata.
+type: software
+authors:
+  - given-names: Matteo
+    family-names: Cacciola
+    email: matteo.cacciola@gmail.com
+    orcid: 'https://orcid.org/0000-0001-7795-4396'
+identifiers:
+  - type: url
+    value: 'https://github.com/matteocacciola/pyvolutionary'
+    description: The URL of the GitHub repository
+repository-code: 'https://github.com/matteocacciola/pyvolutionary'
+url: 'https://pypi.org/project/pyVolutionary/'
+abstract: >-
+  pyVolutionary is a package collecting metaheuristic
+  algorithms, available for free usage and able to solve a
+  wide range of optimization problems.
+keywords:
+  - Evolutionary Computation
+  - Heuristic algorithms
+  - 'Optimization problems '
+  - 'Natural Computation '
+  - Python
+  - 'Artificial Intelligence '
+license: GPL-3.0-only
+version: 2.5.1
+date-released: '2024-09-16'
