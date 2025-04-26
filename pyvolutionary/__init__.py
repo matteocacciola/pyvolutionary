@@ -97,5 +97,14 @@ from .models import (
     MultiObjectiveVariable,
     PermutationVariable,
 )
-from .helpers import best_agent, worst_agent, best_agents, worst_agents, special_agents, get_levy_flight_step
+from .helpers import (
+    best_agent,
+    best_agent_formatted,
+    worst_agent,
+    worst_agent_formatted,
+    best_agents,
+    worst_agents,
+    special_agents,
+    get_levy_flight_step,
+)
 from .utils import agent_trend, best_agent_trend, agent_position, best_agent_position
