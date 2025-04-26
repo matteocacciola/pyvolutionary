@@ -145,16 +145,16 @@ def best_agent_formatted(population: list[T], n_params: int, task_type: TaskType
     :return: the best agent
     :rtype: Agent
     """
-    best_agent = best_agent(population, task_type)
+    b_agent = best_agent(population, task_type)
 
-    best_agent_position = np.array(best_agent.position)  # Ensure it's a NumPy array
+    best_agent_position = np.array(b_agent.position)  # Ensure it's a NumPy array
     if len(best_agent_position) % n_params != 0:
         raise ValueError("Length of `best_agent.position` must be a multiple of `n_params`.")
 
     # Reshape the position
-    best_agent.position = best_agent_position.reshape(-1, n_params)
+    b_agent.position = best_agent_position.reshape(-1, n_params)
 
-    return best_agent
+    return b_agent
 
 
 def best_agent_index(population: list[T], task_type: TaskType | None = TaskType.MIN) -> int:
@@ -189,16 +189,16 @@ def worst_agent_formatted(population: list[T], n_params: int, task_type: TaskTyp
     :return: the best agent
     :rtype: Agent
     """
-    worst_agent = worst_agent(population, task_type)
+    w_agent = worst_agent(population, task_type)
 
-    worst_agent_position = np.array(worst_agent.position)  # Ensure it's a NumPy array
+    worst_agent_position = np.array(w_agent.position)  # Ensure it's a NumPy array
     if len(worst_agent_position) % n_params != 0:
         raise ValueError("Length of `worst_agent.position` must be a multiple of `n_params`.")
 
     # Reshape the position
-    worst_agent.position = worst_agent_position.reshape(-1, n_params)
+    w_agent.position = worst_agent_position.reshape(-1, n_params)
 
-    return worst_agent
+    return w_agent
 
 
 def worst_agent_index(population: list[T], task_type: TaskType | None = TaskType.MIN) -> int:
