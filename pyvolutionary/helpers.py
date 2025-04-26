@@ -136,6 +136,27 @@ def best_agent(population: list[T], task_type: TaskType | None = TaskType.MIN) -
     return b_agent
 
 
+def best_agent_formatted(population: list[T], n_params: int, task_type: TaskType | None = TaskType.MIN) -> T:
+    """
+    Get the best agent of the population based on its cost value (the lower the cost, the best the agent).
+    The positions of the best agent will be splitted into n_params parts.
+    :param population: the population
+    :param task_type: the type of task (minimization or maximization)
+    :return: the best agent
+    :rtype: Agent
+    """
+    best_agent = best_agent(population, task_type)
+
+    best_agent_position = np.array(best_agent.position)  # Ensure it's a NumPy array
+    if len(best_agent_position) % n_params != 0:
+        raise ValueError("Length of `best_agent.position` must be a multiple of `n_params`.")
+
+    # Reshape the position
+    best_agent.position = best_agent_position.reshape(-1, n_params)
+
+    return best_agent
+
+
 def best_agent_index(population: list[T], task_type: TaskType | None = TaskType.MIN) -> int:
     """
     Get the index of the best agent of the population based on its cost value (the lower the cost, the best the agent).
@@ -157,6 +178,27 @@ def worst_agent(population: list[T], task_type: TaskType | None = TaskType.MIN) 
     """
     w_agent, = worst_agents(population, 1, task_type)
     return w_agent
+
+
+def worst_agent_formatted(population: list[T], n_params: int, task_type: TaskType | None = TaskType.MIN) -> T:
+    """
+    Get the worst agent of the population based on its cost value (the lower the cost, the best the agent).
+    The positions of the worst agent will be splitted into n_params parts.
+    :param population: the population
+    :param task_type: the type of task (minimization or maximization)
+    :return: the best agent
+    :rtype: Agent
+    """
+    worst_agent = worst_agent(population, task_type)
+
+    worst_agent_position = np.array(worst_agent.position)  # Ensure it's a NumPy array
+    if len(worst_agent_position) % n_params != 0:
+        raise ValueError("Length of `worst_agent.position` must be a multiple of `n_params`.")
+
+    # Reshape the position
+    worst_agent.position = worst_agent_position.reshape(-1, n_params)
+
+    return worst_agent
 
 
 def worst_agent_index(population: list[T], task_type: TaskType | None = TaskType.MIN) -> int:
