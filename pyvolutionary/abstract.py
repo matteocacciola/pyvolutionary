@@ -224,13 +224,25 @@ class OptimizationAbstract(ABC, Generic[T]):
 
         self.before_initialization()
 
+        if self._debug:
+            print(f"Starting optimization with {self._config.population_size} agents, "
+                  f"{self._config.max_cycles} cycles and {self._workers} workers")
+            print(f"Task: {self._task.name} - Minmax: {self._task.minmax} - ")
+            print("Initializing population...")
+
         self._init_population()
         evolution.append(Population(agents=self._population, task_type=task.minmax))
         (self._best_agent, ), (self._worst_agent, ) = special_agents(self._population, n_best=1, n_worst=1)
 
         self.after_initialization()
 
+        if self._debug:
+            print("Population initialized")
+
         while True:
+            if self._debug:
+                print(f"Starting cycle {self._current_cycle}...")
+
             self.optimization_step()
             # append the current population to the evolution, being sure that costs and fitness are updated
             evolution.append(Population(agents=self._population, task_type=task.minmax))
@@ -240,7 +252,7 @@ class OptimizationAbstract(ABC, Generic[T]):
             # stop when the error is below the error criteria or when the maximum number of cycles is reached
             error, fitness, has_to_stop = self.__error_check__()
             if self._debug:
-                print(f"Cycle {self._current_cycle} - Best position {self._best_agent.position}, "
+                print(f"Cycle {self._current_cycle} completed - Best position {self._best_agent.position}, "
                       f"cost {self._best_agent.cost if task.minmax == TaskType.MIN else -self._best_agent.cost} - "
                       f"Average fitness {fitness}, fitness error {error}")
             if has_to_stop:
