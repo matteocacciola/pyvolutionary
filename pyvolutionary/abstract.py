@@ -301,7 +301,6 @@ class OptimizationAbstract(ABC, Generic[T]):
         # Evaluate the early stopping criteria
         if early_stopping is not None:
             min_delta, patience = early_stopping.min_delta, early_stopping.patience
-            print(min_delta, patience, self._error_diffs[-patience:])
             has_to_stop |= all([diff < 0 and abs(diff) < min_delta for diff in self._error_diffs[-patience:]])
 
         # Stop when the error is below the error criteria
