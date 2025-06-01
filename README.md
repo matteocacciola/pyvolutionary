@@ -197,7 +197,7 @@ In case of `process` and `thread` modes, you can also specify the number of proc
 `n_jobs` argument of the `optimize` method:
 
 ```python
-optimization_result = ParticleSwarmOptimization(configuration).optimize(task, mode="thread", jobs=4)
+optimization_result = ParticleSwarmOptimization(configuration).optimize(task, mode="thread", workers=4)
 ```
 
 The optimization result is a dictionary containing the following keys:
