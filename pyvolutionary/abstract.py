@@ -225,8 +225,10 @@ class OptimizationAbstract(ABC, Generic[T]):
         self.before_initialization()
 
         if self._debug:
-            print(f"Starting optimization with {self._config.population_size} agents, "
-                  f"{self._config.max_cycles} cycles and {self._workers} workers")
+            if self._mode == ModeSolver.SERIAL:
+                print(f"Starting optimization with {self._config.population_size} agents and {self._config.max_cycles} cycles")
+            else:
+                print(f"Starting optimization with {self._config.population_size} agents, {self._config.max_cycles} cycles and {self._workers} workers")
             print(f"Task: {self._task.name} - Minmax: {self._task.minmax} - ")
             print("Initializing population...")
 
