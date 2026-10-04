@@ -54,10 +54,17 @@ help:
 	@echo
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "$(NOTIFICATION_COLOR)%-30s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-.PHONY: test demo coverage
+.PHONY: test demo coverage lint audit
 test: ## Run tests
 	@PYTHONPATH=. pytest -p no:warnings -s -vvv ${FURTHER_ARGS}
 demo: ## Run demo
 	@python ${FURTHER_ARGS}
 coverage: ## Run tests with coverage
 	@coverage run -m pytest && coverage combine && coverage html && coverage report
+lint: ## Run the lint checks (same as CI)
+	@ruff check
+audit: ## Check the runtime dependencies against the OSV/PyPI advisory databases (same as CI)
+	@python -m venv .audit-venv && \
+	.audit-venv/bin/python -m pip install -q --upgrade pip setuptools pip-audit . && \
+	.audit-venv/bin/pip-audit --progress-spinner off; \
+	status=$$?; rm -rf .audit-venv; exit $$status

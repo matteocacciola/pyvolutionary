@@ -45,6 +45,14 @@ matplotlib = "^3.7.5"
 opfunu = "^1.0.1"
 
 
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# syntax errors and undefined names: the checks that reveal real bugs
+select = ["E9", "F63", "F7", "F82"]
+
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

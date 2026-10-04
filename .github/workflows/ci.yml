@@ -1,0 +1,95 @@
+name: CI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: "Lint"
+    runs-on: ubuntu-latest
+    # A separate, fast job: it reports a syntax error or an undefined name in seconds, long before the test matrix ends.
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Ruff
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: "check"
+
+  audit:
+    name: "Audit dependencies"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Check the runtime dependencies against the OSV/PyPI advisory databases
+        run: make audit
+
+  test:
+    name: "Tests (Python ${{ matrix.python-version }}, locked dependencies)"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        run: python -m pip install poetry
+      - name: Install the project with the locked dependencies
+        run: poetry install --with test --no-interaction
+      - name: Run tests
+        run: poetry run pytest -p no:warnings -q tests
+
+  test-latest:
+    name: "Tests (latest dependencies)"
+    runs-on: ubuntu-latest
+    # The newest releases allowed by pyproject.toml (e.g. pandas 3), as a project depending on pyVolutionary gets them:
+    # it catches an upstream break before the users do.
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Install the project with the latest dependencies
+        run: python -m pip install --upgrade . pytest requests-mock
+      - name: Run tests
+        run: python -m pytest -p no:warnings -q tests
+
+  build:
+    name: "Build distributions"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Build and check the distributions
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build
+          python -m twine check --strict dist/*

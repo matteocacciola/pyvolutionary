@@ -137,3 +137,5 @@ dmypy.json
 demos/images
 **/best_fit
 **/multitask
+# virtual environment of `make audit`
+.audit-venv/
