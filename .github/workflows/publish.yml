@@ -75,12 +75,12 @@ jobs:
     permissions:
       contents: write  # to create the GitHub release and attach the distributions and the SBOM
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: sbom
           path: sbom/
