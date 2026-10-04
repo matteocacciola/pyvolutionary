@@ -22,7 +22,7 @@
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/matteocacciola/pyvolutionary.svg)](http://isitmaintained.com/project/matteocacciola/pyvolutionary "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/matteocacciola/pyvolutionary.svg)](http://isitmaintained.com/project/matteocacciola/pyvolutionary "Percentage of issues still open")
 [![GitTutorial](https://img.shields.io/badge/PR-Welcome-%23FF8300.svg?)](https://git-scm.com/book/en/v2/GitHub-Contributing-to-a-Project)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ![GitHub forks](https://img.shields.io/github/forks/matteocacciola/pyvolutionary)
 
