@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyVolutionary"
-version = "2.6.5"
+version = "2.6.6"
 description = "pyVolutionary is a package collecting metaheuristic algorithms, available for free usage and able to solve a wide range of optimization problems."
 authors = ["Matteo Cacciola <matteo.cacciola@gmail.com>"]
 license = "MIT"
@@ -18,7 +18,7 @@ classifiers = [
 python = ">=3.10"
 pydantic = "^2.9.0"
 numpy = "^2.1.1"
-pandas = "^2.2.0"
+pandas = ">=2.2.0,<4.0.0"
 scipy = "^1.12.0"
 
 

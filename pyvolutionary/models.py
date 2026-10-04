@@ -432,7 +432,7 @@ class BinaryVariable(Variable):
 
 
 class Task(BaseModel, ABC):
-    seed: float | None = None
+    seed: int | None = None
     variables: list[Variable] = field(default_factory=list)
     space_dimension: int
     minmax: TaskType = TaskType.MIN
