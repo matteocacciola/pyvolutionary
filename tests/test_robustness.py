@@ -98,3 +98,16 @@ def test_permutation_task(algorithm, config):
         result = algorithm(config.model_copy(deep=True)).optimize(task)
     assert sorted(task.transform_solution(result.best_solution.position)["route"]) == list(range(8))
     assert is_finite(result)
+
+
+@pytest.mark.parametrize("algorithm,config", algorithms())
+def test_reported_costs_are_consistent(algorithm, config):
+    # every agent reports the cost of its own position, and the best solution is the best agent found
+    task = Rastrigin(variables=[ContinuousMultiVariable(name="x", lower_bounds=[-5] * 4, upper_bounds=[5] * 4)], seed=1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        result = algorithm(config.model_copy(deep=True)).optimize(task)
+    agents = [agent for population in result.evolution for agent in population.agents]
+    for agent in agents:
+        assert agent.cost == pytest.approx(task.solve(agent.position), rel=1e-9, abs=1e-9)
+    assert result.best_solution.cost == pytest.approx(min(agent.cost for agent in agents), rel=1e-9, abs=1e-9)

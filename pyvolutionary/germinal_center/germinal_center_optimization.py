@@ -2,7 +2,6 @@ from typing import Any
 import numpy as np
 
 from ..helpers import (
-    roulette_wheel_indexes,
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
@@ -41,8 +40,10 @@ class GerminalCenterOptimization(OptimizationAbstract):
                 center.cell_counter += 1
             elif center.cell_counter > 1:
                 center.cell_counter -= 1
-            counters = np.array([center.cell_counter for center in self._population])
-            r1, r2, r3 = roulette_wheel_indexes(counters, 3)
+            # the cells are selected with probability proportional to their counter (the most active ones are the
+            # most likely); roulette_wheel_indexes would favour the lowest counters, as it is meant for costs
+            counters = np.array([center.cell_counter for center in self._population], dtype=float)
+            r1, r2, r3 = np.random.choice(len(counters), 3, replace=False, p=counters / np.sum(counters))
             pos_new = np.array(self._population[r1].position) + wf * (
                 np.array(self._population[r2].position) - np.array(self._population[r3].position)
             )
@@ -52,7 +53,7 @@ class GerminalCenterOptimization(OptimizationAbstract):
 
         def light_zone(center: GerminalCenter) -> GerminalCenter:
             center.life_signal -= 10
-            cost = (center.cost - cost_max) / (cost_min - cost_max)
+            cost = (center.cost - cost_max) / (cost_min - cost_max + self.EPS)
             center.life_signal += 10 * cost
             return center
 

@@ -76,9 +76,12 @@ class KrillHerdOptimization(OptimizationAbstract):
             neighbours_x = (
                 (positions[neighbours_idx] - positions[idx]) + self.EPS
             ) / per_row(distances_matrix[idx, neighbours_idx] + self.EPS, positions)
-            alpha_l = np.sum(neighbours_k * neighbours_x.T)
-            alpha_t = 2 * (1 + np.random.random() * (current_cycle + 1) / max_cycles)
-            return n_max * (alpha_l + alpha_t) + w_neighbour * krill.induced_speed
+            # local effect: the sum over the neighbours, one value per dimension
+            alpha_l = np.sum(neighbours_k * neighbours_x.T, axis=-1)
+            # target effect: the attraction towards the best krill, with coefficient C_best = 2 * (rand + I / I_max)
+            c_best = 2 * (np.random.random() + current_cycle / max_cycles)
+            alpha_t = c_best * get_k(krill, g_best) * get_x(krill, g_best)
+            return n_max * (alpha_l + alpha_t) + w_neighbour * np.array(krill.induced_speed)
 
         def induce_foraging_motion(krill: Krill) -> np.ndarray:
             beta_f = 2 * (1 - (current_cycle + 1) / max_cycles) * get_k(krill, temp_krill) * get_x(
@@ -88,25 +91,26 @@ class KrillHerdOptimization(OptimizationAbstract):
             return config_foraging_speed * (beta_f + beta_b) + w_foraging * krill.foraging_speed
 
         def new_population(idx: int, krill: Krill) -> Krill:
-            pos = krill.position
             # induced physical diffusion operator
             diffusion = config_diffusion_speed * (1 - (current_cycle + 1) / max_cycles) * np.random.uniform(-1, 1, dims)
             # get a new position by a new delta factor
             new_pos = self._task.correct_solution(
                 krill.position + (c_t * sum_bandwidth * (induced_speed[idx] + foraging_speed[idx] + diffusion))
             )
-            # crossover
+            # crossover: each dimension is taken from a random krill with probability Cr = crossover_rate * K
+            krill_r = positions[np.random.randint(population_size)]
             new_pos = self._task.correct_solution(np.where(
                 np.random.random(dims) < config_crossover_rate * get_k(krill, g_best),
-                pos,
+                krill_r,
                 new_pos
             ))
-            # mutation
+            # mutation: each dimension is moved around the best krill with probability Mu = mutation_rate / K
             mutation_rate = config_mutation_rate / (get_k(krill, g_best) + 1e-31)
+            krill_p, krill_q = positions[np.random.choice(population_size, 2, replace=False)]
             new_pos = np.where(
-                np.random.random(self._task.space_dimension) < mutation_rate,
-                new_pos,
-                g_best.position + np.random.random(self._task.space_dimension)
+                np.random.random(dims) < mutation_rate,
+                np.array(g_best.position) + np.random.random(dims) * (krill_p - krill_q),
+                new_pos
             )
             return self._init_agent(new_pos, induced_speed[idx].tolist(), foraging_speed[idx].tolist())
 

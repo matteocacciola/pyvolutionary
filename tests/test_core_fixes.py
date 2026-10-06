@@ -10,6 +10,8 @@ from pyvolutionary import (
     EarthwormsOptimizationConfig,
     FireflySwarmOptimization,
     FireflySwarmOptimizationConfig,
+    FishSchoolSearchOptimization,
+    FishSchoolSearchOptimizationConfig,
     ContinuousMultiVariable,
     DiscreteMultiVariable,
     DiscreteVariable,
@@ -396,3 +398,14 @@ def test_firefly_mutation_coefficient_is_damped():
     optimizer = FireflySwarmOptimization(config)
     optimizer.optimize(make_task(seed=6))
     assert optimizer._FireflySwarmOptimization__alpha == pytest.approx(0.2 * 0.5 ** 4)
+
+
+def test_fish_school_keeps_the_weights():
+    # the weight of a fish is gained by feeding and kept when it moves (it was reset at every move)
+    config = FishSchoolSearchOptimizationConfig(
+        population_size=10, fitness_error=None, max_cycles=5, step_individual_init=0.1, step_individual_final=0.0001,
+        step_volitive_init=0.01, step_volitive_final=0.001, min_w=1, w_scale=500,
+    )
+    optimizer = FishSchoolSearchOptimization(config)
+    optimizer.optimize(make_task(seed=2))
+    assert any(fish.weight != config.w_scale / 2.0 for fish in optimizer._population)

@@ -261,6 +261,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         self._init_population()
         evolution.append(Population(agents=self._population, task_type=task.minmax))
         (self._best_agent, ), (self._worst_agent, ) = special_agents(self._population, n_best=1, n_worst=1)
+        self._best_agent = self._best_agent.model_copy()
 
         self.after_initialization()
 
@@ -275,7 +276,11 @@ class OptimizationAbstract(ABC, Generic[T]):
             # append the current population to the evolution, being sure that costs and fitness are updated
             evolution.append(Population(agents=self._population, task_type=task.minmax))
 
-            (self._best_agent, ), (self._worst_agent, ) = special_agents(self._population, n_best=1, n_worst=1)
+            # the best agent is the best one found so far (the global best): an algorithm may lose it from the
+            # population, but it must neither be lost in the result nor stop guiding the algorithms using it
+            (current_best, ), (self._worst_agent, ) = special_agents(self._population, n_best=1, n_worst=1)
+            if current_best.cost < self._best_agent.cost:
+                self._best_agent = current_best.model_copy()
 
             # stop when the error is below the error criteria or when the maximum number of cycles is reached
             error, fitness, has_to_stop = self.__error_check__()

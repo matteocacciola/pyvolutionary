@@ -36,13 +36,14 @@ class CuckooSearchOptimization(OptimizationAbstract):
     def optimization_step(self):
         def evolve(cuckoo: Cuckoo) -> Cuckoo:
             pos = np.array(cuckoo.position)
+            # each cuckoo flies with its own Levy step
+            levy_step = get_levy_flight_step(multiplier=0.001, case=-1)
             new_agent = Cuckoo(**self._init_agent(
                 pos + 1.0 / np.sqrt(epoch) * np.sign(np.random.random() - 0.5) * levy_step * (pos - best_pos)
             ).__dict__)
             return self._greedy_select_agent(new_agent, cuckoo)
 
         epoch = self._current_cycle
-        levy_step = get_levy_flight_step(multiplier=0.001, case=-1)
 
         best_pos = np.array(self._best_agent.position)
         self._population = [evolve(cuckoo) for cuckoo in self._population]

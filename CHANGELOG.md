@@ -21,6 +21,35 @@ These fixes change the results of some algorithms, even with the same seed.
   Golden Jackal, Aquila, Dragonfly, Monarch Butterfly).
 - Water Cycle Optimization sorts the initial population, so that the best agent is the sea and the following ones are
   the rivers; every river gets at least one stream.
+- The best agent is the best one found so far (the global best), not the best of the current population: an algorithm
+  not keeping its best agents (Bacterial Foraging, Bee Colony, Chernobyl Disaster, Fire Hawk, Fish School Search,
+  Particle Swarm, Water Cycle) returned a worse solution than one it had already found, and the algorithms guided by the
+  best agent (e.g. the gbest of Particle Swarm) were guided by a worse one.
+- Imperialist Competitive Optimization reports the cost of each emperor: it reported the total cost of the empire
+  (emperor and colonies), which did not match the position of the agent, e.g. a cost of 1572 for a position whose cost
+  is 16.8. The best solution returned was wrong.
+- Bacterial Foraging Optimization (adaptive): the cells did not keep the result of their swim (it was never written back
+  to the population), the personal best was never updated, a cell was eliminated only if starving *and* with
+  probability `Ped` (instead of *or*), and the duplicated cells were never removed.
+- Germinal Center Optimization selects the cells for the mutation with probability proportional to their counter, as in
+  the original algorithm: the roulette wheel used before favoured the least active cells.
+- Cuckoo Search Optimization draws a Levy flight step for each cuckoo (it was one per cycle, shared by all of them).
+- Coronavirus Herd Immunity Optimization follows the original algorithm: the patient getting in touch with a confirmed
+  case may get infected (it was the confirmed case to be marked), the confirmed cases not improving for `max_age`
+  cycles die (it was the recovered ones), the recovered cases with zero cost are not excluded, and the random factor
+  is drawn per dimension.
+- Harmony Search Optimization draws the pitch adjustment of each new harmony (it was one per cycle, shared by all).
+- Fish School Search Optimization follows the original algorithm: a fish keeps its weight when it moves (it was reset at
+  every move, so feeding had no effect), the steps decrease relative to the size of the search space (they lost the
+  scale after the first cycle), the individual move is a random step in [-1, 1] (it was biased by the bounds), and the
+  volitive move compares the weight of the school with the previous cycle and moves along the normalized direction.
+- Krill Herd Optimization follows the original algorithm: the local effect of the neighbours is a vector (it was summed
+  into a scalar), the target effect attracts each krill towards the best one, the crossover takes the dimensions of a
+  random krill, and the mutation moves the dimensions around the best krill with probability `mutation_rate / K`
+  (the condition was inverted, so most dimensions were replaced).
+- Monarch Butterfly Optimization follows the original algorithm: the migration and the adjusting operators build each
+  new butterfly dimension by dimension, from random butterflies of the two lands (the migration copied whole existing
+  butterflies, producing no new solutions), with a Levy flight step per butterfly.
 - Firefly Swarm Optimization follows the implementation of mealpy (`OriginalFFA`). Before:
   - the mutation coefficient `alpha` collapsed at the first cycle (to ~1e-4 of its value, and to ~1e-12 at the tenth),
     since its decay used the current cycle instead of the number of cycles, and it was squared at every cycle;

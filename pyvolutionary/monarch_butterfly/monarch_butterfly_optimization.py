@@ -35,7 +35,9 @@ class MonarchButterflyOptimization(OptimizationAbstract):
 
     def before_initialization(self):
         self.__bar = self._config.partition
-        self.__np1 = int(np.ceil(self._config.partition * self._config.population_size))
+        # both lands hold at least one butterfly
+        self.__np1 = int(min(max(np.ceil(self._config.partition * self._config.population_size), 1),
+                             self._config.population_size - 1))
         self.__np2 = self._config.population_size - self.__np1
 
     def optimization_step(self):
@@ -43,31 +45,38 @@ class MonarchButterflyOptimization(OptimizationAbstract):
         self._population = sort_by_cost(self._population)
         elite = self._population[:self._config.keep].copy()
 
-        # apply the migration operator to the best habitats of the current generation
-        r1 = np.random.random(size=self.__np1) * self._config.period
-        partition_condition = r1 <= self._config.partition
-        n_values = np.where(partition_condition, self.__np1, self.__np2)
+        n_dims = self._task.space_dimension
+        dims = np.arange(n_dims)
+        partition, period = self._config.partition, self._config.period
+        # Land 1 holds the best butterflies, Land 2 the other ones
+        land1 = np.array([butterfly.position for butterfly in self._population[:self.__np1]], dtype=float)
+        land2 = np.array([butterfly.position for butterfly in self._population[self.__np1:]], dtype=float)
 
-        pop_indices = np.round(n_values * np.random.random(size=self.__np1) + 0.5).astype(int).tolist()
+        # migration operator (Land 1): each dimension comes from a random butterfly of Land 1 or of Land 2
+        pop1 = []
+        for _ in range(0, self.__np1):
+            from_land1 = np.random.random(n_dims) * period <= partition
+            position = np.where(
+                from_land1,
+                land1[np.random.randint(0, self.__np1, n_dims), dims],
+                land2[np.random.randint(0, self.__np2, n_dims), dims],
+            )
+            pop1.append(MonarchButterfly(**self._init_agent(position).__dict__))
 
-        pop1 = [
-            MonarchButterfly(**self._init_agent(self._population[idx].position).__dict__) for idx in pop_indices
-        ]
-
-        # apply the adjusting operator to the worst habitats of the current generation
-        scale = 1.0 / ((self._current_cycle + 1) ** 2)
-        step_size = np.ceil(np.random.exponential(2 * self._config.max_cycles))
-        delta_x = get_levy_flight_step(beta=1., multiplier=step_size, size=self._task.space_dimension, case=1)
-
-        mask = np.random.uniform(0.0, 1.0, size=self.__np2) <= self._config.partition
-        indices = np.where(
-            mask, -1, np.round(self.__np2 * np.random.random(size=self.__np2) + 0.5).astype(int).tolist()
-        )
-
-        positions = [self._best_agent.position if idx == -1 else (
-            self._population[idx].position + scale * (delta_x - 0.5) * int(np.random.uniform(0.0, 1.0) > self.__bar)
-        ) for idx in indices]
-        pop2 = [MonarchButterfly(**self._init_agent(position).__dict__) for position in positions]
+        # butterfly adjusting operator (Land 2): each dimension comes from the best butterfly or from a random one of
+        # Land 2, which may take a Levy flight step
+        best_position = np.array(self._best_agent.position)
+        alpha = 1.0 / (self._current_cycle ** 2)
+        pop2 = []
+        for _ in range(0, self.__np2):
+            step_size = np.ceil(np.random.exponential(2 * self._config.max_cycles))
+            delta_x = get_levy_flight_step(beta=1., multiplier=step_size, size=n_dims, case=1)
+            from_best = np.random.random(n_dims) <= partition
+            position = land2[np.random.randint(0, self.__np2, n_dims), dims]
+            flies = np.random.random(n_dims) > self.__bar
+            position = np.where(flies, position + alpha * (delta_x - 0.5), position)
+            position = np.where(from_best, best_position, position)
+            pop2.append(MonarchButterfly(**self._init_agent(position).__dict__))
 
         # apply the elitism operator
         self._population = sort_and_trim(pop1 + pop2, self._config.population_size - self._config.keep)

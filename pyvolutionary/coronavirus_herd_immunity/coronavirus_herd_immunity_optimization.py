@@ -46,9 +46,9 @@ class CoronavirusHerdImmunityOptimization(OptimizationAbstract):
             rand = np.random.uniform()
             ratio = (1.0 / 3) * brr
             if rand < ratio and len(confirmed) > 0:
-                picked = np.random.choice(confirmed)
-                is_corona_list[picked] = True
-                return picked
+                # the current patient gets in touch with a confirmed one, so it may get infected
+                is_corona_list[k] = True
+                return np.random.choice(confirmed)
             if ratio <= rand < 2 * ratio and len(normal) > 0:
                 return np.random.choice(normal)
             if 2 * ratio <= rand < brr and len(recovered) > 0:
@@ -60,7 +60,7 @@ class CoronavirusHerdImmunityOptimization(OptimizationAbstract):
             pos = np.array(patient.position)
             idxs = [select_random_index(idx) for _ in range(0, n_dims)]
             pos_selected = [self._population[idxs[jdx]].position[jdx] for jdx in range(0, n_dims)]
-            pos_new = pos + np.random.uniform() * (pos - np.array(pos_selected))
+            pos_new = pos + np.random.uniform(0, 1, n_dims) * (pos - np.array(pos_selected))
             new_agent = self._init_agent(pos_new, status=patient.status, age=patient.age)
             p = patient.model_copy(update={"age": patient.age + 1})
             return self._greedy_select_agent(p, new_agent)
@@ -75,8 +75,8 @@ class CoronavirusHerdImmunityOptimization(OptimizationAbstract):
             if delta_fx < patient.cost and patient.status == 1:
                 patient.status = 2
                 patient.age = 0
-            # kill the current patient and regenerate from scratch
-            if patient.age >= max_age and patient.status == 2:
+            # fatality: a confirmed patient not improving for max_age cycles is regenerated from scratch
+            if patient.age >= max_age and patient.status == 1:
                 patient = self._init_agent()
             return patient
 
@@ -89,7 +89,7 @@ class CoronavirusHerdImmunityOptimization(OptimizationAbstract):
 
         normal = [idx for idx, patient in enumerate(self._population) if patient.status == 0]
         confirmed = [idx for idx, patient in enumerate(self._population) if patient.status == 1]
-        recovered = [idx for idx, patient in enumerate(self._population) if patient.status == 2 and patient.cost != 0]
+        recovered = [idx for idx, patient in enumerate(self._population) if patient.status == 2]
 
         self._population = [evolve(idx, patient) for idx, patient in enumerate(self._population)]
 

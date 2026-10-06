@@ -44,6 +44,8 @@ class HarmonySearchOptimization(OptimizationAbstract):
             """
             # Create New Harmony Position
             pos_new = self._task.empty_solution()
+            # each harmony draws its own pitch adjustment
+            delta = self.__dyn_fw * np.array(self._task.empty_solution())
 
             # Use Harmony Memory
             pos_new = np.where(np.random.random(dim) < consideration_rate, best_pos, pos_new)
@@ -54,7 +56,6 @@ class HarmonySearchOptimization(OptimizationAbstract):
             # Create New Harmony
             return Harmony(**self._init_agent(pos_new).__dict__)
 
-        delta = self.__dyn_fw * self._task.empty_solution()
         best_pos = self._best_agent.position
         consideration_rate = self._config.consideration_rate
         pitch_adjusting_rate = self._config.pitch_adjusting_rate
