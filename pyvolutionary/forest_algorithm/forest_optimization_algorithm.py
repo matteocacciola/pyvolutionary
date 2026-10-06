@@ -40,13 +40,13 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
 
     def optimization_step(self):
         def local_seeding(tree: Tree) -> Tree:
-            position = np.array(tree.position)
+            position = np.array(tree.position, dtype=float)
             indices = np.random.choice(dims, local_seeding_changes, replace=False)
             position[indices] += np.random.uniform(-self.__dx[indices], self.__dx[indices])
             return self._init_agent(position)
 
         def global_seeding(tree: Tree) -> Tree:
-            position = np.array(tree.position)
+            position = np.array(tree.position, dtype=float)
             indices = np.random.choice(self._task.space_dimension, self._config.global_seeding_changes, replace=False)
             position[indices] = self._task.uniform_coordinates(indices)
             return self._init_agent(position)

@@ -6,6 +6,13 @@
 
 These fixes change the results of some algorithms, even with the same seed.
 
+- `PermutationVariable` spans one dimension per item ("random keys"): the position of an agent holds a key per item,
+  and the permutation is the order of the items by increasing key (`transform_solution` returns it, as before). It was a
+  single dimension holding a nested list, which 15 algorithms could not handle (e.g. Ant Colony, Bacterial Foraging,
+  Battle Royale, Coral Reef, Egret Swarm, Energy Valley, Firefly Swarm, Forensic-Based Investigation, Forest, Golden
+  Jackal, QLE Sine Cosine): all the algorithms now solve permutation tasks. The corrected position holds the ranks of the
+  keys, so that correcting it again leaves it as it is (it was sorted twice before evaluating the objective).
+
 - `Task.increase_solution` now moves from the given solution, instead of returning a random one. This changes Osprey,
   Walrus, Siberian Tiger and Wildebeest Herd optimizations.
 - The velocity of Particle Swarm Optimization is now clamped to 20% of the search range, as intended.
@@ -49,6 +56,11 @@ These fixes change the results of some algorithms, even with the same seed.
 - `Task.amend_solution` no longer fails on array comparisons.
 - `random_selection` no longer raises `IndexError` on rounding errors.
 - `best_agent_formatted` and `worst_agent_formatted` no longer alter the agents of the population.
+- `DiscreteMultiVariable` returns its bounds as `(lower bounds, upper bounds)`, as the other variables: a task got
+  wrong bounds with two discrete variables, and failed with any other number of them.
+- `transform_solution` decodes a multi-variable of one dimension as a list (it failed).
+- Energy Valley, Forest and Golden Jackal optimizations no longer fail (or truncate the updates) with integer positions,
+  e.g. of discrete or permutation variables.
 - `distances` returns the full matrix of pairwise distances (it dropped the last coordinate).
 - `Multitask` accepts one mode per algorithm, and repeated `execute()` calls no longer accumulate results.
 - `HyperTuner` and `Multitask` work on machines with 2 CPUs or less.

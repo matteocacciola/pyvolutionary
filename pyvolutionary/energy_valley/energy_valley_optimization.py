@@ -40,8 +40,8 @@ class EnergyValleyOptimization(OptimizationAbstract):
             eb = np.mean(cost_list)
             sl = (cost_list[idx] - best_cost) / (worst_cost - best_cost + self.EPS)
 
-            pos_new1 = pos.copy()
-            pos_new2 = pos.copy()
+            pos_new1 = pos.astype(float)
+            pos_new2 = pos.astype(float)
             if eb < particle.cost:
                 if np.random.random() > sl:
                     a1_idx, g1_idx = np.random.randint(0, n_dims, size=2)

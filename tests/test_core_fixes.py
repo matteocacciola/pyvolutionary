@@ -10,6 +10,7 @@ from pyvolutionary import (
     FireflySwarmOptimization,
     FireflySwarmOptimizationConfig,
     ContinuousMultiVariable,
+    DiscreteMultiVariable,
     DiscreteVariable,
     EarlyStopping,
     GreyWolfOptimization,
@@ -17,6 +18,7 @@ from pyvolutionary import (
     ImperialistCompetitiveOptimization,
     ImperialistCompetitiveOptimizationConfig,
     Multitask,
+    PermutationVariable,
     Task,
     TaskType,
     WaterCycleOptimization,
@@ -289,3 +291,27 @@ def test_normalize_costs_keeps_the_order():
         normalized = normalize_costs(np.array(costs))
         assert np.all(np.isfinite(normalized))
         assert np.array_equal(np.argsort(normalized, kind="stable"), np.argsort(costs, kind="stable"))
+
+
+def test_discrete_multi_variable_bounds():
+    for n in (1, 2, 3):
+        task = Sphere(variables=[DiscreteMultiVariable(name="d", choices=[["a", "b", "c"], ["x", "y"], [1, 2, 3, 4]][:n])])
+        lb, ub = task.get_bounds()
+        np.testing.assert_array_equal(lb, [0] * n)
+        np.testing.assert_array_equal(ub, [2, 1, 3][:n])
+
+
+def test_transform_solution_of_one_dimensional_multi_variable():
+    task = Sphere(variables=[ContinuousMultiVariable(name="x", lower_bounds=[0], upper_bounds=[1])])
+    assert task.transform_solution([0.5]) == {"x": [0.5]}
+
+
+def test_permutation_variable():
+    task = Sphere(variables=[PermutationVariable(name="route", items=["a", "b", "c", "d"])])
+    # one dimension per item: the route is the order of the items by increasing key
+    assert task.space_dimension == 4
+    keys = [0.3, 2.9, 0.1, 1.5]
+    corrected = task.correct_solution(keys)
+    assert corrected == [1, 3, 0, 2]
+    assert task.correct_solution(corrected) == corrected
+    assert task.transform_solution(keys) == task.transform_solution(corrected) == {"route": ["c", "a", "d", "b"]}

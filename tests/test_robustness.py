@@ -7,7 +7,7 @@ import warnings
 import numpy as np
 import pytest
 
-from pyvolutionary import ContinuousMultiVariable, DiscreteVariable, Task
+from pyvolutionary import ContinuousMultiVariable, DiscreteVariable, PermutationVariable, Task
 
 
 class Rastrigin(Task):
@@ -79,4 +79,22 @@ def test_mixed_variables_stay_finite(algorithm, config):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
         result = algorithm(config.model_copy(deep=True)).optimize(task)
+    assert is_finite(result)
+
+
+class Tsp(Task):
+    def objective_function(self, x):
+        route = self.transform_solution(x)["route"]
+        cities = self.data["cities"]
+        return float(sum(np.hypot(*np.subtract(cities[a], cities[b])) for a, b in zip(route, route[1:] + route[:1])))
+
+
+@pytest.mark.parametrize("algorithm,config", algorithms())
+def test_permutation_task(algorithm, config):
+    cities = np.random.RandomState(7).uniform(0, 100, (8, 2)).tolist()
+    task = Tsp(variables=[PermutationVariable(name="route", items=list(range(8)))], data={"cities": cities}, seed=4)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        result = algorithm(config.model_copy(deep=True)).optimize(task)
+    assert sorted(task.transform_solution(result.best_solution.position)["route"]) == list(range(8))
     assert is_finite(result)

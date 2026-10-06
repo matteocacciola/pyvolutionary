@@ -295,8 +295,9 @@ class DiscreteMultiVariable(Variable):
     def randomize(self):
         return [v.randomize() for v in self._children]
 
-    def get_bounds(self) -> list[tuple[int, int]]:
-        return [v.get_bounds() for v in self._children]
+    def get_bounds(self) -> tuple[list[int], list[int]]:
+        bounds = [v.get_bounds() for v in self._children]
+        return [lb for lb, _ in bounds], [ub for _, ub in bounds]
 
     def correct(self, value: list):
         return [v.correct(value[idx]) for idx, v in enumerate(self._children)]
@@ -322,6 +323,11 @@ class PermutationVariable(Variable):
         self._label_encoder = LabelEncoder()
         self._label_encoder.fit(self.items)
 
+    """
+    A permutation of the items. It spans one dimension per item, holding a "random key": the permutation is the order
+    of the items by increasing key. The corrected value holds the rank of each key, i.e. the integer keys (from 0 to
+    the number of items - 1) describing the same permutation.
+    """
     def get(self) -> "PermutationVariable":
         return self
 
@@ -335,14 +341,15 @@ class PermutationVariable(Variable):
         return lb.tolist(), ub.tolist()
 
     def correct(self, value: tuple | list | np.ndarray) -> list[int]:
-        return np.argsort(value).tolist()
+        # the ranks of the keys: correcting an already corrected value leaves it as it is
+        return np.argsort(np.argsort(np.atleast_1d(value), kind="stable"), kind="stable").tolist()
 
     def decode(self, value: tuple | list | np.ndarray) -> Any:
-        value = self.correct(value)
-        return self._label_encoder.inverse_transform(value)
+        # the items in order of increasing key
+        return self._label_encoder.inverse_transform(np.argsort(np.atleast_1d(value), kind="stable").tolist())
 
     def size(self) -> int:
-        return 1
+        return len(self.items)
 
     def has_children(self) -> bool:
         return False
@@ -457,14 +464,19 @@ class Task(BaseModel, ABC):
         self._flat_variables = [
             item for v in self.variables for item in (v.get() if v.has_children() else [v.get()])
         ]
-        lb, ub = [], []
+        lb, ub, continuous_mask = [], [], []
         for v in self.variables:
             lb_, ub_ = v.get_bounds()
-            lb.extend(lb_ if v.has_children() else [lb_])
-            ub.extend(ub_ if v.has_children() else [ub_])
+            # a variable spans v.size() dimensions: its bounds are either scalars or one per dimension
+            lb.extend(np.ravel(lb_).tolist())
+            ub.extend(np.ravel(ub_).tolist())
+            if v.has_children():
+                continuous_mask.extend([isinstance(child, ContinuousVariable) for child in v.get()])
+            else:
+                continuous_mask.extend([isinstance(v, ContinuousVariable)] * v.size())
         self._lb, self._ub = np.array(lb), np.array(ub)
-        self._continuous_mask = np.array([isinstance(v, ContinuousVariable) for v in self._flat_variables], dtype=bool)
-        self._all_continuous = bool(np.all(self._continuous_mask)) and len(self._flat_variables) > 0
+        self._continuous_mask = np.array(continuous_mask, dtype=bool)
+        self._all_continuous = bool(np.all(self._continuous_mask)) and len(self._continuous_mask) > 0
 
     @model_validator(mode="after")
     def validate_objective_weights(self) -> "Task":
@@ -519,7 +531,18 @@ class Task(BaseModel, ABC):
         if private["_all_continuous"]:
             # same result as np.clip, without its overhead
             return np.minimum(np.maximum(np.asarray(solution, dtype=float), private["_lb"]), private["_ub"]).tolist()
-        return [v.correct(c) for c, v in zip(solution, private["_flat_variables"])]
+        # each variable corrects the dimensions it spans
+        corrected = []
+        offset = 0
+        for v in self.variables:
+            size = v.size()
+            segment = solution[offset:(offset + size)]
+            if v.has_children() or size > 1:
+                corrected.extend(v.correct(segment))
+            else:
+                corrected.append(v.correct(segment[0]))
+            offset += size
+        return corrected
 
     def empty_solution(self) -> list[float]:
         """
@@ -531,7 +554,10 @@ class Task(BaseModel, ABC):
         if private["_all_continuous"]:
             # one vectorized draw yields the same values as one draw per variable, in the same order
             return np.random.uniform(private["_lb"], private["_ub"]).tolist()
-        solution = [item for v in self.variables for item in (v.randomize() if v.has_children() else [v.randomize()])]
+        solution = []
+        for v in self.variables:
+            value = v.randomize()
+            solution.extend(value if isinstance(value, list) else [value])
         return solution
 
     def initial_solution(self, solution: list[float] | np.ndarray | None = None) -> list[float]:
@@ -620,13 +646,12 @@ class Task(BaseModel, ABC):
         return self.objective_function(solution)
 
     def transform_solution(self, x: list[float | int]) -> dict[str, Any]:
-        if len(x) == 1:
-            return {self.variables[0].name: self.variables[0].decode(x[0])}
         counter = 0
         solution = {}
         for v in self.variables:
             temp = x[counter:(counter + v.size())]
-            solution[v.name] = v.decode(temp if len(temp) > 1 else temp[0])
+            # variables spanning several dimensions decode a list, the other ones a scalar
+            solution[v.name] = v.decode(temp if v.has_children() or v.size() > 1 else temp[0])
             counter += v.size()
         return solution
 
