@@ -1,3 +1,4 @@
+import random
 from abc import ABC, abstractmethod
 from typing import Generic, Final, Any
 import numpy as np
@@ -73,7 +74,11 @@ class OptimizationAbstract(ABC, Generic[T]):
         :return the cost of the position, or the list of costs if the objective function is multi-objective
         :rtype: float | list[float]
         """
-        return self._task.solve(x) if self._task.minmax == TaskType.MIN else -1 * self._task.solve(x)
+        cost = self._task.solve(x)
+        if self._task.minmax == TaskType.MIN:
+            return cost
+        # multi-objective functions return a list of costs: negate each of them
+        return [-c for c in cost] if isinstance(cost, (list, tuple, np.ndarray)) else -cost
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Agent:
         """
@@ -100,9 +105,24 @@ class OptimizationAbstract(ABC, Generic[T]):
 
         # Parallel mode
         with get_pool_executor(self._mode, self._workers) as executor:
-            executors = [executor.submit(self._init_agent) for _ in range(0, n_agents)]
+            if self._mode == ModeSolver.PROCESS:
+                # each worker process inherits a copy of the parent's random state: seed each job independently, or
+                # different workers would generate identical agents
+                seeds = np.random.randint(0, 2**31 - 1, size=n_agents)
+                executors = [executor.submit(self._init_agent_with_seed, int(seed)) for seed in seeds]
+            else:
+                executors = [executor.submit(self._init_agent) for _ in range(0, n_agents)]
             pop = get_pool_results(executors)
         return pop
+
+    def _init_agent_with_seed(self, seed: int) -> Agent:
+        """
+        This method initializes a random agent after seeding the random generators. It is used in process mode.
+        :param seed: the seed of the random generators
+        """
+        np.random.seed(seed)
+        random.seed(seed)
+        return self._init_agent()
 
     def _init_population(self):
         """
@@ -121,19 +141,11 @@ class OptimizationAbstract(ABC, Generic[T]):
         self._population = sort_by_cost(self._population)
         new_population = sort_by_cost(new_population)
 
-        # Serial mode
-        if self._mode == ModeSolver.SERIAL:
-            self._population = [
-                self._greedy_select_agent(agent, new_population[idx]) for idx, agent in enumerate(self._population)
-            ]
-            return
-
-        # Parallel mode
-        with get_pool_executor(self._mode, self._workers) as executor:
-            executors = [executor.submit(
-                self._greedy_select_agent, agent, new_population[idx]
-            ) for idx, agent in enumerate(self._population)]
-            self._population = get_pool_results(executors)
+        # the selection is a mere comparison of costs: dispatching it to a pool of workers would be far more
+        # expensive than running it serially
+        self._population = [
+            self._greedy_select_agent(agent, new_population[idx]) for idx, agent in enumerate(self._population)
+        ]
 
     def _greedy_select_agent(self, agent: T, new_agent: T) -> T:
         """
@@ -207,7 +219,15 @@ class OptimizationAbstract(ABC, Generic[T]):
             raise ValueError("Invalid configuration")
 
         np.random.seed(task.seed)
+        random.seed(task.seed)
         evolution: list[Population] = []
+
+        # reset the state of any previous run, so that the same instance can be used to optimize several times
+        self._current_cycle = 1
+        self._errors = []
+        self._error_diffs = []
+        self._best_agent = None
+        self._worst_agent = None
 
         if workers is not None:
             if workers <= 0:
@@ -280,13 +300,12 @@ class OptimizationAbstract(ABC, Generic[T]):
         # Get the optimal population
         avg_fit = average_fitness(self._population)
         current_error = abs(1 - avg_fit)
-        previous_error = self._errors[-1] if len(self._errors) > 0 else 0
+        # Append the difference between the current error and the previous one to the list of error differences
+        if len(self._errors) > 0:
+            self._error_diffs.append(current_error - self._errors[-1])
 
         # Append the current error to the list of errors
         self._errors.append(current_error)
-
-        # Append the difference between the current error and the previous one to the list of error differences
-        self._error_diffs.append(current_error - previous_error)
 
         return current_error, avg_fit, self.__should_stop__(current_error)
 
@@ -301,9 +320,12 @@ class OptimizationAbstract(ABC, Generic[T]):
         has_to_stop = cycle >= max_cycles
 
         # Evaluate the early stopping criteria
+        # (stop when the error has not improved, i.e. decreased, by at least min_delta for patience cycles)
         if early_stopping is not None:
             min_delta, patience = early_stopping.min_delta, early_stopping.patience
-            has_to_stop |= all([diff < 0 and abs(diff) < min_delta for diff in self._error_diffs[-patience:]])
+            has_to_stop |= len(self._error_diffs) >= patience and all(
+                -diff < min_delta for diff in self._error_diffs[-patience:]
+            )
 
         # Stop when the error is below the error criteria
         if fitness_error is not None:

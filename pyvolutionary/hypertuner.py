@@ -1,5 +1,6 @@
 import operator
 import os
+from copy import deepcopy
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from functools import partial, reduce
@@ -224,8 +225,11 @@ class HyperTuner:
             return
         self._df_fit.to_csv(f"{save_path}/{filename}.csv", header=True, index=False)
 
-    def __run__(self, id_trial: int, mode: ModeSolver, n_workers: int | None = None) -> tuple[int, Agent, list]:
-        result = self._algorithm.optimize(self._problem, mode=str(mode), workers=n_workers)
+    @staticmethod
+    def __run__(
+        algorithm: OptimizationAbstract, task: Task, id_trial: int, mode: ModeSolver, n_workers: int | None = None
+    ) -> tuple[int, Agent, list]:
+        result = algorithm.optimize(task, mode=str(mode), workers=n_workers)
         return id_trial, result.best_solution, result.rates
 
     @staticmethod
@@ -263,7 +267,7 @@ class HyperTuner:
         except ValueError:
             raise ValueError("Invalid mode. Possible values are \"serial\", \"thread\" and \"process\"")
 
-        n_cpus = np.clip(n_jobs, 2, os.cpu_count() - 1, dtype=int)
+        n_cpus = int(max(1, min(n_jobs if n_jobs is not None else 2, (os.cpu_count() or 2) - 1)))
 
         list_params_grid = list(ParameterGrid(self._param_grid))
         trial_columns = [f"trial_{id_trial}" for id_trial in range(1, n_trials + 1)]
@@ -271,14 +275,23 @@ class HyperTuner:
 
         best_fit_results = []
         loss_results = []
-        for id_params, params in enumerate(list_params_grid):
-            self._algorithm.set_config_parameters(params)
-            best_fit_results.append({"params": params})
-            with parallel.ProcessPoolExecutor(n_cpus) as executor:
-                list_results = executor.map(
-                    partial(self.__run__, n_workers=n_workers, mode=mode), list(range(0, n_trials))
-                )
-                for (idx, g_best, loss_epoch) in list_results:
+        # a single pool of processes is shared by all the combinations of parameters: spawning a new pool for each
+        # combination is expensive
+        with parallel.ProcessPoolExecutor(n_cpus) as executor:
+            futures = []
+            for params in list_params_grid:
+                # each combination runs on its own copy of the algorithm, configured with the proper parameters
+                algorithm = deepcopy(self._algorithm)
+                algorithm.set_config_parameters(params)
+                futures.append([
+                    executor.submit(self.__run__, algorithm, self._problem, id_trial, mode, n_workers)
+                    for id_trial in range(0, n_trials)
+                ])
+
+            for params, trial_futures in zip(list_params_grid, futures):
+                best_fit_results.append({"params": params})
+                for future in trial_futures:
+                    idx, g_best, loss_epoch = future.result()
                     best_fit_results[-1][trial_columns[idx]] = g_best.cost
                     loss_results.append(self.__generate_dict_result__(params, idx, loss_epoch))
 
@@ -288,9 +301,9 @@ class HyperTuner:
         self._df_fit["trial_mean"] = self._df_fit[trial_columns].mean(axis=1)
         self._df_fit["trial_std"] = self._df_fit[trial_columns].std(axis=1)
         self._df_fit["rank_mean"] = self._df_fit["trial_mean"].rank(ascending=ascending)
-        self._df_fit["rank_std"] = self._df_fit["trial_std"].rank(ascending=ascending)
+        self._df_fit["rank_std"] = self._df_fit["trial_std"].rank(ascending=True)
         self._df_fit["rank_mean_std"] = self._df_fit[["rank_mean", "rank_std"]].apply(tuple, axis=1).rank(
-            method="dense", ascending=ascending
+            method="dense", ascending=True
         )
         self._best_row = self._df_fit[self._df_fit["rank_mean_std"] == self._df_fit["rank_mean_std"].min()]
         self._best_params = self._best_row["params"].values[0]

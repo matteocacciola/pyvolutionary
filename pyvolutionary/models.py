@@ -198,7 +198,7 @@ class ContinuousVariable(Variable):
         return self.lower_bound, self.upper_bound
 
     def correct(self, value: float | int) -> float:
-        return float(np.clip(value, self.lower_bound, self.upper_bound))
+        return float(min(max(value, self.lower_bound), self.upper_bound))
 
     def decode(self, value: float) -> float:
         return value
@@ -266,8 +266,7 @@ class DiscreteVariable(Variable):
         return 0, len(self.choices) - 1
 
     def correct(self, value: float | int) -> int:
-        lb, ub = self.get_bounds()
-        return int(np.clip(value, lb, ub))
+        return int(min(max(value, 0), len(self.choices) - 1))
 
     def decode(self, value: float | int) -> Any:
         return self.choices[int(value)]
@@ -440,6 +439,11 @@ class Task(BaseModel, ABC):
     objective_weights: list[float] | None = None
 
     _EPS = PrivateAttr()
+    _flat_variables: list[Variable] = PrivateAttr()
+    _lb: np.ndarray = PrivateAttr()
+    _ub: np.ndarray = PrivateAttr()
+    _continuous_mask: np.ndarray = PrivateAttr()
+    _all_continuous: bool = PrivateAttr()
 
     def __init__(self, **kwargs: Any):
         variables = kwargs.get("variables")
@@ -447,6 +451,20 @@ class Task(BaseModel, ABC):
         super().__init__(**kwargs)
 
         self._EPS = np.finfo(float).eps
+
+        # the variables are immutable after the initialization: cache the derived structures, since they are used
+        # at every evaluation of the objective function
+        self._flat_variables = [
+            item for v in self.variables for item in (v.get() if v.has_children() else [v.get()])
+        ]
+        lb, ub = [], []
+        for v in self.variables:
+            lb_, ub_ = v.get_bounds()
+            lb.extend(lb_ if v.has_children() else [lb_])
+            ub.extend(ub_ if v.has_children() else [ub_])
+        self._lb, self._ub = np.array(lb), np.array(ub)
+        self._continuous_mask = np.array([isinstance(v, ContinuousVariable) for v in self._flat_variables], dtype=bool)
+        self._all_continuous = bool(np.all(self._continuous_mask)) and len(self._flat_variables) > 0
 
     @model_validator(mode="after")
     def validate_objective_weights(self) -> "Task":
@@ -461,7 +479,16 @@ class Task(BaseModel, ABC):
         pass
 
     def get_variables(self) -> list[Variable]:
-        return [item for v in self.variables for item in (v.get() if v.has_children() else [v.get()])]
+        return list(self._flat_variables)
+
+    @property
+    def continuous_mask(self) -> np.ndarray:
+        """
+        The mask of the dimensions of the search space corresponding to continuous variables.
+        :return: a boolean array, True where the dimension is continuous
+        :rtype: np.ndarray
+        """
+        return self._continuous_mask.copy()
 
     def get_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -469,14 +496,7 @@ class Task(BaseModel, ABC):
         :return: the lower and upper bounds
         :rtype: tuple[np.ndarray, np.ndarray]
         """
-        lb = []
-        ub = []
-        for v in self.variables:
-            lb_, ub_ = v.get_bounds()
-            lb.extend(lb_ if v.has_children() else [lb_])
-            ub.extend(ub_ if v.has_children() else [ub_])
-
-        return np.array(lb), np.array(ub)
+        return self._lb.copy(), self._ub.copy()
 
     def correct_solution(self, solution: list[float | int] | np.ndarray) -> list[float | int]:
         """
@@ -486,8 +506,9 @@ class Task(BaseModel, ABC):
         :return: the corrected solution
         :rtype: list[Any]
         """
-        variables = self.get_variables()
-        return [v.correct(c) for c, v in zip(solution, variables)]
+        if self._all_continuous:
+            return np.clip(np.asarray(solution, dtype=float), self._lb, self._ub).tolist()
+        return [v.correct(c) for c, v in zip(solution, self._flat_variables)]
 
     def empty_solution(self) -> list[float]:
         """
@@ -512,7 +533,7 @@ class Task(BaseModel, ABC):
     def amend_solution(self, solution: list[float | int] | np.ndarray) -> np.ndarray:
         solution = solution if isinstance(solution, np.ndarray) else np.array(solution)
         lb, ub = self.get_bounds()
-        return np.where(np.logical_and(lb <= solution <= ub), solution, np.array(self.initial_solution()))
+        return np.where(np.logical_and(lb <= solution, solution <= ub), solution, np.array(self.initial_solution()))
 
     def random_solution(self) -> list[float]:
         """
@@ -520,11 +541,8 @@ class Task(BaseModel, ABC):
         :return: the random solution
         :rtype: list[float]
         """
-        lb, _ = self.get_bounds()
-        variables = self.get_variables()
-        return np.where(
-            isinstance(variables, ContinuousVariable), np.random.random() * self.bandwidth() + lb, self.empty_solution()
-        ).tolist()
+        # for continuous variables, a uniform sample in [lb, ub] is the same as lb + U(0, 1) * (ub - lb)
+        return self.empty_solution()
 
     def increase_solution(self, solution: list[float], scale_factor: float | None = None) -> np.ndarray:
         """
@@ -535,12 +553,16 @@ class Task(BaseModel, ABC):
         :rtype: np.ndarray
         """
         scale_factor = scale_factor if scale_factor is not None else 1.0
-        variables = self.get_variables()
-        return np.where(
-            isinstance(variables, ContinuousVariable),
-            np.array(solution) + np.array(self.random_solution()) / scale_factor,
-            self.empty_solution()
-        )
+        random_solution = self.random_solution()
+        if self._all_continuous:
+            return np.array(solution, dtype=float) + np.array(random_solution) / scale_factor
+        if not np.any(self._continuous_mask):
+            return np.array(random_solution)
+        # mixed variables: only the continuous ones are increased, the others are randomly re-sampled
+        return np.array([
+            s + r / scale_factor if is_continuous else r
+            for s, r, is_continuous in zip(solution, random_solution, self._continuous_mask)
+        ])
 
     def uniform_coordinates(self, dimensions: int | list[int]) -> list[float]:
         """

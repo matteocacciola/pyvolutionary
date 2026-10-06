@@ -1,7 +1,6 @@
 from typing import Any
 import numpy as np
 
-from ..models import ContinuousVariable
 from ..helpers import parse_obj_doc  # type: ignore
 from ..abstract import OptimizationAbstract
 from .models import Particle, ParticleSwarmOptimizationConfig
@@ -45,7 +44,7 @@ class ParticleSwarmOptimization(OptimizationAbstract):
             return Particle(**agent.model_dump(), velocity=np.zeros(self._task.space_dimension).tolist())
 
         velocity = np.where(
-            isinstance(self._task.get_variables(), ContinuousVariable), np.clip(velocity, -self.__v, self.__v), velocity
+            self._task.continuous_mask, np.clip(velocity, -self.__v, self.__v), velocity
         ).tolist()
         return Particle(**agent.model_dump(), velocity=velocity)
 

@@ -145,7 +145,7 @@ def best_agent_formatted(population: list[T], n_params: int, task_type: TaskType
     :return: the best agent
     :rtype: Agent
     """
-    b_agent = best_agent(population, task_type)
+    b_agent = best_agent(population, task_type).model_copy()
 
     best_agent_position = np.array(b_agent.position)  # Ensure it's a NumPy array
     if len(best_agent_position) % n_params != 0:
@@ -189,7 +189,7 @@ def worst_agent_formatted(population: list[T], n_params: int, task_type: TaskTyp
     :return: the best agent
     :rtype: Agent
     """
-    w_agent = worst_agent(population, task_type)
+    w_agent = worst_agent(population, task_type).model_copy()
 
     worst_agent_position = np.array(w_agent.position)  # Ensure it's a NumPy array
     if len(worst_agent_position) % n_params != 0:
@@ -283,13 +283,10 @@ def special_agents(
     if n_best is None and n_worst is None:
         raise ValueError("Either n_best or n_worst must be provided")
 
-    best = []
-    if n_best is not None:
-        best = best_agents(population, n_best, task_type)
-
-    worst = []
-    if n_worst is not None:
-        worst = worst_agents(population, n_worst, task_type)
+    # sort once, and pick both the best and the worst agents
+    sorted_population = sort_by_cost(population, task_type=task_type)
+    best = sorted_population[:n_best] if n_best is not None else []
+    worst = sorted_population[len(population) - n_worst:] if n_worst is not None else []
 
     return best, worst
 
@@ -339,8 +336,8 @@ def random_selection(p: list | np.ndarray) -> int:
     """
     r = np.random.random()
     c = np.cumsum(p)
-    index = [i for i, x in enumerate(c) if r <= x]
-    return index[0]
+    # clip to the last index, in case the cumulative sum is slightly lower than 1 due to rounding errors
+    return int(min(np.searchsorted(c, r), len(c) - 1))
 
 
 def get_levy_flight_step(
@@ -397,10 +394,8 @@ def get_pool_results(executors: list[parallel.Future]) -> list:
     :return: the results
     :rtype: list
     """
-    res = []
-    for i in parallel.as_completed(executors):
-        res.append(i.result())
-    return res
+    # keep the order of submission, so that results can be matched to the corresponding inputs
+    return [executor.result() for executor in executors]
 
 
 def find_centers(pop_groups: list[list[T]]) -> list[T]:
