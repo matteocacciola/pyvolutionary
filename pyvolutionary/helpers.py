@@ -51,10 +51,9 @@ def distances(elements: list | np.ndarray) -> np.ndarray:
     :param elements: the list of elements
     :return: the distance matrix
     """
-    elements = np.array(elements)
-    a = elements[:, :-1]
-    b = a.reshape(np.prod(a.shape[:-1]), 1, a.shape[-1])
-    return np.sqrt(np.einsum('ijk,ijk->ij', b - a, b - a)).squeeze()
+    elements = np.asarray(elements, dtype=float)
+    diff = elements[:, np.newaxis, :] - elements[np.newaxis, :, :]
+    return np.sqrt(np.einsum('ijk,ijk->ij', diff, diff))
 
 
 def verser(point1: list[float], point2: list[float]) -> np.ndarray:
@@ -362,7 +361,8 @@ def get_levy_flight_step(
         math.gamma((1 + beta) / 2.) * beta * np.power(2., (beta - 1) / 2)
     ), 1. / beta)
     size = 1 if size is None else size
-    u = np.random.normal(0, sigma_u ** 2, size)
+    # sigma_u is the standard deviation of u (numpy expects the standard deviation, not the variance)
+    u = np.random.normal(0, sigma_u, size)
     v = np.random.normal(0, 1, size)
     s = u / np.power(np.abs(v), 1 / beta)
 
@@ -371,7 +371,7 @@ def get_levy_flight_step(
         step = multiplier * s * np.random.uniform()
     elif case == 1:
         step = multiplier * s * np.random.normal(0, 1)
-    return step[0] if size == 1 else step
+    return step[0] if np.ndim(size) == 0 and size == 1 else step
 
 
 def get_pool_executor(mode: ModeSolver, n_workers: int = None) -> parallel.Executor:

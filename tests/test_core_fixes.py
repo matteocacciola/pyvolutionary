@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from pyvolutionary import (
@@ -13,7 +14,7 @@ from pyvolutionary import (
     WaterCycleOptimizationConfig,
 )
 from pyvolutionary.enums import ModeSolver
-from pyvolutionary.helpers import best_agent_formatted, random_selection
+from pyvolutionary.helpers import best_agent_formatted, distances, get_levy_flight_step, random_selection
 from pyvolutionary.models import Agent
 from tests.fixtures import Rastrigin
 
@@ -143,3 +144,36 @@ def test_water_cycle_assigns_streams_to_every_river():
     )
     config = WaterCycleOptimizationConfig(population_size=20, fitness_error=0.01, max_cycles=10, nsr=4, wc=2.0)
     WaterCycleOptimization(config).optimize(task)
+
+
+def test_distances():
+    points = [[0.0, 0.0], [3.0, 4.0], [6.0, 8.0]]
+    np.testing.assert_allclose(distances(points), [[0, 5, 10], [5, 0, 5], [10, 5, 0]])
+
+
+def test_levy_flight_step_scale():
+    np.random.seed(0)
+    beta = 1.5
+    sigma_u = (math.gamma(1 + beta) * np.sin(np.pi * beta / 2) / (
+        math.gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2)
+    )) ** (1 / beta)
+    # with multiplier 1 and case -1, the step is u / |v|^(1/beta): u ~ N(0, sigma_u) and v ~ N(0, 1)
+    steps = get_levy_flight_step(beta=beta, multiplier=1.0, size=200000, case=-1)
+    np.random.seed(0)
+    u = np.random.normal(0, sigma_u, 200000)
+    v = np.random.normal(0, 1, 200000)
+    np.testing.assert_allclose(steps, u / np.abs(v) ** (1 / beta))
+
+    assert np.isscalar(get_levy_flight_step(beta=beta, case=-1))
+    assert np.shape(get_levy_flight_step(beta=beta, size=np.array(3), case=-1)) == (3,)
+
+
+def test_water_cycle_with_zero_cost():
+    class Zero(Task):
+        def objective_function(self, x):
+            return 0.0
+
+    task = Zero(variables=[ContinuousMultiVariable(name="x", lower_bounds=[-1] * 2, upper_bounds=[1] * 2)], seed=1)
+    config = WaterCycleOptimizationConfig(population_size=20, fitness_error=None, max_cycles=3, nsr=4, wc=2.0)
+    result = WaterCycleOptimization(config).optimize(task)
+    assert result.best_solution.cost == 0.0

@@ -37,12 +37,19 @@ class WaterCycleOptimization(OptimizationAbstract):
 
     def after_initialization(self):
         n_stream = self._config.population_size - self._config.nsr
+        # the best agent is the sea, the following nsr - 1 ones are the rivers
+        self._population = sort_by_cost(self._population)
         self.__pop_best = self._population[:self._config.nsr]
         pop_stream = self._population[self._config.nsr:]  # Forming Stream
 
         # Designate streams to rivers and sea
-        cost_river_list = np.array([agent.cost for agent in self.__pop_best])
-        num_child_in_river_list = np.round(np.abs(cost_river_list / np.sum(cost_river_list)) * n_stream).astype(int)
+        cost_river_list = np.abs(np.array([agent.cost for agent in self.__pop_best]))
+        total_cost = np.sum(cost_river_list)
+        # when all the costs are zero, the streams are equally divided among the rivers
+        share_river_list = (
+            cost_river_list / total_cost if total_cost > 0 else np.full(self._config.nsr, 1 / self._config.nsr)
+        )
+        num_child_in_river_list = np.round(share_river_list * n_stream).astype(int)
         # each river must have at least one stream (when there are enough streams), and the total number of assigned
         # streams must be exactly n_stream
         num_child_in_river_list = np.maximum(num_child_in_river_list, 1 if n_stream >= self._config.nsr else 0)
