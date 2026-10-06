@@ -43,6 +43,11 @@ class WaterCycleOptimization(OptimizationAbstract):
         # Designate streams to rivers and sea
         cost_river_list = np.array([agent.cost for agent in self.__pop_best])
         num_child_in_river_list = np.round(np.abs(cost_river_list / np.sum(cost_river_list)) * n_stream).astype(int)
+        # each river must have at least one stream (when there are enough streams), and the total number of assigned
+        # streams must be exactly n_stream
+        num_child_in_river_list = np.maximum(num_child_in_river_list, 1 if n_stream >= self._config.nsr else 0)
+        while np.sum(num_child_in_river_list) > n_stream:
+            num_child_in_river_list[np.argmax(num_child_in_river_list)] -= 1
         if np.sum(num_child_in_river_list) < n_stream:
             num_child_in_river_list[-1] += n_stream - np.sum(num_child_in_river_list)
         self.__streams = {}
@@ -75,7 +80,7 @@ class WaterCycleOptimization(OptimizationAbstract):
         }
         self.__pop_best = [self._greedy_select_agent(
             best_agent(self.__streams[idx]), stream
-        ) for idx, stream in enumerate(self.__pop_best)]
+        ) if len(self.__streams[idx]) > 0 else stream for idx, stream in enumerate(self.__pop_best)]
 
         # Evaporation
         evaporation_indexes = [idx for idx in range(1, nsr) if distance(

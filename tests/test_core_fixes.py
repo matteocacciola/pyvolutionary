@@ -9,10 +9,13 @@ from pyvolutionary import (
     Multitask,
     Task,
     TaskType,
+    WaterCycleOptimization,
+    WaterCycleOptimizationConfig,
 )
 from pyvolutionary.enums import ModeSolver
 from pyvolutionary.helpers import best_agent_formatted, random_selection
 from pyvolutionary.models import Agent
+from tests.fixtures import Rastrigin
 
 
 class Sphere(Task):
@@ -131,3 +134,12 @@ def test_multitask_with_one_mode_per_algorithm():
     )
     multitask.execute(n_trials=1, n_jobs=1)
     assert len(multitask._df2) == 2
+
+
+def test_water_cycle_assigns_streams_to_every_river():
+    # with this seed, the share of streams of a river was rounded to zero, and the empty stream made the step crash
+    task = Rastrigin(
+        variables=[ContinuousMultiVariable(name="x", lower_bounds=[-10] * 3, upper_bounds=[10] * 3)], seed=137
+    )
+    config = WaterCycleOptimizationConfig(population_size=20, fitness_error=0.01, max_cycles=10, nsr=4, wc=2.0)
+    WaterCycleOptimization(config).optimize(task)
