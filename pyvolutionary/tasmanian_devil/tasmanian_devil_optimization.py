@@ -34,7 +34,7 @@ class TasmanianDevilOptimization(OptimizationAbstract):
             ) if self._population[kk].cost < tasmanian_devil.cost else pos + np.random.random(n_dims) * (
                 pos - np.array(self._population[kk].position)
             )
-            agent = TasmanianDevil(**self._init_agent(pos_new).model_dump())
+            agent = TasmanianDevil(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(tasmanian_devil, agent)
 
         def evolve(idx: int, tasmanian_devil: TasmanianDevil) -> TasmanianDevil:
@@ -50,7 +50,7 @@ class TasmanianDevilOptimization(OptimizationAbstract):
             # phase 2: prey chasing
             rr = 0.01 * (1 - epoch / epochs)  # Calculating the neighborhood radius using(9)
             pos_new = pos + (-rr + 2 * rr * np.random.random(n_dims)) * pos
-            agent = TasmanianDevil(**self._init_agent(pos_new).model_dump())
+            agent = TasmanianDevil(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(tasmanian_devil, agent)
 
         pop_size = self._config.population_size

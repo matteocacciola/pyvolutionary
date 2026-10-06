@@ -73,7 +73,7 @@ class GainingSharingKnowledgeOptimization(OptimizationAbstract):
                 junior_gaining_sharing_knowledge(idx, agent),
                 senior_gaining_sharing_knowledge(idx, agent)
             )
-            return self._greedy_select_agent(agent, Knowledge(**self._init_agent(pos).model_dump()))
+            return self._greedy_select_agent(agent, Knowledge(**self._init_agent(pos).__dict__))
 
         p, kf, kr, kg = self._config.p, self._config.kf, self._config.kr, self._config.kg
         pop_size = self._config.population_size

@@ -35,7 +35,7 @@ class GizaPyramidConstructionOptimization(OptimizationAbstract):
                 np.array(self._task.empty_solution()) * x * (np.array(worker.position) + d),
                 np.array(worker.position)
             )
-            new_agent = Worker(**self._init_agent(new_pos).model_dump())
+            new_agent = Worker(**self._init_agent(new_pos).__dict__)
             return new_agent if new_agent.cost < worker.cost else None
 
         mu1, mu2 = self._config.friction

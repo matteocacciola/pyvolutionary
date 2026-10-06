@@ -33,13 +33,13 @@ class PelicanOptimization(OptimizationAbstract):
             pos_new = pos + np.random.random() * (
                 pos_kk - np.random.randint(1, 3) * pos
             ) if self._population[kk].cost < pelican.cost else pos + np.random.random() * (pos - pos_kk)
-            agent = Pelican(**self._init_agent(pos_new).model_dump())
+            agent = Pelican(**self._init_agent(pos_new).__dict__)
             pelican = self._greedy_select_agent(pelican, agent)
             # phase 2: Winging on the water surface (exploitation phase), with Eq. 6
             pos_new = np.array(pelican.position) + 0.2 * (1 - self._current_cycle / self._config.max_cycles) * (
                 2 * np.random.random(n_dims) - 1
             ) * np.array(pelican.position)
-            agent = Pelican(**self._init_agent(pos_new).model_dump())
+            agent = Pelican(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(pelican, agent)
 
         n_dims = self._task.space_dimension

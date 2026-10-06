@@ -2,6 +2,7 @@ from typing import Any
 import numpy as np
 
 from ..helpers import (
+    normalize_costs,
     get_partner_index,
     roulette_wheel_indexes,
     parse_obj_doc,  # type: ignore
@@ -33,12 +34,14 @@ class BeeColonyOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = BeeColonyOptimizationConfig(**parameters)
 
-    def before_initialization(self):
-        self._config.population_size = int(self._config.population_size / 2)
+    def _init_population(self):
+        # half of the colony are employed bees, each one bound to a food source: the population is made of the food
+        # sources (the configuration is not altered, so that it can be reused for further optimizations)
+        self._population = self._generate_agents(int(self._config.population_size / 2))
 
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Bee:
         agent = super()._init_agent(position)
-        return Bee(**agent.model_dump())
+        return Bee(**agent.__dict__)
 
     def _greedy_select_agent(self, agent: Bee, new_agent: Bee) -> Bee:
         """
@@ -77,7 +80,7 @@ class BeeColonyOptimization(OptimizationAbstract):
             selected_bee = self._population[jdx]
             return food_source_dance(idx, selected_bee)
 
-        population_size = self._config.population_size
+        population_size = len(self._population)
         dims = self._task.space_dimension
         phi = np.random.uniform(low=-1, high=1, size=dims)
 
@@ -87,7 +90,7 @@ class BeeColonyOptimization(OptimizationAbstract):
         # based to probability, generate a neighbour point and evaluate again some food sources
         # same food source can be evaluated multiple times
         employed_costs = np.array([agent.cost for agent in self._population])
-        probabilities = employed_costs / np.sum(employed_costs)
+        probabilities = normalize_costs(employed_costs)
         self._population = [send_onlooker_bees(idx) for idx in range(0, population_size)]
 
         # abandon the food sources which have not been improved after a predefined number of trials; it means to send

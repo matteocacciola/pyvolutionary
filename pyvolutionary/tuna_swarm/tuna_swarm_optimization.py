@@ -49,7 +49,7 @@ class TunaSwarmOptimization(OptimizationAbstract):
         def evolve(idx: int, tuna: Tuna) -> Tuna:
             pos = tuna.position
             prev_pos = pos if idx == 0 else self._population[idx - 1].position
-            return Tuna(**self._init_agent(get_new_local_pos(pos, prev_pos)).model_dump())
+            return Tuna(**self._init_agent(get_new_local_pos(pos, prev_pos)).__dict__)
 
         aa = 0.7
         zz = 0.05

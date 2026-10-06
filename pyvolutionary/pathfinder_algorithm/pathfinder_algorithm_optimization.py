@@ -39,7 +39,7 @@ class PathfinderAlgorithmOptimization(OptimizationAbstract):
             ) + np.random.uniform() * t * (dist / space)
 
             pos_new = self._task.correct_solution(pos_new)
-            agent = Pathfinder(**self._init_agent(pos_new).model_dump())
+            agent = Pathfinder(**self._init_agent(pos_new).__dict__)
 
             return self._greedy_select_agent(agent, pathfinder)
 

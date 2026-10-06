@@ -42,7 +42,7 @@ class WindDrivenOptimization(OptimizationAbstract):
             vel = np.clip(vel, -max_v, max_v).tolist()
             # Update air parcel positions, check the bound and calculate pressure (fitness)
             self.__dyn_list_velocity[idx] = vel
-            return vel, AirParcel(**self._init_agent(pos + vel).model_dump())
+            return vel, AirParcel(**self._init_agent(pos + vel).__dict__)
 
         RT = self._config.RT
         g_c = self._config.g_c

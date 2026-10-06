@@ -45,7 +45,7 @@ class ElephantHerdOptimization(OptimizationAbstract):
             pos_new = beta * np.mean(pos_group, axis=0) if pos_clan_idx == 0 else (
                 pos_group[pos_clan_idx] + alpha * np.random.random() * (pos_group[0] - pos_group[pos_clan_idx])
             )
-            agent = Elephant(**self._init_agent(pos_new).model_dump())
+            agent = Elephant(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(elephant, agent)
 
         n_individuals = self.__n_individuals

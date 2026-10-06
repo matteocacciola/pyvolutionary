@@ -1,5 +1,6 @@
 import math
 import random
+from typing import Callable
 import numpy as np
 from pydantic import BaseModel
 import concurrent.futures as parallel
@@ -34,6 +35,29 @@ def squared_norm(point1: list[float], point2: list[float]):
     return np.sum((np.array(point1) - np.array(point2))**2)
 
 
+def squared_norms(diff: np.ndarray) -> np.ndarray:
+    """
+    Calculate the squared norm of each row of the provided array, i.e. of each agent, over all its coordinates (also
+    when the position of an agent is nested, e.g. for permutation variables). Each value is the same as the one of
+    squared_norm applied to the row.
+    :param diff: the array, with one row per agent
+    :return: the squared norm of each row
+    :rtype: np.ndarray
+    """
+    return np.sum((diff ** 2).reshape(len(diff), -1), axis=1)
+
+
+def per_row(values: np.ndarray, like: np.ndarray) -> np.ndarray:
+    """
+    Reshape a vector with one value per row, so that it broadcasts over the rows of the provided array.
+    :param values: the vector, with one value per row
+    :param like: the array, with one row per agent
+    :return: the reshaped vector
+    :rtype: np.ndarray
+    """
+    return np.reshape(values, (-1,) + (1,) * (np.ndim(like) - 1))
+
+
 def distance(point1: list[float], point2: list[float]):
     """
     Calculate the distance between two points in the space using the Euclidean distance.
@@ -51,10 +75,9 @@ def distances(elements: list | np.ndarray) -> np.ndarray:
     :param elements: the list of elements
     :return: the distance matrix
     """
-    elements = np.array(elements)
-    a = elements[:, :-1]
-    b = a.reshape(np.prod(a.shape[:-1]), 1, a.shape[-1])
-    return np.sqrt(np.einsum('ijk,ijk->ij', b - a, b - a)).squeeze()
+    elements = np.asarray(elements, dtype=float)
+    diff = elements[:, np.newaxis, :] - elements[np.newaxis, :, :]
+    return np.sqrt(np.einsum('ijk,ijk->ij', diff, diff))
 
 
 def verser(point1: list[float], point2: list[float]) -> np.ndarray:
@@ -145,7 +168,7 @@ def best_agent_formatted(population: list[T], n_params: int, task_type: TaskType
     :return: the best agent
     :rtype: Agent
     """
-    b_agent = best_agent(population, task_type)
+    b_agent = best_agent(population, task_type).model_copy()
 
     best_agent_position = np.array(b_agent.position)  # Ensure it's a NumPy array
     if len(best_agent_position) % n_params != 0:
@@ -189,7 +212,7 @@ def worst_agent_formatted(population: list[T], n_params: int, task_type: TaskTyp
     :return: the best agent
     :rtype: Agent
     """
-    w_agent = worst_agent(population, task_type)
+    w_agent = worst_agent(population, task_type).model_copy()
 
     worst_agent_position = np.array(w_agent.position)  # Ensure it's a NumPy array
     if len(worst_agent_position) % n_params != 0:
@@ -283,13 +306,10 @@ def special_agents(
     if n_best is None and n_worst is None:
         raise ValueError("Either n_best or n_worst must be provided")
 
-    best = []
-    if n_best is not None:
-        best = best_agents(population, n_best, task_type)
-
-    worst = []
-    if n_worst is not None:
-        worst = worst_agents(population, n_worst, task_type)
+    # sort once, and pick both the best and the worst agents
+    sorted_population = sort_by_cost(population, task_type=task_type)
+    best = sorted_population[:n_best] if n_best is not None else []
+    worst = sorted_population[len(population) - n_worst:] if n_worst is not None else []
 
     return best, worst
 
@@ -304,7 +324,22 @@ def average_fitness(population: list[T]) -> float:
     return np.average([agent.fitness for agent in population])
 
 
+def normalize_costs(costs: np.ndarray) -> np.ndarray:
+    """
+    Scale the costs by the magnitude of their sum, keeping their order. Dividing by the sum itself would invert the
+    order when the sum is negative (e.g. for maximization tasks), and fail when it is zero (e.g. when all the costs
+    are zero): in the latter case, the costs are returned as they are.
+    :param costs: the costs
+    :return: the scaled costs
+    :rtype: np.ndarray
+    """
+    total = np.sum(costs)
+    return costs / np.abs(total) if total != 0 else costs
+
+
 def get_partner_index(index: int, num_elements: int) -> int:
+    if num_elements < 2:
+        raise ValueError(f"At least two elements are needed to select a partner. Got {num_elements}")
     while True:
         partner_index = random.randint(0, num_elements - 1)
         if partner_index != index:
@@ -322,12 +357,38 @@ def roulette_wheel_indexes(probabilities: np.ndarray, num: int | None = 1) -> li
     :rtype: int
     """
     final_probabilities = np.max(probabilities) - probabilities
-    k = list(set(range(0, len(probabilities))))
-    if all(final_probabilities == 0):
+    k = len(probabilities)
+    if not np.any(final_probabilities):
         return np.random.choice(k, size=num, replace=False)
 
     p = final_probabilities / np.sum(final_probabilities)
-    return np.random.choice(k, size=num, replace=len([i for i in p if i != 0]) < num, p=p)
+    if num == 1 and np.all(np.isfinite(p)):
+        # same draw as np.random.choice(k, size=1, p=p) of the legacy (frozen) numpy generator, without the overhead of
+        # its validation: one uniform sample, located in the normalized cumulative distribution
+        cdf = np.cumsum(p)
+        cdf /= cdf[-1]
+        return cdf.searchsorted(np.random.random_sample(1), side="right")
+    return np.random.choice(k, size=num, replace=np.count_nonzero(p) < num, p=p)
+
+
+def roulette_wheel_sampler(probabilities: np.ndarray) -> Callable[[], int]:
+    """
+    Build a function drawing an index by roulette wheel selection, for repeated draws with the same probabilities.
+    Each call is equivalent to roulette_wheel_indexes(probabilities)[0] (same result, same random draws), but the
+    distribution is computed only once.
+    :param probabilities: the probabilities of each element of the population
+    :return: a function returning the selected index at each call
+    :rtype: Callable[[], int]
+    """
+    final_probabilities = np.max(probabilities) - probabilities
+    if not np.any(final_probabilities):
+        return lambda: roulette_wheel_indexes(probabilities)[0]
+    p = final_probabilities / np.sum(final_probabilities)
+    if not np.all(np.isfinite(p)):
+        return lambda: roulette_wheel_indexes(probabilities)[0]
+    cdf = np.cumsum(p)
+    cdf /= cdf[-1]
+    return lambda: cdf.searchsorted(np.random.random_sample(1), side="right")[0]
 
 
 def random_selection(p: list | np.ndarray) -> int:
@@ -339,8 +400,8 @@ def random_selection(p: list | np.ndarray) -> int:
     """
     r = np.random.random()
     c = np.cumsum(p)
-    index = [i for i, x in enumerate(c) if r <= x]
-    return index[0]
+    # clip to the last index, in case the cumulative sum is slightly lower than 1 due to rounding errors
+    return int(min(np.searchsorted(c, r), len(c) - 1))
 
 
 def get_levy_flight_step(
@@ -365,7 +426,8 @@ def get_levy_flight_step(
         math.gamma((1 + beta) / 2.) * beta * np.power(2., (beta - 1) / 2)
     ), 1. / beta)
     size = 1 if size is None else size
-    u = np.random.normal(0, sigma_u ** 2, size)
+    # sigma_u is the standard deviation of u (numpy expects the standard deviation, not the variance)
+    u = np.random.normal(0, sigma_u, size)
     v = np.random.normal(0, 1, size)
     s = u / np.power(np.abs(v), 1 / beta)
 
@@ -374,7 +436,7 @@ def get_levy_flight_step(
         step = multiplier * s * np.random.uniform()
     elif case == 1:
         step = multiplier * s * np.random.normal(0, 1)
-    return step[0] if size == 1 else step
+    return step[0] if np.ndim(size) == 0 and size == 1 else step
 
 
 def get_pool_executor(mode: ModeSolver, n_workers: int = None) -> parallel.Executor:
@@ -397,10 +459,8 @@ def get_pool_results(executors: list[parallel.Future]) -> list:
     :return: the results
     :rtype: list
     """
-    res = []
-    for i in parallel.as_completed(executors):
-        res.append(i.result())
-    return res
+    # keep the order of submission, so that results can be matched to the corresponding inputs
+    return [executor.result() for executor in executors]
 
 
 def find_centers(pop_groups: list[list[T]]) -> list[T]:

@@ -29,7 +29,7 @@ class QleSineCosineAlgorithmOptimization(OptimizationAbstract):
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> QleCandidate:
         agent = super()._init_agent(position)
-        return QleCandidate(**agent.model_dump(), qtable=QTable(n_states=9, n_actions=9))
+        return QleCandidate(**agent.__dict__, qtable=QTable(n_states=9, n_actions=9))
 
     def optimization_step(self):
         def evolve(candidate: QleCandidate) -> QleCandidate:
@@ -43,7 +43,7 @@ class QleSineCosineAlgorithmOptimization(OptimizationAbstract):
             r2 = 2 * np.pi * np.random.uniform()
             r4 = np.random.uniform()
             pos_new = pos + r1 * (np.sin(r2) if r4 < 0.5 else np.cos(r2)) * (r3 * best_pos - pos)
-            new_candidate = QleCandidate(**self._init_agent(pos_new).model_dump())
+            new_candidate = QleCandidate(**self._init_agent(pos_new).__dict__)
             new_candidate.qtable.update(state, action, reward=1, alpha=alpha, gama=gama)
             candidate.qtable.update(state, action, reward=-1, alpha=alpha, gama=gama)
             return self._greedy_select_agent(new_candidate, candidate)

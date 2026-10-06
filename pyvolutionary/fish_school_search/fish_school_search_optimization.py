@@ -33,40 +33,43 @@ class FishSchoolSearchOptimization(OptimizationAbstract):
         self.__step_individual = self._config.step_individual_init * self._task.bandwidth()
         self.__step_volitive = self._config.step_volitive_init * self._task.bandwidth()
 
-    def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Fish:
+    def _init_agent(self, position: list[Any] | np.ndarray | None = None, weight: float | None = None) -> Fish:
         agent = super()._init_agent(position)
-        return Fish(**agent.model_dump(), weight=self._config.w_scale / 2.0)
+        # a fish keeps its weight when it moves; a new fish starts from half of the weight scale
+        return Fish(**agent.__dict__, weight=weight if weight is not None else self._config.w_scale / 2.0)
 
     def optimization_step(self):
         def move_individual(fish: Fish) -> Fish:
+            # a random step in [-1, 1] per dimension, scaled by the individual step: kept only if it improves the fish
             pos = np.array(fish.position)
-            new_fish = self._init_agent(pos + (si * self._task.empty_solution()))
+            new_fish = self._init_agent(pos + si * np.random.uniform(-1, 1, sd), fish.weight)
             if new_fish.cost < fish.cost:
-                delta_cost = abs(new_fish.cost - fish.cost)
-                delta_pos = (np.array(new_fish.position) - pos).tolist()
-                fish = new_fish
-                fish.delta_cost = delta_cost
-                fish.delta_pos = delta_pos
-                return fish
+                new_fish.delta_cost = fish.cost - new_fish.cost
+                new_fish.delta_pos = (np.array(new_fish.position) - pos).tolist()
+                return new_fish
             fish.delta_pos = np.zeros(sd).tolist()
             fish.delta_cost = 0
             return fish
 
-        def update(init: float, final: float) -> np.ndarray:
-            return np.full(
-                self._task.space_dimension, init - (self._current_cycle + 1) * (init - final) / self._config.max_cycles
-            )
-
         def feeding(fish: Fish) -> Fish:
             if max_delta_cost:
                 fish.weight += (fish.delta_cost / max_delta_cost)
-            fish.weight = np.clip(fish.weight, self._config.min_w, self._config.w_scale)
+            fish.weight = float(np.clip(fish.weight, self._config.min_w, self._config.w_scale))
             return fish
 
         def volitive_movement(fish: Fish) -> Fish:
+            # towards the barycenter if the school gained weight (contraction), away from it otherwise (dilation)
             pos = np.array(fish.position)
-            new_pos = pos + (multiplier * (pos - barycenter) * sv * np.random.uniform(0, 1, sd))
-            return self._init_agent(new_pos)
+            direction = pos - barycenter
+            norm = np.linalg.norm(direction)
+            if norm > 0:
+                direction = direction / norm
+            new_pos = pos + multiplier * sv * np.random.uniform(0, 1, sd) * direction
+            return self._init_agent(new_pos, fish.weight)
+
+        def step(init: float, final: float) -> np.ndarray:
+            # the steps decrease linearly, from init to final, relative to the bandwidth of the search space
+            return (init - self._current_cycle * (init - final) / self._config.max_cycles) * self._task.bandwidth()
 
         # individual movement
         sd, si, sv = self._task.space_dimension, self.__step_individual, self.__step_volitive
@@ -76,21 +79,24 @@ class FishSchoolSearchOptimization(OptimizationAbstract):
         max_delta_cost = max([fish.delta_cost for fish in self._population])
         self._population = [feeding(fish) for fish in self._population]
 
-        # collective movements
+        # collective-instinctive movement: the school moves along the improvements, weighted by their size
         delta = sum([fish.delta_cost * np.array(fish.delta_pos) for fish in self._population], start=np.zeros(sd))
         density = sum([f.delta_cost for f in self._population])
         if density != 0:
             delta /= density
-        self._population = [self._init_agent((np.array(fish.position) + delta).tolist()) for fish in self._population]
+        self._population = [
+            self._init_agent(np.array(fish.position) + delta, fish.weight) for fish in self._population
+        ]
 
-        # collective volitive movements
+        # collective-volitive movement
         school_weight = sum([fish.weight for fish in self._population])
         multiplier = -1 if school_weight > self.__school_weight else 1
+        self.__school_weight = school_weight
         barycenter = (
             sum([np.array(fish.position) * fish.weight for fish in self._population], start=np.zeros(sd))
-        ) / sum([fish.weight for fish in self._population])
+        ) / school_weight
         self._population = [volitive_movement(fish) for fish in self._population]
 
         # update steps
-        self.__step_individual = update(self._config.step_individual_init, self._config.step_individual_final)
-        self.__step_volitive = update(self._config.step_volitive_init, self._config.step_volitive_final)
+        self.__step_individual = step(self._config.step_individual_init, self._config.step_individual_final)
+        self.__step_volitive = step(self._config.step_volitive_init, self._config.step_volitive_final)

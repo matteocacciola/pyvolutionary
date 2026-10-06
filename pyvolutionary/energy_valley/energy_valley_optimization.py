@@ -40,8 +40,8 @@ class EnergyValleyOptimization(OptimizationAbstract):
             eb = np.mean(cost_list)
             sl = (cost_list[idx] - best_cost) / (worst_cost - best_cost + self.EPS)
 
-            pos_new1 = pos.copy()
-            pos_new2 = pos.copy()
+            pos_new1 = pos.astype(float)
+            pos_new2 = pos.astype(float)
             if eb < particle.cost:
                 if np.random.random() > sl:
                     a1_idx, g1_idx = np.random.randint(0, n_dims, size=2)
@@ -58,13 +58,13 @@ class EnergyValleyOptimization(OptimizationAbstract):
                     pos_new1 += jr[0] * (ir[0, 0] * best_pos - ir[0, 1] * x_avg_pop) / sl
                     pos_new2 += jr[1] * (ir[1, 0] * best_pos - ir[1, 1] * x_avg_team)
                 return [
-                    Particle(**self._init_agent(pos_new1).model_dump()),
-                    Particle(**self._init_agent(pos_new2).model_dump()),
+                    Particle(**self._init_agent(pos_new1).__dict__),
+                    Particle(**self._init_agent(pos_new2).__dict__),
                 ]
 
             return [Particle(**self._init_agent(
                 pos_new1 + np.random.random() * sl * np.array(self._task.empty_solution())
-            ).model_dump())]
+            ).__dict__)]
 
         pos_list = np.array([agent.position for agent in self._population])
         cost_list = np.array([agent.cost for agent in self._population])

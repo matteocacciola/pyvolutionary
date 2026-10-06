@@ -25,7 +25,7 @@ class CoralReefOptimization(OptimizationAbstract):
     """
     def __init__(self, config: CoralReefOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
-        _, self.__G1 = self._config.gamma
+        self.__G1: float | None = None
         self.__alpha: float | None = None
         self.__gamma: float | None = None
         self.__num_occupied: int | None = None
@@ -38,6 +38,9 @@ class CoralReefOptimization(OptimizationAbstract):
         self._config = CoralReefOptimizationConfig(**parameters)
 
     def before_initialization(self):
+        # the state of the run is reset, so that the same instance can be used for several optimizations
+        _, self.__G1 = self._config.gamma
+        self.__dyn_Pd = 0
         self.__alpha = 10 * self._config.Pd / self._config.max_cycles
         self.__gamma = 10 * (self._config.gamma[1] - self._config.gamma[0]) / self._config.max_cycles
         self.__num_occupied = int(self._config.population_size / (1 + self._config.po))
@@ -75,16 +78,16 @@ class CoralReefOptimization(OptimizationAbstract):
         selected_corals = np.random.choice(
             self.__occupied_idx_list, int(len(self.__occupied_idx_list) * self._config.Fb), replace=False
         )
-        larvae = [Coral(**self._init_agent(gaussian_mutation(self._population[idx].position)).model_dump())
+        larvae = [Coral(**self._init_agent(gaussian_mutation(self._population[idx].position)).__dict__)
                   for idx in self.__occupied_idx_list if idx not in selected_corals]
 
         # Step 1b
         while len(selected_corals) >= 2:
-            id1, id2 = np.random.choice(range(len(selected_corals)), 2, replace=False)
+            id1, id2 = np.random.choice(len(selected_corals), 2, replace=False)
             agent = Coral(**self._init_agent(multi_point_cross(
                 self._population[selected_corals[id1]].position,
                 self._population[selected_corals[id2]].position
-            )).model_dump())
+            )).__dict__)
             larvae.append(agent)
             selected_corals = np.delete(selected_corals, [id1, id2])
         return larvae

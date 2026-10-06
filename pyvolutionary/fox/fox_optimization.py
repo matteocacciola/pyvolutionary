@@ -26,6 +26,11 @@ class FoxOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = FoxOptimizationConfig(**parameters)
 
+    def before_initialization(self):
+        # the minimum time is updated during the run: reset it, so that the same instance can be used several times.
+        # It starts from a large finite value: with inf, inf * a is NaN at the first cycle (a = 0)
+        self.__mint = 1e10
+
     def optimization_step(self):
         def evolve(fox: Fox) -> Fox:
             if np.random.random() >= 0.5:
@@ -38,7 +43,7 @@ class FoxOptimization(OptimizationAbstract):
                 pos_new = travel_distance * jump * (c1 if np.random.random() > pp else c2)
             else:
                 pos_new = best_position + np.random.standard_normal(dim) * (self.__mint * a)
-            agent = Fox(**self._init_agent(pos_new).model_dump())
+            agent = Fox(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(fox, agent)
 
         a = 2 * (1 - (1.0 / self._current_cycle))

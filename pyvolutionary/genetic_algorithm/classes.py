@@ -29,12 +29,13 @@ class BitGene:
         largest = 2 ** self.n_bits
 
         lb, ub = np.array(lower_bound), np.array(upper_bound)
+        n_bits = self.n_bits
+        # convert the whole bitstring to a string of chars once
+        all_chars = ''.join(map(str, self.bitstring))
         for i in range(0, self.__space_dimension):
             # extract the substring
-            start, end = i * self.n_bits, (i * self.n_bits) + self.n_bits
-            substring = self.bitstring[start:end]
-            # convert bitstring to a string of chars
-            chars = ''.join([str(s) for s in substring])
+            start, end = i * n_bits, (i * n_bits) + n_bits
+            chars = all_chars[start:end]
             # convert string to integer
             integer = int(chars, 2)
             # scale integer to desired range
@@ -74,4 +75,4 @@ class BitGene:
 class Transformer:
     @staticmethod
     def from_bit_gene_to_gene(bit_gene: BitGene, lower_bounds: list[float], upper_bounds: list[float], gene_init_fnc: callable) -> Gene:
-        return Gene(**gene_init_fnc(bit_gene.decode(lower_bounds, upper_bounds)).model_dump())
+        return Gene(**gene_init_fnc(bit_gene.decode(lower_bounds, upper_bounds)).__dict__)

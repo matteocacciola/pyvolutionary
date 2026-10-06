@@ -33,14 +33,14 @@ class GoldenJackalOptimization(OptimizationAbstract):
         def evolve(idx: int, jackal: GoldenJackal) -> GoldenJackal:
             pos = np.array(jackal.position)
             E = np.array(E1 * 2 * np.random.random(size=n_dims) - 1)
-            male_position = np.array(male.position)
-            female_position = np.array(female.position)
+            male_position = np.array(male.position, dtype=float)
+            female_position = np.array(female.position, dtype=float)
             t1 = np.abs(np.where(np.abs(E) < 1, RL[idx, :] * male_position - pos, male_position - RL[idx, :] * pos))
             t2 = np.abs(np.where(np.abs(E) < 1, RL[idx, :] * female_position - pos, female_position - RL[idx, :] * pos))
             male_position -= E * t1
             female_position -= E * t2
             pos_new = ((male_position + female_position) / 2).tolist()
-            return self._greedy_select_agent(jackal, GoldenJackal(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(jackal, GoldenJackal(**self._init_agent(pos_new).__dict__))
 
         n_dims = self._task.space_dimension
         pop_size = self._config.population_size

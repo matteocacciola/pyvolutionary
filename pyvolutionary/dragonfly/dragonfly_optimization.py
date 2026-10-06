@@ -38,22 +38,14 @@ class DragonflyOptimization(OptimizationAbstract):
         self.__radius = self.__delta_max = self._task.bandwidth() / 10
 
     def optimization_step(self):
-        def neighbouring(
-            jdx: int, pos: np.ndarray, pos_jdx: list[float]
-        ) -> tuple[list[float] | None, list[float] | None]:
-            dist = np.abs(pos - np.array(pos_jdx))
-            if np.all(dist <= r) and np.all(dist != 0):
-                return self._population[jdx].position, self.__population_delta[jdx].position
-            return None, None
-
         def evolve(dragonfly: Dragonfly, dragonfly_delta: Dragonfly) -> tuple[Dragonfly, Dragonfly]:
             pos = np.array(dragonfly.position)
             pos_delta = np.array(dragonfly_delta.position)
-            # find the neighbouring solutions
-            neighbour_data = [neighbouring(j, pos, agent.position) for j, agent in enumerate(self._population)]
-            pos_neighbours, pos_neighbours_delta = zip(*[(p, delta) for p, delta in neighbour_data])
-            pos_neighbours = [p for p in pos_neighbours if p is not None]
-            pos_neighbours_delta = [p for p in pos_neighbours_delta if p is not None]
+            # find the neighbouring solutions: those within the radius in each dimension, and not overlapping
+            dist = np.abs(pos - positions).reshape(len(positions), -1)
+            is_neighbour = np.all(dist <= np.ravel(r), axis=1) & np.all(dist != 0, axis=1)
+            pos_neighbours = positions[is_neighbour]
+            pos_neighbours_delta = positions_delta[is_neighbour]
             neighbours_num = len(pos_neighbours)
             # separation: Eq 3.1, Alignment: Eq 3.2, Cohesion: Eq 3.3
             S = np.zeros(n_dims)
@@ -84,9 +76,9 @@ class DragonflyOptimization(OptimizationAbstract):
             pos_new += np.clip(temp, -1 * self.__delta_max, self.__delta_max)
             pos_delta_new = np.clip(temp_new, -1 * self.__delta_max, self.__delta_max)
             # amend solution
-            agent_new = self._greedy_select_agent(dragonfly, Dragonfly(**self._init_agent(pos_new).model_dump()))
+            agent_new = self._greedy_select_agent(dragonfly, Dragonfly(**self._init_agent(pos_new).__dict__))
             agent_delta_new = self._greedy_select_agent(
-                dragonfly_delta, Dragonfly(**self._init_agent(pos_delta_new).model_dump())
+                dragonfly_delta, Dragonfly(**self._init_agent(pos_delta_new).__dict__)
             )
             return agent_new, agent_delta_new
 
@@ -106,6 +98,9 @@ class DragonflyOptimization(OptimizationAbstract):
 
         g_best_position = np.array(self._best_agent.position)
         g_worst_position = np.array(self._worst_agent.position)
+
+        positions = np.array([dragonfly.position for dragonfly in self._population])
+        positions_delta = np.array([dragonfly.position for dragonfly in self.__population_delta])
         
         self._population, self.__population_delta = map(
             lambda x: list(x),

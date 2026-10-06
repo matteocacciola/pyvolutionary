@@ -44,13 +44,13 @@ class VirusColonySearchOptimization(OptimizationAbstract):
             sigma_diffusion = (np.log1p(cycle) / max_cycles) * (position - best_position)
             gauss = np.random.normal(np.random.normal(best_position, np.abs(sigma_diffusion)))
             position_new = gauss + np.random.uniform() * best_position - np.random.uniform() * position
-            agent = Virus(**self._init_agent(position_new).model_dump())
+            agent = Virus(**self._init_agent(position_new).__dict__)
             return self._greedy_select_agent(virus, agent)
 
         def host_cell_infection(virus: Virus) -> Virus:
             agent = Virus(**self._init_agent(
                 np.array(calculate_x_mean()) + sigma_infection * np.random.normal(0, 1, n_dims)
-            ).model_dump())
+            ).__dict__)
             return self._greedy_select_agent(virus, agent)
 
         def immune_response(idx: int, virus: Virus) -> Virus:
@@ -61,7 +61,7 @@ class VirusColonySearchOptimization(OptimizationAbstract):
                 np.array(self._population[id2].position) - position
             )
             position_new = np.where(np.random.random(n_dims) < pr, position, temp)
-            agent = Virus(**self._init_agent(position_new).model_dump())
+            agent = Virus(**self._init_agent(position_new).__dict__)
             return self._greedy_select_agent(self._population[idx], agent)
 
         max_cycles = self._config.max_cycles

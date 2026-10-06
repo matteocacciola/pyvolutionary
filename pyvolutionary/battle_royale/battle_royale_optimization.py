@@ -31,7 +31,7 @@ class BattleRoyaleOptimization(OptimizationAbstract):
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None, damage: int | None = None) -> Soldier:
         agent = super()._init_agent(position=position)
-        soldier = Soldier(**agent.model_dump())
+        soldier = Soldier(**agent.__dict__)
         if damage is not None:
             soldier.damage = damage
         return soldier

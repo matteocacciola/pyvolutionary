@@ -304,6 +304,9 @@ As an illustration, consider a TSP scenario involving 5 cities denoted as A, B, 
 be denoted by the permutation [A, B, D, E, C], illustrating the order in which the cities are visited. This interpretation
 indicates that the tour initiates at city A, proceeds to city B, then D, E, and ultimately C before looping back to city A.
 
+A `PermutationVariable` spans one dimension per item: the position of an agent holds a key for each item, and the
+permutation is the order of the items by increasing key. Use `transform_solution` to get the permutation of the items.
+
 The following code snippet illustrates how to solve the TSP with the Virus Colony Search Optimization algorithm.
 
 ```python

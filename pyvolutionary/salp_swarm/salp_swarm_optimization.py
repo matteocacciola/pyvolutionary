@@ -41,7 +41,7 @@ class SalpSwarmOptimization(OptimizationAbstract):
 
         def evolve(idx: int, salp: Salp) -> Salp:
             pos_new = new_position(idx, salp)
-            agent = Salp(**self._init_agent(pos_new).model_dump())
+            agent = Salp(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(agent, salp)
 
         n_dims = self._task.space_dimension

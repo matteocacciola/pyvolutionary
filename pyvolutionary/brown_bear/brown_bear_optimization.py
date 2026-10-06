@@ -37,7 +37,7 @@ class BrownBearOptimization(OptimizationAbstract):
             else:
                 ww = 2 * pp * np.pi * np.random.random(n_dims)
                 pos_new = pos + (ww * best_position - np.abs(pos)) - (ww * worst_position - np.abs(pos))
-            return self._greedy_select_agent(bear, BrownBear(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(bear, BrownBear(**self._init_agent(pos_new).__dict__))
 
         def sniffing_bear(idx: int, bear: BrownBear) -> BrownBear:
             pos = np.array(bear.position)
@@ -45,7 +45,7 @@ class BrownBearOptimization(OptimizationAbstract):
             agent = self._population[kk]
             agent_pos = np.array(agent.position)
             pos_new = pos + np.random.random() * (pos - agent_pos) * (1 if bear.cost < agent.cost else -1)
-            return self._greedy_select_agent(bear, BrownBear(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(bear, BrownBear(**self._init_agent(pos_new).__dict__))
 
         cycles = self._current_cycle
         pp = cycles / self._config.max_cycles

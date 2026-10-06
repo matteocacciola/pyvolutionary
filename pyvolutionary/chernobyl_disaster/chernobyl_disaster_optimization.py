@@ -35,7 +35,7 @@ class ChernobylDisasterOptimization(OptimizationAbstract):
             pos_b = 0.5 * (b2_pos - pb * np.abs(np.random.random() ** 2 * np.pi * b2_pos - pos))
             pos_c = b3_pos - pc * np.abs(np.random.random() ** 2 * np.pi * b3_pos - pos)
             pos_new = (pos_a + pos_b + pos_c) / 3
-            return SearchRadiation(**self._init_agent(pos_new).model_dump())
+            return SearchRadiation(**self._init_agent(pos_new).__dict__)
 
         a = 3. - 3. * self._current_cycle / self._config.max_cycles
 

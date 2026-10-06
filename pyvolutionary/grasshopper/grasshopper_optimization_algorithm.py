@@ -2,8 +2,8 @@ from typing import Any
 import numpy as np
 
 from ..helpers import (
-    distance,
-    verser,
+    per_row,
+    squared_norms,
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
@@ -55,17 +55,18 @@ class GrasshopperOptimization(OptimizationAbstract):
             population
             :rtype: np.ndarray
             """
-            return np.sum([
-                ran * f(2 + np.remainder(distance(position, g.position), 2)) * verser(position, g.position)
-                for jdx, g in enumerate(self._population)
-            ], axis=0)
+            # vectorized over the grasshoppers of the population: distances and versers of Eq. (2.1)
+            diff = np.array(position) - positions
+            dist = np.sqrt(squared_norms(diff))
+            versers = diff / per_row(dist + np.finfo(float).eps, diff)
+            return np.sum(ran * per_row(f(2 + np.remainder(dist, 2)), diff) * versers, axis=0)
 
         def evolve(grasshopper: Grasshopper) -> Grasshopper:
             sum_grass = s_function(grasshopper.position)
             # Eq. (2.7)
             agent = Grasshopper(**self._init_agent(
                 c * np.random.normal(0, 1, self._task.space_dimension) * sum_grass + best_pos
-            ).model_dump())
+            ).__dict__)
             return self._greedy_select_agent(agent, grasshopper)
 
         # Eq.(2.8)
@@ -73,4 +74,5 @@ class GrasshopperOptimization(OptimizationAbstract):
         ran = (c / 2) * self._task.bandwidth()
 
         best_pos = np.array(self._best_agent.position)
+        positions = np.array([g.position for g in self._population])
         self._population = [evolve(grasshopper) for grasshopper in self._population]

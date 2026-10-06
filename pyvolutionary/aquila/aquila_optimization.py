@@ -45,7 +45,7 @@ class AquilaOptimization(OptimizationAbstract):
                 ) if np.random.random() < 0.5 else QF * best_position - (
                     g2 * pos * np.random.random()
                 ) - g2 * levy_step + np.random.random() * g1  # Eq. 13, 14
-            new_agent = Aquila(**self._init_agent(pos_new).model_dump())
+            new_agent = Aquila(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(new_agent, aquila)
 
         current_cycle = self._current_cycle

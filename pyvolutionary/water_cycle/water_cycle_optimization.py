@@ -37,12 +37,24 @@ class WaterCycleOptimization(OptimizationAbstract):
 
     def after_initialization(self):
         n_stream = self._config.population_size - self._config.nsr
+        # the best agent is the sea, the following nsr - 1 ones are the rivers
+        self._population = sort_by_cost(self._population)
         self.__pop_best = self._population[:self._config.nsr]
         pop_stream = self._population[self._config.nsr:]  # Forming Stream
 
         # Designate streams to rivers and sea
-        cost_river_list = np.array([agent.cost for agent in self.__pop_best])
-        num_child_in_river_list = np.round(np.abs(cost_river_list / np.sum(cost_river_list)) * n_stream).astype(int)
+        cost_river_list = np.abs(np.array([agent.cost for agent in self.__pop_best]))
+        total_cost = np.sum(cost_river_list)
+        # when all the costs are zero, the streams are equally divided among the rivers
+        share_river_list = (
+            cost_river_list / total_cost if total_cost > 0 else np.full(self._config.nsr, 1 / self._config.nsr)
+        )
+        num_child_in_river_list = np.round(share_river_list * n_stream).astype(int)
+        # each river must have at least one stream (when there are enough streams), and the total number of assigned
+        # streams must be exactly n_stream
+        num_child_in_river_list = np.maximum(num_child_in_river_list, 1 if n_stream >= self._config.nsr else 0)
+        while np.sum(num_child_in_river_list) > n_stream:
+            num_child_in_river_list[np.argmax(num_child_in_river_list)] -= 1
         if np.sum(num_child_in_river_list) < n_stream:
             num_child_in_river_list[-1] += n_stream - np.sum(num_child_in_river_list)
         self.__streams = {}
@@ -63,7 +75,7 @@ class WaterCycleOptimization(OptimizationAbstract):
         def evolve_stream(idx: int, stream: Stream) -> Stream:
             pos = np.array(stream.position)
             pos_new = pos + np.random.uniform() * wc * (np.array(self.__pop_best[idx].position) - pos)
-            return Stream(**self._init_agent(pos_new).model_dump())
+            return Stream(**self._init_agent(pos_new).__dict__)
 
         nsr = self._config.nsr
         wc = self._config.wc
@@ -75,14 +87,14 @@ class WaterCycleOptimization(OptimizationAbstract):
         }
         self.__pop_best = [self._greedy_select_agent(
             best_agent(self.__streams[idx]), stream
-        ) for idx, stream in enumerate(self.__pop_best)]
+        ) if len(self.__streams[idx]) > 0 else stream for idx, stream in enumerate(self.__pop_best)]
 
         # Evaporation
         evaporation_indexes = [idx for idx in range(1, nsr) if distance(
             best_agent_pos, self.__pop_best[idx].position
         ) < self.__ecc or np.random.random() < 0.1]
         for idx in evaporation_indexes:
-            pop_current_best = sort_by_cost(self.__streams[idx] + [Stream(**self._init_agent().model_dump())])
+            pop_current_best = sort_by_cost(self.__streams[idx] + [Stream(**self._init_agent().__dict__)])
             self.__pop_best[idx] = pop_current_best.pop(0)
             self.__streams[idx] = pop_current_best
 

@@ -39,15 +39,15 @@ class CatSwarmOptimization(OptimizationAbstract):
 
         flag = np.random.uniform() < self._config.mixture_ratio if flag is None else flag
         if velocity is None:
-            return Cat(**agent.model_dump(), velocity=self._task.empty_solution(), flag=flag)
+            return Cat(**agent.__dict__, velocity=self._task.empty_solution(), flag=flag)
 
         velocity = self._task.correct_solution(velocity.tolist() if isinstance(velocity, np.ndarray) else velocity)
-        return Cat(**agent.model_dump(), velocity=velocity, flag=flag)
+        return Cat(**agent.__dict__, velocity=velocity, flag=flag)
 
     def optimization_step(self):
         def seeking_clone(c: Cat) -> Cat:
             pos = np.array(c.position)
-            jdx = np.random.choice(range(0, n_dims), int(cdc * n_dims), replace=False)
+            jdx = np.random.choice(n_dims, int(cdc * n_dims), replace=False)
             pos_new = np.where(np.random.random(n_dims) < 0.5, pos * (1 + srd), pos * (1 - srd))
             pos_new[jdx] = pos[jdx]
             return self._init_agent(pos_new, c.velocity, c.flag)
@@ -55,12 +55,12 @@ class CatSwarmOptimization(OptimizationAbstract):
         def seeking_mode(cat: Cat) -> list[float]:
             cloned = [cat.model_copy() for _ in range(smp - 1)] if spc else self._generate_agents(self._config.smp)
             candidates = [cat.model_copy()] if self._config.spc else []
-            candidates += [seeking_clone(Cat(**cat.model_dump())) for cat in cloned]
+            candidates += [seeking_clone(Cat(**cat.__dict__)) for cat in cloned]
             if selected_strategy == 0:  # best fitness-self
                 return best_agent(candidates).position
             if selected_strategy == 1:  # tournament
                 k_way = 4
-                idx = np.random.choice(range(0, self._config.smp), k_way, replace=False)
+                idx = np.random.choice(self._config.smp, k_way, replace=False)
                 cats_k_way = [candidates[_] for _ in idx]
                 return best_agent(cats_k_way).position
             if selected_strategy == 2:  # roulette wheel selection

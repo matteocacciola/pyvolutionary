@@ -39,7 +39,7 @@ class CoyotesOptimization(OptimizationAbstract):
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None, age: int | None = None) -> Coyote:
         agent = super()._init_agent(position)
-        return Coyote(**agent.model_dump(), age=age if age is not None else 0)
+        return Coyote(**agent.__dict__, age=age if age is not None else 0)
 
     def optimization_step(self):
         def evolve_coyote(idx: int, coyote: Coyote, pack: list[Coyote], tend: np.ndarray) -> Coyote:

@@ -33,11 +33,11 @@ class WalrusOptimization(OptimizationAbstract):
             pos_new = pos + np.random.random() * (
                     np.array(agent_kk.position) - np.random.randint(1, 3) * pos
             ) if agent_kk.cost < walrus.cost else pos + np.random.random() * (pos - np.array(agent_kk.position))
-            agent = Walrus(**self._init_agent(pos_new).model_dump())
+            agent = Walrus(**self._init_agent(pos_new).__dict__)
             walrus = self._greedy_select_agent(walrus, agent)
             # phase 2 Exploitation
             pos_new = self._task.increase_solution(walrus.position, self._current_cycle)  # Eq. 7
-            agent = Walrus(**self._init_agent(pos_new).model_dump())
+            agent = Walrus(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(walrus, agent)
 
         pop_size = self._config.population_size

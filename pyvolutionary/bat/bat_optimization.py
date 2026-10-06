@@ -37,7 +37,7 @@ class BatOptimization(OptimizationAbstract):
         velocity = self._task.correct_solution(velocity if velocity is not None else self._task.empty_solution())
 
         return Bat(
-            **agent.model_dump(),
+            **agent.__dict__,
             velocity=velocity,
             loudness=loudness if loudness is not None else np.random.uniform(*self._config.loudness),
             pulse_rate=pulse_rate if pulse_rate is not None else np.random.uniform(*self._config.pulse_rate),

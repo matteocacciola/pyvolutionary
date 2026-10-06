@@ -40,7 +40,7 @@ class EgretSwarmOptimization(OptimizationAbstract):
         n_dims = self._task.space_dimension
         weights = weights if weights is not None else np.random.uniform(-1., 1., n_dims).tolist()
         return Egret(
-            **agent.model_dump(),
+            **agent.__dict__,
             weights=weights,
             m=m if m is not None else np.zeros(n_dims).tolist(),
             v=v if v is not None else np.zeros(n_dims).tolist(),

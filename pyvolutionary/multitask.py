@@ -56,7 +56,7 @@ class Multitask:
         if len(values) == 1:
             return [[deepcopy(values[0]) for _ in range(0, self._m_tasks)] for _ in range(0, self._n_algorithms)]
         if len(values) == self._n_algorithms:
-            return [deepcopy(values[idx] for _ in range(0, self._m_tasks)) for idx in range(0, self._n_algorithms)]
+            return [[deepcopy(values[idx]) for _ in range(0, self._m_tasks)] for idx in range(0, self._n_algorithms)]
         if len(values) == self._m_tasks:
             return [deepcopy(values) for _ in range(0, self._n_algorithms)]
         if len(values) == (self._n_algorithms * self._m_tasks):
@@ -139,29 +139,37 @@ class Multitask:
         :raises: ValueError: raises ValueError if any of the modes is not supported
         """
         self._debug = debug
-        n_cpus = np.clip(n_jobs, 2, os.cpu_count() - 1, dtype=int)
+        n_cpus = int(max(1, min(n_jobs if n_jobs is not None else 2, (os.cpu_count() or 2) - 1)))
         trial_list = list(range(1, n_trials + 1))
+        self._df2 = []
 
-        for id_optimizer, optimizer in enumerate(self._algorithms):
-            best_fit_optimizer_results = {}
-            for id_task, task in enumerate(self._tasks):
-                mode = self.__get_mode__(id_optimizer, id_task)
+        # a single pool of processes is shared by all the pairs (algorithm, task): spawning a new pool for each pair
+        # is expensive
+        with parallel.ProcessPoolExecutor(n_cpus) as executor:
+            for id_optimizer, optimizer in enumerate(self._algorithms):
+                best_fit_optimizer_results = {}
+                for id_task, task in enumerate(self._tasks):
+                    mode = self.__get_mode__(id_optimizer, id_task)
 
-                best_fit_trials = self.__parallelize__(optimizer, task, mode, n_cpus, trial_list)
+                    best_fit_trials = self.__parallelize__(executor, optimizer, task, mode, trial_list)
 
-                best_fit_optimizer_results[f"{optimizer.name}_{task.name}"] = best_fit_trials
+                    best_fit_optimizer_results[f"{optimizer.name}_{task.name}"] = best_fit_trials
 
-            self._df2.append(pd.DataFrame(best_fit_optimizer_results))
+                self._df2.append(pd.DataFrame(best_fit_optimizer_results))
 
     def __parallelize__(
-        self, optimizer: OptimizationAbstract, task: Task, mode: ModeSolver, n_cpus: int, trial_list: list
+        self,
+        executor: parallel.Executor,
+        optimizer: OptimizationAbstract,
+        task: Task,
+        mode: ModeSolver,
+        trial_list: list,
     ) -> list:
         best_fit_trials = []
-        with parallel.ProcessPoolExecutor(n_cpus) as executor:
-            list_results = executor.map(partial(self.__run__, optimizer=optimizer, task=task, mode=mode), trial_list)
-            for result in list_results:
-                best_fit_trials.append(result)
-                self.__debug_results__(result, optimizer.name)
+        list_results = executor.map(partial(self.__run__, optimizer=optimizer, task=task, mode=mode), trial_list)
+        for result in list_results:
+            best_fit_trials.append(result)
+            self.__debug_results__(result, optimizer.name)
         return best_fit_trials
 
     def __get_mode__(self, id_optimizer: int, id_prob: int) -> ModeSolver:

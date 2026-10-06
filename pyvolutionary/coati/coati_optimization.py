@@ -33,7 +33,7 @@ class CoatiOptimization(OptimizationAbstract):
         def hunting(coati: Coati) -> Coati:
             pos = np.array(coati.position)
             pos_new = pos + np.random.random() * (best_pos - np.random.randint(1, 3) * pos)  # Eq. 4
-            return self._greedy_select_agent(coati, Coati(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(coati, Coati(**self._init_agent(pos_new).__dict__))
 
         def attacking(coati: Coati) -> Coati:
             pos = np.array(coati.position)
@@ -42,9 +42,9 @@ class CoatiOptimization(OptimizationAbstract):
                 pos_new = pos + np.random.random() * (
                     np.array(iguana.position) - np.random.randint(1, 3) * pos
                 )  # Eq. 6
-                return self._greedy_select_agent(coati, Coati(**self._init_agent(pos_new).model_dump()))
+                return self._greedy_select_agent(coati, Coati(**self._init_agent(pos_new).__dict__))
             pos_new = pos + np.random.random() * (pos - np.array(iguana.position))  # Eq. 6
-            return self._greedy_select_agent(coati, Coati(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(coati, Coati(**self._init_agent(pos_new).__dict__))
 
         def exploration(idx: int, coati: Coati) -> Coati:
             if idx < self.__size2:
@@ -54,7 +54,7 @@ class CoatiOptimization(OptimizationAbstract):
         def exploitation(coati: Coati) -> Coati:
             pos = np.array(coati.position)
             pos_new = pos + (1 - 2 * np.random.random()) * (low + np.random.random() * (high - low))  # Eq. 8
-            return self._greedy_select_agent(coati, Coati(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(coati, Coati(**self._init_agent(pos_new).__dict__))
 
         best_pos = np.array(self._best_agent.position)
 

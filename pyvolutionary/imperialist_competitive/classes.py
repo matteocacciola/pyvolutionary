@@ -113,7 +113,9 @@ class Transformer:
         :param task_type: the type of the task, i.e. whether it is a minimization or maximization task
         :return: an instance of EmpireModel class, i.e. the pydantic representation of the empire
         """
-        cost = empire.cost
+        # the agent is the emperor: its cost is the one of its position (the total cost of the empire, including the
+        # colonies, is only used to compare the empires)
+        cost = empire.emperor.cost
         return EmpireModel(
             position=empire.emperor.representation, cost=cost, fitness=calculate_fitness(cost, task_type)
         )

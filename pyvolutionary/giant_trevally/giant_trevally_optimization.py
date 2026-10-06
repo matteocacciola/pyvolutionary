@@ -34,13 +34,13 @@ class GiantTrevallyOptimization(OptimizationAbstract):
             pos_new = best_pos * np.random.random() + (
                 (ub - lb) * np.random.random() + lb
             ) * get_levy_flight_step(beta=1.5, multiplier=0.01, size=n_dims, case=-1)
-            return self._greedy_select_agent(trevally, GiantTrevally(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(trevally, GiantTrevally(**self._init_agent(pos_new).__dict__))
 
         def choosing_area(trevally: GiantTrevally) -> GiantTrevally:
             pos = np.array(trevally.position)
             r3 = np.random.random()
             pos_new = best_pos * A * r3 + pos_m - pos * r3  # Eq. 7
-            return self._greedy_select_agent(trevally, GiantTrevally(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(trevally, GiantTrevally(**self._init_agent(pos_new).__dict__))
 
         def attacking(trevally: GiantTrevally) -> GiantTrevally:
             pos = np.array(trevally.position)
@@ -53,7 +53,7 @@ class GiantTrevallyOptimization(OptimizationAbstract):
             VD = np.sin(np.radians(theta1)) * dist  # Eq. 11
             # the behavior of giant trevally when chasing and jumping out of the water is mathematically simulated
             pos_new = pos * np.sin(np.radians(theta2)) * trevally.cost + VD + H  # Eq. (13)
-            return self._greedy_select_agent(trevally, GiantTrevally(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(trevally, GiantTrevally(**self._init_agent(pos_new).__dict__))
 
         n_dims = self._task.space_dimension
         epoch = self._current_cycle

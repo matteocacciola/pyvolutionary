@@ -3,7 +3,6 @@ import numpy as np
 
 from ..helpers import (
     best_agent,
-    distance,
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
@@ -26,51 +25,82 @@ class FireflySwarmOptimization(OptimizationAbstract):
         Bio-Inspired Computation 2.2 (2010): 78-84. https://doi.org/10.1504/IJBIC.2010.032124
     [3] Yang, Xin-She. "Firefly algorithm, Levy flights and global optimization." Research and development in intelligent
         systems XXVI. Springer, London, 2010. 209-218. https://doi.org/10.1007/978-1-84996-153-4_15
+    [4] Gandomi, A.H., Yang, X.S. and Alavi, A.H., 2011. Mixed variable structural optimization using firefly
+        algorithm. Computers & Structures, 89(23-24), pp.2325-2336.
+
+    The implementation follows the one of mealpy (OriginalFFA), with two differences: a firefly is replaced by its best
+    candidate only if better than the firefly itself (mealpy compares it with the firefly after its moves), and the
+    mutation coefficient is damped at every cycle (mealpy damps the initial value, so it stays constant).
     """
 
     def __init__(self, config: FireflySwarmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+        self.__alpha: float | None = None
 
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = FireflySwarmOptimizationConfig(**parameters)
 
+    def before_initialization(self):
+        # the mutation coefficient is damped during the optimization: keep it in the state of the run, not in the
+        # configuration
+        self.__alpha = self._config.alpha
+
     def optimization_step(self):
-        def update_firefly(idx: int, firefly: Firefly) -> Firefly:
+        def move(firefly: Firefly, brighter: Firefly) -> Firefly:
             """
-            Update the population of fireflies. This method is called at each iteration of the algorithm. It updates the
-            position of each firefly based on the position of the other fireflies. The fireflies with the best fitness
-            values will attract the other fireflies and the fireflies with the worst fitness values will be attracted by the
-            other fireflies. The fireflies with the best fitness values will move towards the fireflies with the worst
-            fitness values. The fireflies with the worst fitness values will move away from the fireflies with the best
-            fitness values.
-            :param idx: index of the firefly
-            :param firefly: a firefly
-            :return: a firefly
+            Move a firefly towards a brighter one: the attraction decreases with the distance between them, and a random
+            step is added.
+            :param firefly: the firefly to move
+            :param brighter: the brighter firefly
+            :return: the moved firefly
             :rtype: Firefly
             """
-            position = firefly.position
-            cost = firefly.cost
-            weighted_pos = [np.array(position) + beta_min * np.exp(
-                -gamma * distance(position, f.position) / np.sqrt(n_dims)
-            ) * np.matmul(
-                np.array(f.position) - np.array(position), np.random.uniform(0, 1, (n_dims, n_dims))
-            ) + alpha * np.random.uniform(0, 1, n_dims) for f in self._population[idx + 1:] if f.cost < cost]
-            new_agents = (
-                [self._init_agent(position) for position in weighted_pos] +
-                [self._init_agent() for _ in range(0, pop_size - len(weighted_pos) + 1)]
-            )
-            return Firefly(**best_agent(new_agents).model_dump())
+            position = np.array(firefly.position, dtype=float)
+            brighter_position = np.array(brighter.position, dtype=float)
+            # radius and attraction level
+            rij = np.linalg.norm(position - brighter_position) / d_max
+            beta = beta_base * np.exp(-gamma * rij ** exponent)
+            # random step
+            mutation_vector = delta * np.random.uniform(0, 1, n_dims)
+            temp = np.matmul(brighter_position - position, np.random.uniform(0, 1, (n_dims, n_dims)))
+            pos_new = position + alpha * mutation_vector + beta * temp
+            return Firefly(**self._init_agent(pos_new).__dict__)
 
-        # update alpha parameter. This parameter is used to control the randomness of the movement of the fireflies
-        delta = 1.0 - (10.0 ** -4.0 / 0.9) ** (1.0 / self._current_cycle)
-        self._config.alpha *= (1 - delta) * self._config.alpha
+        def update_firefly(idx: int) -> Firefly:
+            """
+            The firefly moves towards each brighter firefly following it in the population, starting each move from
+            where the previous one ended. If the moves are fewer than the population size, random fireflies complete
+            the candidates. The firefly is replaced by the best candidate, if better.
+            :param idx: the index of the firefly
+            :return: the updated firefly
+            :rtype: Firefly
+            """
+            firefly = self._population[idx]
+            moved = firefly
+            candidates = []
+            for brighter in self._population[(idx + 1):]:
+                if brighter.cost < moved.cost:
+                    moved = move(moved, brighter)
+                    candidates.append(moved)
+            if len(candidates) < pop_size:
+                candidates += [Firefly(**agent.__dict__) for agent in self._generate_agents(pop_size - len(candidates))]
+            local_best = best_agent(candidates)
+            return local_best if local_best.cost < firefly.cost else firefly
 
-        alpha = self._config.alpha
-        beta_min = self._config.beta_min
+        alpha = self.__alpha
+        beta_base = self._config.beta_min
         gamma = self._config.gamma
+        delta = self._config.delta
+        exponent = self._config.exponent
 
         n_dims = self._task.space_dimension
+        d_max = np.sqrt(n_dims)
         pop_size = self._config.population_size
 
-        # replace old population
-        self._population = [update_firefly(idx, firefly) for idx, firefly in enumerate(self._population)]
+        # the fireflies are updated in place, one after the other (each one is compared with the following ones only,
+        # which are not updated yet)
+        for idx in range(0, pop_size):
+            self._population[idx] = update_firefly(idx)
+
+        # damp the mutation coefficient
+        self.__alpha *= self._config.alpha_damp

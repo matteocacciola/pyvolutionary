@@ -44,7 +44,7 @@ class ArchimedeOptimization(OptimizationAbstract):
         acceleration = self._task.empty_solution() if acceleration is None else (
             acceleration.tolist() if isinstance(acceleration, np.ndarray) else acceleration
         )
-        return Object(**agent.model_dump(), density=density, volume=volume, acceleration=acceleration)
+        return Object(**agent.__dict__, density=density, volume=volume, acceleration=acceleration)
 
     def optimization_step(self):
         def calculate_new_properties(idx: int, obj: Object) -> tuple[np.ndarray, np.ndarray, np.ndarray]:

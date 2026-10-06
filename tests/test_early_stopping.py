@@ -1,5 +1,9 @@
 from pyvolutionary import OptimizationResult, AntColonyOptimization, AntColonyOptimizationConfig, EarlyStopping
-from tests.fixtures import task
+from tests.fixtures import task as fixture_task
+
+# the fixture task is shared with other tests: seed a copy, so that each run is reproducible (unseeded runs could get
+# stuck in a local minimum of the Rastrigin function and last up to max_cycles)
+task = fixture_task.model_copy(update={"seed": 0})
 
 
 def test_max_cycles():
@@ -27,6 +31,9 @@ def test_fitness_error():
     o = AntColonyOptimization(optimization_config)
     result = o.optimize(task)
     assert isinstance(result, OptimizationResult)
+    # the optimization stops because the fitness error is reached, well before max_cycles
+    assert result.rates[-1] <= 0.1
+    assert len(result.evolution) < 1000
 
 
 def test_early_stopping_no_patience():

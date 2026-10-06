@@ -30,6 +30,10 @@ class SuccessHistoryIntelligentOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = SuccessHistoryIntelligentOptimizationConfig(**parameters)
 
+    def before_initialization(self):
+        # the coefficient decays during the run: reset it, so that the same instance can be used several times
+        self.__a = 1.5
+
     def optimization_step(self):
         def evolve(solution: Solution) -> Solution:
             pos = np.array(solution.position)
@@ -37,7 +41,7 @@ class SuccessHistoryIntelligentOptimization(OptimizationAbstract):
             x2 = b2_pos + (a * 2 * np.random.random(n_dims) - a) * np.abs(np.random.random(n_dims) * b2_pos - pos)
             x3 = b3_pos + (a * 2 * np.random.random(n_dims) - a) * np.abs(np.random.random(n_dims) * b3_pos - pos)
             pos_new = (x1 + x2 + x3) / 3
-            return self._greedy_select_agent(solution, Solution(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(solution, Solution(**self._init_agent(pos_new).__dict__))
         
         b1_pos, b2_pos, b3_pos = map(lambda x: np.array(x.position), best_agents(self._population, n_best=3))
         self.__a -= 0.04

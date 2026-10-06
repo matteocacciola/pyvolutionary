@@ -36,19 +36,21 @@ class BacterialForagingOptimization(OptimizationAbstract):
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Cell:
         agent = super()._init_agent(position)
-        return Cell(**agent.model_dump(), local_best=agent.position.copy(), local_cost=agent.cost)
+        return Cell(**agent.__dict__, local_best=agent.position.copy(), local_cost=agent.cost)
 
     def __clean_population__(self):
         """
         Remove duplicates from the population. This method is called after each optimization step.
         """
-        new_set = set()
-        pop = self._population.copy()
-        for idx, obj in enumerate(pop):
-            if pos := tuple(obj.position) in new_set:
-                self._population.pop(idx)
-            else:
-                new_set.add(pos)
+        # keep the first cell of each position
+        seen = set()
+        unique = []
+        for cell in self._population:
+            position = tuple(cell.position)
+            if position not in seen:
+                seen.add(position)
+                unique.append(cell)
+        self._population = unique
 
     def __balance_population__(self):
         """
@@ -63,13 +65,15 @@ class BacterialForagingOptimization(OptimizationAbstract):
         if n_agents < 0:
             self._population += [self._init_agent() for _ in range(0, -n_agents)]
         else:
-            list_idx_removed = np.random.choice(range(0, len(self._population)), n_agents, replace=False)
+            list_idx_removed = np.random.choice(len(self._population), n_agents, replace=False)
             for idx in sorted(list_idx_removed, reverse=True):
                 self._population.pop(idx)
 
     def optimization_step(self):
         def update_step_size(c: Cell) -> float:
-            step_sz = C_s - (C_s - C_e) * c.cost / total_costs
+            # the step size decreases with the share of the cost of the cell (all the costs may be zero)
+            share = c.cost / total_costs if total_costs != 0 else 0
+            step_sz = C_s - (C_s - C_e) * share
             return step_sz / c.nutrients if c.nutrients > 0 else step_sz
 
         def tumble_cell(c: Cell, step_sz: float) -> Cell:
@@ -89,11 +93,11 @@ class BacterialForagingOptimization(OptimizationAbstract):
                     c.nutrients -= 1
                     continue
                 new_cell.nutrients += 1
+                # the personal best is the best position found by the cell so far
+                if c.local_cost < new_cell.cost:
+                    new_cell.local_best = list(c.local_best)
+                    new_cell.local_cost = c.local_cost
                 c = new_cell
-                # update personal best
-                if new_cell.cost < c.local_cost:
-                    c.local_best = new_cell.position.copy()
-                    c.local_cost = new_cell.cost
             return c
 
         C_s, C_e = self.__C_s, self.__C_e
@@ -107,6 +111,7 @@ class BacterialForagingOptimization(OptimizationAbstract):
 
             step_size = update_step_size(cell)
             cell = swim(cell, step_size)
+            self._population[idx] = cell
 
             m = max(self._config.N_split, self._config.N_split + (
                 len(self._population) - self._config.population_size
@@ -124,7 +129,8 @@ class BacterialForagingOptimization(OptimizationAbstract):
                     len(self._population) - self._config.population_size
             ) / self._config.N_adapt)
 
-            if cell.nutrients < nut_min and np.random.random() < self._config.Ped:
+            # eliminate the cell if it is starving, or with probability Ped (elimination-dispersal)
+            if cell.nutrients < nut_min or np.random.random() < self._config.Ped:
                 self._population[idx] = self._init_agent()
 
         # make sure the population does not have duplicates

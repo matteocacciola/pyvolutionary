@@ -30,7 +30,7 @@ class ZebraOptimization(OptimizationAbstract):
             pos = np.array(zebra.position)
             r1 = np.round(1 + np.random.random())
             pos_new = pos + np.random.random(n_dims) * (best_pos - r1 * pos)  # Eq. 3
-            agent = Zebra(**self._init_agent(pos_new).model_dump())
+            agent = Zebra(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(agent, zebra)
 
         def defense_strategy(zebra: Zebra) -> Zebra:
@@ -42,7 +42,7 @@ class ZebraOptimization(OptimizationAbstract):
             ) if np.random.random() < 0.5 else pos + np.random.random(n_dims) * (
                 pos_kk - np.random.randint(1, 3) * pos
             )
-            agent = Zebra(**self._init_agent(pos_new).model_dump())
+            agent = Zebra(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(agent, zebra)
 
         n_dims = self._task.space_dimension

@@ -198,7 +198,7 @@ class ContinuousVariable(Variable):
         return self.lower_bound, self.upper_bound
 
     def correct(self, value: float | int) -> float:
-        return float(np.clip(value, self.lower_bound, self.upper_bound))
+        return float(min(max(value, self.lower_bound), self.upper_bound))
 
     def decode(self, value: float) -> float:
         return value
@@ -266,8 +266,7 @@ class DiscreteVariable(Variable):
         return 0, len(self.choices) - 1
 
     def correct(self, value: float | int) -> int:
-        lb, ub = self.get_bounds()
-        return int(np.clip(value, lb, ub))
+        return int(min(max(value, 0), len(self.choices) - 1))
 
     def decode(self, value: float | int) -> Any:
         return self.choices[int(value)]
@@ -296,8 +295,9 @@ class DiscreteMultiVariable(Variable):
     def randomize(self):
         return [v.randomize() for v in self._children]
 
-    def get_bounds(self) -> list[tuple[int, int]]:
-        return [v.get_bounds() for v in self._children]
+    def get_bounds(self) -> tuple[list[int], list[int]]:
+        bounds = [v.get_bounds() for v in self._children]
+        return [lb for lb, _ in bounds], [ub for _, ub in bounds]
 
     def correct(self, value: list):
         return [v.correct(value[idx]) for idx, v in enumerate(self._children)]
@@ -313,6 +313,11 @@ class DiscreteMultiVariable(Variable):
 
 
 class PermutationVariable(Variable):
+    """
+    A permutation of the items. It spans one dimension per item, holding a "random key": the permutation is the order
+    of the items by increasing key. The corrected value holds the rank of each key, i.e. the integer keys (from 0 to
+    the number of items - 1) describing the same permutation.
+    """
     items: list[Any]
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -336,14 +341,15 @@ class PermutationVariable(Variable):
         return lb.tolist(), ub.tolist()
 
     def correct(self, value: tuple | list | np.ndarray) -> list[int]:
-        return np.argsort(value).tolist()
+        # the ranks of the keys: correcting an already corrected value leaves it as it is
+        return np.argsort(np.argsort(np.atleast_1d(value), kind="stable"), kind="stable").tolist()
 
     def decode(self, value: tuple | list | np.ndarray) -> Any:
-        value = self.correct(value)
-        return self._label_encoder.inverse_transform(value)
+        # the items in order of increasing key
+        return self._label_encoder.inverse_transform(np.argsort(np.atleast_1d(value), kind="stable").tolist())
 
     def size(self) -> int:
-        return 1
+        return len(self.items)
 
     def has_children(self) -> bool:
         return False
@@ -431,6 +437,18 @@ class BinaryVariable(Variable):
         return True
 
 
+# the built-in variables, whose correction is idempotent
+IDEMPOTENT_VARIABLES = (
+    ContinuousVariable,
+    ContinuousMultiVariable,
+    DiscreteVariable,
+    DiscreteMultiVariable,
+    PermutationVariable,
+    MultiObjectiveVariable,
+    BinaryVariable,
+)
+
+
 class Task(BaseModel, ABC):
     seed: int | None = None
     variables: list[Variable] = field(default_factory=list)
@@ -440,6 +458,13 @@ class Task(BaseModel, ABC):
     objective_weights: list[float] | None = None
 
     _EPS = PrivateAttr()
+    _variables_key: tuple = PrivateAttr()
+    _flat_variables: list[Variable] = PrivateAttr()
+    _lb: np.ndarray = PrivateAttr()
+    _ub: np.ndarray = PrivateAttr()
+    _continuous_mask: np.ndarray = PrivateAttr()
+    _all_continuous: bool = PrivateAttr()
+    _idempotent_correction: bool = PrivateAttr()
 
     def __init__(self, **kwargs: Any):
         variables = kwargs.get("variables")
@@ -447,6 +472,56 @@ class Task(BaseModel, ABC):
         super().__init__(**kwargs)
 
         self._EPS = np.finfo(float).eps
+        self.__build_cache()
+
+    def __build_cache(self):
+        """
+        Cache the structures derived from the variables, since they are used at every evaluation of the objective
+        function. They are built again whenever the variables change (see __cache).
+        """
+        private = self.__pydantic_private__
+        private["_variables_key"] = tuple(map(id, self.variables))
+        # the dimension of the search space follows the variables (e.g. after model_copy(update={"variables": ...}))
+        self.__dict__["space_dimension"] = sum(v.size() for v in self.variables)
+        private["_flat_variables"] = [
+            item for v in self.variables for item in (v.get() if v.has_children() else [v.get()])
+        ]
+        lb, ub, continuous_mask = [], [], []
+        for v in self.variables:
+            lb_, ub_ = v.get_bounds()
+            # a variable spans v.size() dimensions: its bounds are either scalars or one per dimension
+            lb.extend(np.ravel(lb_).tolist())
+            ub.extend(np.ravel(ub_).tolist())
+            if v.has_children():
+                continuous_mask.extend([isinstance(child, ContinuousVariable) for child in v.get()])
+            else:
+                continuous_mask.extend([isinstance(v, ContinuousVariable)] * v.size())
+        private["_lb"], private["_ub"] = np.array(lb), np.array(ub)
+        private["_continuous_mask"] = np.array(continuous_mask, dtype=bool)
+        private["_all_continuous"] = bool(np.all(private["_continuous_mask"])) and len(continuous_mask) > 0
+        # the corrections of the built-in variables are idempotent: correcting a corrected solution leaves it as it is
+        private["_idempotent_correction"] = all(type(v) in IDEMPOTENT_VARIABLES for v in self.variables)
+
+    def model_copy(self, *, update: dict[str, Any] | None = None, deep: bool = False) -> "Task":
+        copy = super().model_copy(update=update, deep=deep)
+        copy.__build_cache()
+        return copy
+
+    def __setattr__(self, name: str, value: Any):
+        super().__setattr__(name, value)
+        if name == "variables":
+            self.__build_cache()
+
+    def __cache(self) -> dict:
+        """
+        The cached structures derived from the variables, built again if the variables changed.
+        :return: the private attributes holding them
+        :rtype: dict
+        """
+        private = self.__pydantic_private__
+        if private["_variables_key"] != tuple(map(id, self.variables)):
+            self.__build_cache()
+        return private
 
     @model_validator(mode="after")
     def validate_objective_weights(self) -> "Task":
@@ -461,7 +536,33 @@ class Task(BaseModel, ABC):
         pass
 
     def get_variables(self) -> list[Variable]:
-        return [item for v in self.variables for item in (v.get() if v.has_children() else [v.get()])]
+        return list(self.__cache()["_flat_variables"])
+
+    @property
+    def all_continuous(self) -> bool:
+        """
+        Whether all the variables of the task are continuous.
+        :rtype: bool
+        """
+        return self.__cache()["_all_continuous"]
+
+    @property
+    def idempotent_correction(self) -> bool:
+        """
+        Whether correcting an already corrected solution leaves it as it is, i.e. whether all the variables are of the
+        built-in types (a custom variable may correct a solution in any way).
+        :rtype: bool
+        """
+        return self.__cache()["_idempotent_correction"]
+
+    @property
+    def continuous_mask(self) -> np.ndarray:
+        """
+        The mask of the dimensions of the search space corresponding to continuous variables.
+        :return: a boolean array, True where the dimension is continuous
+        :rtype: np.ndarray
+        """
+        return self.__cache()["_continuous_mask"].copy()
 
     def get_bounds(self) -> tuple[np.ndarray, np.ndarray]:
         """
@@ -469,14 +570,8 @@ class Task(BaseModel, ABC):
         :return: the lower and upper bounds
         :rtype: tuple[np.ndarray, np.ndarray]
         """
-        lb = []
-        ub = []
-        for v in self.variables:
-            lb_, ub_ = v.get_bounds()
-            lb.extend(lb_ if v.has_children() else [lb_])
-            ub.extend(ub_ if v.has_children() else [ub_])
-
-        return np.array(lb), np.array(ub)
+        private = self.__cache()
+        return private["_lb"].copy(), private["_ub"].copy()
 
     def correct_solution(self, solution: list[float | int] | np.ndarray) -> list[float | int]:
         """
@@ -486,8 +581,23 @@ class Task(BaseModel, ABC):
         :return: the corrected solution
         :rtype: list[Any]
         """
-        variables = self.get_variables()
-        return [v.correct(c) for c, v in zip(solution, variables)]
+        # read the private attributes from the underlying dict: pydantic resolves each of them with a slow __getattr__
+        private = self.__cache()
+        if private["_all_continuous"]:
+            # same result as np.clip, without its overhead
+            return np.minimum(np.maximum(np.asarray(solution, dtype=float), private["_lb"]), private["_ub"]).tolist()
+        # each variable corrects the dimensions it spans
+        corrected = []
+        offset = 0
+        for v in self.variables:
+            size = v.size()
+            segment = solution[offset:(offset + size)]
+            if v.has_children() or size > 1:
+                corrected.extend(v.correct(segment))
+            else:
+                corrected.append(v.correct(segment[0]))
+            offset += size
+        return corrected
 
     def empty_solution(self) -> list[float]:
         """
@@ -495,7 +605,15 @@ class Task(BaseModel, ABC):
         :return: the random solution
         :rtype: list[float]
         """
-        solution = [item for v in self.variables for item in (v.randomize() if v.has_children() else [v.randomize()])]
+        private = self.__cache()
+        if private["_all_continuous"]:
+            # one vectorized draw yields the same values as one draw per variable, in the same order
+            return np.random.uniform(private["_lb"], private["_ub"]).tolist()
+        solution = []
+        for v in self.variables:
+            value = v.randomize()
+            # variables spanning several dimensions return one value per dimension
+            solution.extend(value if v.has_children() or v.size() > 1 else [value])
         return solution
 
     def initial_solution(self, solution: list[float] | np.ndarray | None = None) -> list[float]:
@@ -512,7 +630,7 @@ class Task(BaseModel, ABC):
     def amend_solution(self, solution: list[float | int] | np.ndarray) -> np.ndarray:
         solution = solution if isinstance(solution, np.ndarray) else np.array(solution)
         lb, ub = self.get_bounds()
-        return np.where(np.logical_and(lb <= solution <= ub), solution, np.array(self.initial_solution()))
+        return np.where(np.logical_and(lb <= solution, solution <= ub), solution, np.array(self.initial_solution()))
 
     def random_solution(self) -> list[float]:
         """
@@ -520,11 +638,8 @@ class Task(BaseModel, ABC):
         :return: the random solution
         :rtype: list[float]
         """
-        lb, _ = self.get_bounds()
-        variables = self.get_variables()
-        return np.where(
-            isinstance(variables, ContinuousVariable), np.random.random() * self.bandwidth() + lb, self.empty_solution()
-        ).tolist()
+        # for continuous variables, a uniform sample in [lb, ub] is the same as lb + U(0, 1) * (ub - lb)
+        return self.empty_solution()
 
     def increase_solution(self, solution: list[float], scale_factor: float | None = None) -> np.ndarray:
         """
@@ -535,12 +650,17 @@ class Task(BaseModel, ABC):
         :rtype: np.ndarray
         """
         scale_factor = scale_factor if scale_factor is not None else 1.0
-        variables = self.get_variables()
-        return np.where(
-            isinstance(variables, ContinuousVariable),
-            np.array(solution) + np.array(self.random_solution()) / scale_factor,
-            self.empty_solution()
-        )
+        random_solution = self.random_solution()
+        private = self.__cache()
+        if private["_all_continuous"]:
+            return np.array(solution, dtype=float) + np.array(random_solution) / scale_factor
+        if not np.any(private["_continuous_mask"]):
+            return np.array(random_solution)
+        # mixed variables: only the continuous ones are increased, the others are randomly re-sampled
+        return np.array([
+            s + r / scale_factor if is_continuous else r
+            for s, r, is_continuous in zip(solution, random_solution, private["_continuous_mask"])
+        ])
 
     def uniform_coordinates(self, dimensions: int | list[int]) -> list[float]:
         """
@@ -583,13 +703,12 @@ class Task(BaseModel, ABC):
         return self.objective_function(solution)
 
     def transform_solution(self, x: list[float | int]) -> dict[str, Any]:
-        if len(x) == 1:
-            return {self.variables[0].name: self.variables[0].decode(x[0])}
         counter = 0
         solution = {}
         for v in self.variables:
             temp = x[counter:(counter + v.size())]
-            solution[v.name] = v.decode(temp if len(temp) > 1 else temp[0])
+            # variables spanning several dimensions decode a list, the other ones a scalar
+            solution[v.name] = v.decode(temp if v.has_children() or v.size() > 1 else temp[0])
             counter += v.size()
         return solution
 

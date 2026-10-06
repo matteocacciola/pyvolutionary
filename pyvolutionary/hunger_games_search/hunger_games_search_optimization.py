@@ -31,7 +31,7 @@ class HungerGamesSearchOptimization(OptimizationAbstract):
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None, hunger: float | None = None) -> Individual:
         agent = super()._init_agent(position=position)
-        individual = Individual(**agent.model_dump())
+        individual = Individual(**agent.__dict__)
         if hunger is not None:
             individual.hunger = hunger
         return individual

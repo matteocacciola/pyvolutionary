@@ -49,7 +49,7 @@ class NuclearReactionOptimization(OptimizationAbstract):
                 offset = 0
             xichma = (np.log(epoch) * 1.0 / epoch) * np.abs(np.subtract(pos_rand_agent, g_best_position))
             gauss = np.array([np.random.normal(pos_new[j], xichma[j]) for j in range(n_dims)])
-            agent = NuclearReaction(**self._init_agent(gauss + offset).model_dump())
+            agent = NuclearReaction(**self._init_agent(gauss + offset).__dict__)
             return self._greedy_select_agent(reaction, agent)
 
         def nfu_phase(idx: int, reaction: NuclearReaction) -> NuclearReaction:
@@ -71,7 +71,7 @@ class NuclearReactionOptimization(OptimizationAbstract):
                 ) if np.all(pos_i1 == pos_i2) else (
                     position - 0.5 * (np.sin(2 * np.pi * freq * epoch + np.pi) * f / epochs + 1) * (pos_i1 - pos_i2)
                 )
-            agent = NuclearReaction(**self._init_agent(pos_new).model_dump())
+            agent = NuclearReaction(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(reaction, agent)
         
         def fusion_phase(idx: int, reaction: NuclearReaction) -> NuclearReaction:
@@ -92,7 +92,7 @@ class NuclearReactionOptimization(OptimizationAbstract):
                 ) if np.all(pos_i1 == pos_i2) else (
                     position - 0.5 * (np.sin(2 * np.pi * freq * epoch + np.pi) * f / epochs + 1) * (pos_i1 - pos_i2)
                 )
-            agent = NuclearReaction(**self._init_agent(pos_new).model_dump())
+            agent = NuclearReaction(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(reaction, agent)
 
         xichma_u = ((math.gamma(1 + 1.5) * np.sin(np.pi * 1.5 / 2)) / (
