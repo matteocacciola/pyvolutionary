@@ -2,6 +2,7 @@ from typing import Any
 import numpy as np
 
 from ..helpers import (
+    normalize_costs,
     get_partner_index,
     roulette_wheel_indexes,
     parse_obj_doc,  # type: ignore
@@ -89,7 +90,7 @@ class BeeColonyOptimization(OptimizationAbstract):
         # based to probability, generate a neighbour point and evaluate again some food sources
         # same food source can be evaluated multiple times
         employed_costs = np.array([agent.cost for agent in self._population])
-        probabilities = employed_costs / np.sum(employed_costs)
+        probabilities = normalize_costs(employed_costs)
         self._population = [send_onlooker_bees(idx) for idx in range(0, population_size)]
 
         # abandon the food sources which have not been improved after a predefined number of trials; it means to send

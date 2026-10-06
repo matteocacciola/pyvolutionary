@@ -324,6 +324,19 @@ def average_fitness(population: list[T]) -> float:
     return np.average([agent.fitness for agent in population])
 
 
+def normalize_costs(costs: np.ndarray) -> np.ndarray:
+    """
+    Scale the costs by the magnitude of their sum, keeping their order. Dividing by the sum itself would invert the
+    order when the sum is negative (e.g. for maximization tasks), and fail when it is zero (e.g. when all the costs
+    are zero): in the latter case, the costs are returned as they are.
+    :param costs: the costs
+    :return: the scaled costs
+    :rtype: np.ndarray
+    """
+    total = np.sum(costs)
+    return costs / np.abs(total) if total != 0 else costs
+
+
 def get_partner_index(index: int, num_elements: int) -> int:
     if num_elements < 2:
         raise ValueError(f"At least two elements are needed to select a partner. Got {num_elements}")

@@ -1,4 +1,3 @@
-from itertools import chain
 from typing import Any
 import numpy as np
 
@@ -72,19 +71,13 @@ class EarthwormsOptimization(OptimizationAbstract):
             x_t1 = (cauchy_w + best_pos) / 2
             return Earthworm(**self._init_agent(x_t1).__dict__)
 
-        def find_idx_duplicates(chrome: Earthworm) -> list[int]:
-            return [jdx for jdx, c in enumerate(self._population[(idx + 1):], idx + 1) if np.array_equal(
-                chrome.position, c.position
-            )]
-
-        def find_all_duplicates(start: int) -> list[int]:
+        def find_duplicates() -> list[int]:
             """
-            For each chrome of the population, in order, the indexes (from start on) of the chromes with the same
-            position: the same result as find_idx_duplicates applied to each chrome, without comparing all the pairs.
+            The indexes of the chromes whose position equals the one of a previous chrome of the population.
             """
             positions = [tuple(chrome.position) for chrome in self._population]
             # nested positions (e.g. of permutations) are not hashable, and NaN never equals NaN in np.array_equal:
-            # in both cases, keep the pairwise comparison
+            # in both cases, compare the pairs
             try:
                 for position in positions:
                     hash(position)
@@ -92,11 +85,16 @@ class EarthwormsOptimization(OptimizationAbstract):
             except (TypeError, ValueError):
                 use_pairwise = True
             if use_pairwise:
-                return list(chain.from_iterable([find_idx_duplicates(chrome) for chrome in self._population]))
-            indexes_by_position: dict[tuple, list[int]] = {}
-            for jdx in range(start, len(positions)):
-                indexes_by_position.setdefault(positions[jdx], []).append(jdx)
-            return list(chain.from_iterable([indexes_by_position.get(position, []) for position in positions]))
+                return [jdx for jdx in range(1, len(positions)) if any(
+                    np.array_equal(self._population[i].position, self._population[jdx].position) for i in range(0, jdx)
+                )]
+            seen = set()
+            duplicates = []
+            for jdx, position in enumerate(positions):
+                if position in seen:
+                    duplicates.append(jdx)
+                seen.add(position)
+            return duplicates
 
         alpha = self._config.alpha
         beta = self.__dyn_beta
@@ -124,12 +122,12 @@ class EarthwormsOptimization(OptimizationAbstract):
         for idx in range(0, keep):
             self._population[n_chromes - idx - 1] = chrome_keep[idx].model_copy()
 
-        # clear duplicates in the population
-        duplicates = find_all_duplicates(idx + 1)
-        dimension_to_change = np.random.randint(0, dims - 1, len(duplicates))
-        for jdx in duplicates:
+        # clear duplicates in the population: one random dimension of each duplicate is re-sampled
+        duplicates = find_duplicates()
+        dimension_to_change = np.random.randint(0, dims, len(duplicates))
+        for jdx, dimension in zip(duplicates, dimension_to_change):
             position_jdx = np.array(self._population[jdx].position)
-            position_jdx[dimension_to_change[jdx]] = self._task.uniform_coordinates(dimension_to_change[jdx])
+            position_jdx[dimension] = self._task.uniform_coordinates(dimension)
             self._population[jdx] = Earthworm(**self._init_agent(position_jdx).__dict__)
 
         self.__dyn_beta *= self._config.gamma

@@ -23,6 +23,12 @@ These fixes change the results of some algorithms, even with the same seed.
   - the power of the empires is computed by scaling the costs by their largest magnitude: with negative costs (e.g.
     of maximization tasks) the weakest empires were the most likely to win, and the weights could overflow. Nothing
     changes with positive costs.
+- Earthworms Optimization re-samples only the actual duplicates of the population: each earthworm was considered a
+  duplicate of itself, so almost the whole population was altered and evaluated again at every cycle. The dimension to
+  re-sample can be any one (the last one was never chosen, and a single dimension failed).
+- Bee Colony and Biogeography-Based optimizations scale the costs by the magnitude of their sum: with negative costs
+  (e.g. of maximization tasks) the roulette wheel favoured the worst agents, and with all costs equal to zero it failed.
+  Nothing changes with positive costs.
 - Early stopping now stops when the error has not improved by at least `min_delta` for `patience` cycles. Before, it
   never stopped when the error stagnated or got worse.
 - `HyperTuner` ranks the standard deviation (lower is better) and the combined rank correctly for maximization tasks.
@@ -30,6 +36,11 @@ These fixes change the results of some algorithms, even with the same seed.
 ### Fixes
 
 - `optimize()` can be called several times on the same instance: the cycle counter and the error history are reset.
+- Coral Reef, Fox, Imperialist Competitive and Success History Intelligent optimizations reset their state at every
+  run: optimizing again with the same instance gave different results (Imperialist Competitive kept the empires of the
+  previous run). Coral Reef can be created without a configuration, as the other algorithms.
+- African Vulture and Fox optimizations no longer produce NaN positions (a division by zero, and `inf * 0` at the first
+  cycle), which failed with discrete variables; Ficks Law no longer fails when a cost is zero.
 - Bee Colony and Firefly Swarm optimizations no longer alter their configuration. Bee Colony halved
   `population_size` at every run, so a reused configuration ended up with an empty colony (or hung with a single bee).
 - In `process` mode, each worker is seeded independently: workers generated identical agents.

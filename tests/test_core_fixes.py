@@ -4,6 +4,9 @@ import numpy as np
 from pyvolutionary import (
     BeeColonyOptimization,
     BeeColonyOptimizationConfig,
+    CoralReefOptimization,
+    EarthwormsOptimization,
+    EarthwormsOptimizationConfig,
     FireflySwarmOptimization,
     FireflySwarmOptimizationConfig,
     ContinuousMultiVariable,
@@ -20,7 +23,9 @@ from pyvolutionary import (
     WaterCycleOptimizationConfig,
 )
 from pyvolutionary.enums import ModeSolver
-from pyvolutionary.helpers import best_agent_formatted, distances, get_levy_flight_step, random_selection
+from pyvolutionary.helpers import (
+    best_agent_formatted, distances, get_levy_flight_step, normalize_costs, random_selection
+)
 from pyvolutionary.models import Agent
 from tests.fixtures import Rastrigin
 
@@ -263,3 +268,24 @@ def test_imperialist_power_weights():
         weights = optimizer._power_weights(np.array(costs))
         assert np.all(np.isfinite(weights))
         assert np.argmax(weights) == np.argmin(costs)
+
+
+def test_coral_reef_without_configuration():
+    # as the other algorithms, it can be created without a configuration (e.g. for the HyperTuner)
+    CoralReefOptimization()
+
+
+def test_earthworms_with_one_dimension():
+    task = Sphere(variables=[ContinuousMultiVariable(name="x", lower_bounds=[-10], upper_bounds=[10])], seed=0)
+    config = EarthwormsOptimizationConfig(
+        population_size=10, fitness_error=None, max_cycles=5, alpha=0.98, beta=0.9, gamma=0.9, keep=2, prob_mutate=0.05,
+        prob_crossover=0.8,
+    )
+    assert len(EarthwormsOptimization(config).optimize(task).evolution) == 6
+
+
+def test_normalize_costs_keeps_the_order():
+    for costs in ([1.0, 2.0, 3.0], [-1.0, -2.0, -3.0], [-2.0, 1.0, 1.0], [0.0, 0.0, 0.0]):
+        normalized = normalize_costs(np.array(costs))
+        assert np.all(np.isfinite(normalized))
+        assert np.array_equal(np.argsort(normalized, kind="stable"), np.argsort(costs, kind="stable"))

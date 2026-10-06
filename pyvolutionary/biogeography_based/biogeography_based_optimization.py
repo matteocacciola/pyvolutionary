@@ -2,6 +2,7 @@ from typing import Any
 import numpy as np
 
 from ..helpers import (
+    normalize_costs,
     best_agents,
     roulette_wheel_indexes,
     parse_obj_doc,  # type: ignore
@@ -55,8 +56,7 @@ class BiogeographyBasedOptimization(OptimizationAbstract):
         pop_elites = best_agents(self._population, n_best=self._config.n_elites)
 
         # pick a position from which to emigrate (roulette wheel selection)
-        costs = np.array([agent.cost for agent in self._population])
-        costs /= np.sum(costs)
+        costs = normalize_costs(np.array([agent.cost for agent in self._population]))
 
         self._population = [evolve(idx, agent) for idx, agent in enumerate(self._population)]
 

@@ -35,12 +35,16 @@ class AfricanVultureOptimization(OptimizationAbstract):
             best_x1 = np.array(best_list[0].position)
             best_x2 = np.array(best_list[1].position)
             if np.random.random() < p2:
-                A = best_x1 - ((best_x1 * position) / (best_x1 - position ** 2)) * F
-                B = best_x2 - ((best_x2 * position) / (best_x2 - position ** 2)) * F
+                A = best_x1 - safe_ratio(best_x1 * position, best_x1 - position ** 2) * F
+                B = best_x2 - safe_ratio(best_x2 * position, best_x2 - position ** 2) * F
                 return (A + B) / 2
             return rand_pos - np.abs(rand_pos - position) * F * get_levy_flight_step(
                 beta=1.5, multiplier=1., size=dim, case=-1
             )
+
+        def safe_ratio(numerator: np.ndarray, denominator: np.ndarray) -> np.ndarray:
+            # the ratio is zero where the denominator is zero (it was NaN or infinite, e.g. with best_x = position = 0)
+            return np.divide(numerator, denominator, out=np.zeros_like(numerator, dtype=float), where=denominator != 0)
 
         def exploration_position_phase2(rand_pos: np.ndarray, position: np.ndarray) -> np.ndarray:
             if np.random.random() < p3:

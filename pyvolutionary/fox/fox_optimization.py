@@ -26,6 +26,11 @@ class FoxOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = FoxOptimizationConfig(**parameters)
 
+    def before_initialization(self):
+        # the minimum time is updated during the run: reset it, so that the same instance can be used several times.
+        # It starts from a large finite value: with inf, inf * a is NaN at the first cycle (a = 0)
+        self.__mint = 1e10
+
     def optimization_step(self):
         def evolve(fox: Fox) -> Fox:
             if np.random.random() >= 0.5:

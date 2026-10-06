@@ -38,6 +38,9 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
         self._config = ImperialistCompetitiveOptimizationConfig(**parameters)
 
     def _init_population(self):
+        # the empires of a previous run are discarded
+        self.__empires = []
+
         # Create countries
         k = self._config.number_of_countries
         countries = []

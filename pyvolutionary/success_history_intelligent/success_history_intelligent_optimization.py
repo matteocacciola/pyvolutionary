@@ -30,6 +30,10 @@ class SuccessHistoryIntelligentOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = SuccessHistoryIntelligentOptimizationConfig(**parameters)
 
+    def before_initialization(self):
+        # the coefficient decays during the run: reset it, so that the same instance can be used several times
+        self.__a = 1.5
+
     def optimization_step(self):
         def evolve(solution: Solution) -> Solution:
             pos = np.array(solution.position)

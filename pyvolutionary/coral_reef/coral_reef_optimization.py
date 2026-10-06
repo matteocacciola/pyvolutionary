@@ -25,7 +25,7 @@ class CoralReefOptimization(OptimizationAbstract):
     """
     def __init__(self, config: CoralReefOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
-        _, self.__G1 = self._config.gamma
+        self.__G1: float | None = None
         self.__alpha: float | None = None
         self.__gamma: float | None = None
         self.__num_occupied: int | None = None
@@ -38,6 +38,9 @@ class CoralReefOptimization(OptimizationAbstract):
         self._config = CoralReefOptimizationConfig(**parameters)
 
     def before_initialization(self):
+        # the state of the run is reset, so that the same instance can be used for several optimizations
+        _, self.__G1 = self._config.gamma
+        self.__dyn_Pd = 0
         self.__alpha = 10 * self._config.Pd / self._config.max_cycles
         self.__gamma = 10 * (self._config.gamma[1] - self._config.gamma[0]) / self._config.max_cycles
         self.__num_occupied = int(self._config.population_size / (1 + self._config.po))
