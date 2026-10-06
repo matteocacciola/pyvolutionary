@@ -463,6 +463,26 @@ def get_pool_results(executors: list[parallel.Future]) -> list:
     return [executor.result() for executor in executors]
 
 
+def split_in_clusters(population: list[T], n_clusters: int) -> list[list[T]]:
+    """
+    Split the population in (at most) n_clusters clusters of consecutive agents, whose sizes differ by one at most: all
+    the agents belong to a cluster, also when the size of the population is not a multiple of n_clusters (with equal
+    sizes, the clusters are the same as consecutive groups of population_size / n_clusters agents).
+    :param population: the population
+    :param n_clusters: the number of clusters
+    :return: the clusters (copies of the agents)
+    :rtype: list[list[T]]
+    """
+    n_clusters = max(1, min(n_clusters, len(population)))
+    size, residual = divmod(len(population), n_clusters)
+    clusters, start = [], 0
+    for idx in range(0, n_clusters):
+        end = start + size + (1 if idx < residual else 0)
+        clusters.append([agent.model_copy() for agent in population[start:end]])
+        start = end
+    return clusters
+
+
 def find_centers(pop_groups: list[list[T]]) -> list[T]:
     return [best_agent(pop_group).model_copy() for pop_group in pop_groups]
 

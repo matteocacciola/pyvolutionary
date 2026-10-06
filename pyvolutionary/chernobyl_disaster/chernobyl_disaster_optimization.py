@@ -28,6 +28,10 @@ class ChernobylDisasterOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = ChernobylDisasterOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # the agents are guided by the three best ones
+        return 3
+
     def optimization_step(self):
         def evolve(radiation: SearchRadiation) -> SearchRadiation:
             pos = np.array(radiation.position)

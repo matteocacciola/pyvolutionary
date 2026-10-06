@@ -34,6 +34,10 @@ class BeeColonyOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = BeeColonyOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # half of the colony are food sources, and a food source needs a partner
+        return 4
+
     def _init_population(self):
         # half of the colony are employed bees, each one bound to a food source: the population is made of the food
         # sources (the configuration is not altered, so that it can be reused for further optimizations)

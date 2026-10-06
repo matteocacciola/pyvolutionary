@@ -25,6 +25,10 @@ class ForensicBasedInvestigationOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = ForensicBasedInvestigationOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # a suspect is investigated through three other suspects
+        return 4
+
     def optimization_step(self):
         def investigation_a1(idx: int, detective: Detective) -> Detective:
             pos = detective.position

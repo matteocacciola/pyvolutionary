@@ -32,7 +32,8 @@ class FireHawkOptimization(OptimizationAbstract):
         self._config = FireHawkOptimizationConfig(**parameters)
 
     def before_initialization(self):
-        self.__hn = np.random.randint(1, np.ceil(self._config.population_size / 5))
+        # number of fire hawks: at least one (with a small population, ceil(population_size / 5) may be 1)
+        self.__hn = np.random.randint(1, max(np.ceil(self._config.population_size / 5), 2))
 
     def optimization_step(self):
         def get_groups() -> dict[int, list[FireHawk]]:

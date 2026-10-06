@@ -51,6 +51,15 @@ class OptimizationAbstract(ABC, Generic[T]):
     def before_initialization(self):
         pass
 
+    def _minimum_population_size(self) -> int:
+        """
+        The minimum size of the population the algorithm can work with (e.g. an algorithm guided by the three best
+        agents needs at least three agents). The algorithms needing more than two agents override it.
+        :return: the minimum population size
+        :rtype: int
+        """
+        return 2
+
     def after_initialization(self):
         pass
 
@@ -223,6 +232,13 @@ class OptimizationAbstract(ABC, Generic[T]):
         """
         if not self._config:
             raise ValueError("Invalid configuration")
+
+        minimum_population_size = self._minimum_population_size()
+        if self._config.population_size < minimum_population_size:
+            raise ValueError(
+                f"{self.name} needs a population of at least {minimum_population_size} agents. "
+                f"Got {self._config.population_size}"
+            )
 
         np.random.seed(task.seed)
         random.seed(task.seed)

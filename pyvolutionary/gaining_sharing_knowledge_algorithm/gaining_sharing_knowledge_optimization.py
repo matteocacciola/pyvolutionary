@@ -1,7 +1,10 @@
 from typing import Any
 import numpy as np
 
-from ..helpers import parse_obj_doc  # type: ignore
+from ..helpers import (
+    sort_by_cost,
+    parse_obj_doc,  # type: ignore
+)
 from ..abstract import OptimizationAbstract
 from .models import Knowledge, GainingSharingKnowledgeOptimizationConfig
 
@@ -40,8 +43,13 @@ class GainingSharingKnowledgeOptimization(OptimizationAbstract):
             # Other case it chooses i-1, i+1
             return idx - 1, idx + 1
 
+        def random_index(low: int, high: int, excluded: set[int]) -> int:
+            # a group may be empty with a small population: draw from the whole population then
+            candidates = list(set(range(low, high)) - excluded) or list(set(range(0, pop_size)) - excluded)
+            return np.random.choice(candidates) if candidates else np.random.randint(0, pop_size)
+
         def junior_gaining_sharing_knowledge(idx: int, agent: Knowledge) -> np.ndarray:
-            rand_idx = np.random.choice(list(set(range(0, pop_size)) - {prevs[idx], idx, nexts[idx]}))
+            rand_idx = random_index(0, pop_size, {prevs[idx], idx, nexts[idx]})
             pos = np.array(agent.position)
             if np.random.uniform() > kr:
                 return pos.copy()
@@ -57,9 +65,9 @@ class GainingSharingKnowledgeOptimization(OptimizationAbstract):
             pos = np.array(agent.position)
             if np.random.uniform() > kr:
                 return pos.copy()
-            rand_best = np.random.choice(list(set(range(0, id1)) - {idx}))
-            rand_worst = np.random.choice(list(set(range(id2, pop_size)) - {idx}))
-            rand_mid = np.random.choice(list(set(range(id1, id2)) - {idx}))
+            rand_best = random_index(0, id1, {idx})
+            rand_worst = random_index(id2, pop_size, {idx})
+            rand_mid = random_index(id1, id2, {idx})
             pos_rand_best = np.array(self._population[rand_best].position)
             pos_rand_worst = np.array(self._population[rand_worst].position)
             pos_rand_mid = np.array(self._population[rand_mid].position)
@@ -75,11 +83,17 @@ class GainingSharingKnowledgeOptimization(OptimizationAbstract):
             )
             return self._greedy_select_agent(agent, Knowledge(**self._init_agent(pos).__dict__))
 
+        # the knowledge is gained by rank: the population is sorted by cost (the best first)
+        self._population = sort_by_cost(self._population)
+
         p, kf, kr, kg = self._config.p, self._config.kf, self._config.kr, self._config.kg
         pop_size = self._config.population_size
         cycle_ratio = self._current_cycle / self._config.max_cycles
 
-        prevs, nexts = zip(*[get_prev_next(i) for i in range(pop_size)])
+        # (with a very small population, the neighbours are kept inside the population)
+        prevs, nexts = zip(*[
+            tuple(min(max(n, 0), pop_size - 1) for n in get_prev_next(i)) for i in range(pop_size)
+        ])
         n_dims = self._task.space_dimension
         dd = int(n_dims * (1 - cycle_ratio) ** kg)
 

@@ -29,6 +29,10 @@ class VirusColonySearchOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = VirusColonySearchOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # the immune response involves two other viruses
+        return 3
+
     def before_initialization(self):
         self.__n_best = int(self._config.lamda * self._config.population_size)
 

@@ -30,6 +30,10 @@ class RungeKuttaOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = RungeKuttaOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # the search mechanism uses three agents different from the current one
+        return 4
+
     def optimization_step(self):
         def evolve_runge_kutta(
             idx: int, agent: Agent

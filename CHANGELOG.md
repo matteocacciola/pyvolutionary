@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.7.1
+
+### Bug fixes
+
+These fixes change the results of the algorithms involved, even with the same seed. They make small populations (e.g.
+the 8 agents used by the plugins tuning a pipeline with a few evaluations) and few dimensions work everywhere.
+
+- Every algorithm declares the minimum number of agents it needs (2 by default; e.g. 3 for Grey Wolf, Germinal Center,
+  Nuclear Reaction, 4 for Bee Colony, Energy Valley, Runge Kutta, `nsr` for Water Cycle): `optimize` raises a clear
+  `ValueError` below it, instead of failing deep inside an optimization step.
+- Brain Storm, Improved Brain Storm and Elephant Herd optimizations put every agent in a cluster (a clan) also when the
+  population size is not a multiple of the number of clusters: the agents left over were dropped, or the run failed. In
+  Brain Storm, the p3 branch no longer overwrites the cluster of the agent with the one of the random center.
+- Electromagnetic Field Optimization sorts the population before splitting it into the positive, neutral and negative
+  fields, and draws from the whole population when a field is empty (it failed with small populations).
+- Forest Optimization Algorithm: the local and global seeding changes are capped to the number of dimensions, and the
+  trees beyond the area limit all die (one of them survived).
+- Gaining Sharing Knowledge Algorithm sorts the population before the junior phase, and its random indexes never fall
+  outside the population (it failed with small populations).
+- Genetic Algorithm: the second child of a crossover was a copy of the first one, the last parent of an odd selection
+  had no partner, and the population grew beyond its size.
+- Coral Reef Optimization: the crossover of one-dimensional solutions takes the position of one of the parents (it
+  failed).
+- Spotted Hyena Optimization: the size of the cluster never exceeds the population.
+- Fire Hawk Optimization: the number of fire hawks is drawn correctly with 5 agents or fewer (it failed).
+
 ## 2.7.0
 
 ### Behaviour changes

@@ -32,6 +32,10 @@ class GreyWolfOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = GreyWolfOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # the pack is guided by the three best wolves (alpha, beta and delta)
+        return 3
+
     def after_initialization(self):
         self.__alpha_wolf, self.__beta_wolf, self.__gamma_wolf = best_agents(self._population, 3)
 

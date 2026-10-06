@@ -27,6 +27,10 @@ class GerminalCenterOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = GerminalCenterOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # the mutation mixes three cells
+        return 3
+
     def _init_agent(
         self, position: list[Any] | np.ndarray | None = None, cc: float | None = None, ls: float | None = None
     ) -> GerminalCenter:
