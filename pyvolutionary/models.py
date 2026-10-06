@@ -506,9 +506,11 @@ class Task(BaseModel, ABC):
         :return: the corrected solution
         :rtype: list[Any]
         """
-        if self._all_continuous:
-            return np.clip(np.asarray(solution, dtype=float), self._lb, self._ub).tolist()
-        return [v.correct(c) for c, v in zip(solution, self._flat_variables)]
+        # read the private attributes from the underlying dict: pydantic resolves each of them with a slow __getattr__
+        private = self.__pydantic_private__
+        if private["_all_continuous"]:
+            return np.clip(np.asarray(solution, dtype=float), private["_lb"], private["_ub"]).tolist()
+        return [v.correct(c) for c, v in zip(solution, private["_flat_variables"])]
 
     def empty_solution(self) -> list[float]:
         """
@@ -516,6 +518,10 @@ class Task(BaseModel, ABC):
         :return: the random solution
         :rtype: list[float]
         """
+        private = self.__pydantic_private__
+        if private["_all_continuous"]:
+            # one vectorized draw yields the same values as one draw per variable, in the same order
+            return np.random.uniform(private["_lb"], private["_ub"]).tolist()
         solution = [item for v in self.variables for item in (v.randomize() if v.has_children() else [v.randomize()])]
         return solution
 

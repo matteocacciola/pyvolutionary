@@ -318,12 +318,12 @@ def roulette_wheel_indexes(probabilities: np.ndarray, num: int | None = 1) -> li
     :rtype: int
     """
     final_probabilities = np.max(probabilities) - probabilities
-    k = list(set(range(0, len(probabilities))))
-    if all(final_probabilities == 0):
+    k = len(probabilities)
+    if not np.any(final_probabilities):
         return np.random.choice(k, size=num, replace=False)
 
     p = final_probabilities / np.sum(final_probabilities)
-    return np.random.choice(k, size=num, replace=len([i for i in p if i != 0]) < num, p=p)
+    return np.random.choice(k, size=num, replace=np.count_nonzero(p) < num, p=p)
 
 
 def random_selection(p: list | np.ndarray) -> int:
