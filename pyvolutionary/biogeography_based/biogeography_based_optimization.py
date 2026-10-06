@@ -45,7 +45,7 @@ class BiogeographyBasedOptimization(OptimizationAbstract):
             pos_new = np.where(condition, self._population[idx_selected].position, population.position)
             # Mutation
             pos_new = np.where(np.random.random(n_dims) < p_m, self._task.empty_solution(), pos_new)
-            agent_new = Population(**self._init_agent(pos_new).model_dump())
+            agent_new = Population(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(population, agent_new)
 
         n_dims = self._task.space_dimension

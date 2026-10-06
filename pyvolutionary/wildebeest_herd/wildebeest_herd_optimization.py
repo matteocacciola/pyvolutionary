@@ -38,13 +38,13 @@ class WildebeestHerdOptimization(OptimizationAbstract):
             local_list = [self._init_agent(
                 pos + eta * np.random.uniform() * np.array(self._task.empty_solution())
             ) for _ in range(0, n_explore_step)]
-            return Wildebeest(**best_agent(local_list).model_dump())
+            return Wildebeest(**best_agent(local_list).__dict__)
 
         def local_movement(wildebeest: Wildebeest) -> Wildebeest:
             best_local_position = np.array(get_best_local(wildebeest).position)
             agent = Wildebeest(**self._init_agent(
                 local_alpha * best_local_position + local_beta * (np.array(wildebeest.position) - best_local_position)
-            ).model_dump())
+            ).__dict__)
             return self._greedy_select_agent(wildebeest, agent)
 
         def herd_instinct(wildebeest: Wildebeest) -> Wildebeest:
@@ -54,13 +54,13 @@ class WildebeestHerdOptimization(OptimizationAbstract):
                 return wildebeest
             agent = Wildebeest(**self._init_agent(
                 global_alpha * np.array(wildebeest.position) + global_beta * np.array(picked_wildebeest.position)
-            ).model_dump())
+            ).__dict__)
             return self._greedy_select_agent(wildebeest, agent)
 
         def starvation_avoidance(wildebeest: Wildebeest) -> Wildebeest | None:
             dist_to_worst = distance(wildebeest.position, g_worst.position)
             if dist_to_worst < delta_w:
-                return Wildebeest(**self._init_agent(self._task.increase_solution(wildebeest.position)).model_dump())
+                return Wildebeest(**self._init_agent(self._task.increase_solution(wildebeest.position)).__dict__)
             return None
 
         def population_pressure(wildebeest: Wildebeest) -> Wildebeest | None:
@@ -68,12 +68,12 @@ class WildebeestHerdOptimization(OptimizationAbstract):
             if 1.0 < dist_to_best < delta_c:
                 return Wildebeest(**self._init_agent(
                     np.array(g_best.position) + self._config.eta * self._task.empty_solution()
-                ).model_dump())
+                ).__dict__)
             return None
 
         def herd_social_memory() -> list[Wildebeest]:
             return [Wildebeest(
-                **self._init_agent(np.array(g_best.position) + 0.1 * np.array(self._task.empty_solution())).model_dump()
+                **self._init_agent(np.array(g_best.position) + 0.1 * np.array(self._task.empty_solution())).__dict__
             ) for _ in range(0, n_exploit_step)]
 
         def generate_children(wildebeest: Wildebeest) -> list[Wildebeest]:

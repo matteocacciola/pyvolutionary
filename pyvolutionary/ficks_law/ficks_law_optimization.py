@@ -56,13 +56,13 @@ class FicksLawOptimization(OptimizationAbstract):
             jj = -DD * xm_factor * (xm2 - xm1) / np.linalg.norm(best_pos - pos + self.EPS)
             return Molecule(**self._init_agent(
                 best_pos + dfg * dof * np.random.random(n_dims) * (jj * best_pos - pos)
-            ).model_dump())
+            ).__dict__)
 
         def non_equilibrium_operator_2(molecule: Molecule, best_pos: np.ndarray) -> Molecule:
             pos = np.array(molecule.position)
             tt = pos + dof * (np.random.random(n_dims) * bandwidth + lb)
             pp = np.random.random(n_dims)
-            return Molecule(**self._init_agent(np.where(pp < 0.8, best_pos, np.where(pp >= 0.9, pos, tt))).model_dump())
+            return Molecule(**self._init_agent(np.where(pp < 0.8, best_pos, np.where(pp >= 0.9, pos, tt))).__dict__)
 
         def equilibrium_operator(
             molecule: Molecule, best_pos: np.ndarray, best_cost: float, xm_: np.ndarray
@@ -74,7 +74,7 @@ class FicksLawOptimization(OptimizationAbstract):
             drf = np.exp(-jj / tf)
             ms = np.exp(-best_cost / molecule.cost + self.EPS)
             qeo = dfg * drf * np.random.random(n_dims)
-            return Molecule(**self._init_agent(best_pos + qeo * pos + qeo * (ms * best_pos - pos)).model_dump())
+            return Molecule(**self._init_agent(best_pos + qeo * pos + qeo * (ms * best_pos - pos)).__dict__)
 
         def steady_state_operator(molecule: Molecule, best_pos: np.ndarray, xm_: np.ndarray) -> Molecule:
             pos = np.array(molecule.position)
@@ -84,7 +84,7 @@ class FicksLawOptimization(OptimizationAbstract):
             drf = np.exp(-jj / tf)
             ms = np.exp(-fsss / molecule.cost + self.EPS)
             qg = dfg * drf * np.random.random(n_dims)
-            return Molecule(**self._init_agent(g_best + qg * pos + qg * (ms * best_pos - pos)).model_dump())
+            return Molecule(**self._init_agent(g_best + qg * pos + qg * (ms * best_pos - pos)).__dict__)
 
         C1, C2, C3, C4, C5 = self._config.C1, self._config.C2, self._config.C3, self._config.C4, self._config.C5
         DD = self._config.DD

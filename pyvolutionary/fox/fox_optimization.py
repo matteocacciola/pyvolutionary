@@ -38,7 +38,7 @@ class FoxOptimization(OptimizationAbstract):
                 pos_new = travel_distance * jump * (c1 if np.random.random() > pp else c2)
             else:
                 pos_new = best_position + np.random.standard_normal(dim) * (self.__mint * a)
-            agent = Fox(**self._init_agent(pos_new).model_dump())
+            agent = Fox(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(fox, agent)
 
         a = 2 * (1 - (1.0 / self._current_cycle))

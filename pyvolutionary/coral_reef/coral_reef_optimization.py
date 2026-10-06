@@ -75,7 +75,7 @@ class CoralReefOptimization(OptimizationAbstract):
         selected_corals = np.random.choice(
             self.__occupied_idx_list, int(len(self.__occupied_idx_list) * self._config.Fb), replace=False
         )
-        larvae = [Coral(**self._init_agent(gaussian_mutation(self._population[idx].position)).model_dump())
+        larvae = [Coral(**self._init_agent(gaussian_mutation(self._population[idx].position)).__dict__)
                   for idx in self.__occupied_idx_list if idx not in selected_corals]
 
         # Step 1b
@@ -84,7 +84,7 @@ class CoralReefOptimization(OptimizationAbstract):
             agent = Coral(**self._init_agent(multi_point_cross(
                 self._population[selected_corals[id1]].position,
                 self._population[selected_corals[id2]].position
-            )).model_dump())
+            )).__dict__)
             larvae.append(agent)
             selected_corals = np.delete(selected_corals, [id1, id2])
         return larvae

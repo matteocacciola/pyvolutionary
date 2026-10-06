@@ -40,7 +40,7 @@ class GoldenJackalOptimization(OptimizationAbstract):
             male_position -= E * t1
             female_position -= E * t2
             pos_new = ((male_position + female_position) / 2).tolist()
-            return self._greedy_select_agent(jackal, GoldenJackal(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(jackal, GoldenJackal(**self._init_agent(pos_new).__dict__))
 
         n_dims = self._task.space_dimension
         pop_size = self._config.population_size

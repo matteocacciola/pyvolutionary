@@ -52,7 +52,7 @@ class HarmonySearchOptimization(OptimizationAbstract):
             pos_new = np.where(np.random.random(dim) < pitch_adjusting_rate, pos_new + delta, pos_new)
 
             # Create New Harmony
-            return Harmony(**self._init_agent(pos_new).model_dump())
+            return Harmony(**self._init_agent(pos_new).__dict__)
 
         delta = self.__dyn_fw * self._task.empty_solution()
         best_pos = self._best_agent.position

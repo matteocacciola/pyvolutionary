@@ -50,14 +50,14 @@ class ChaosGameOptimization(OptimizationAbstract):
             selected_alpha = alpha[np.random.randint(0, 4, size=3), :]
             new_seed_1 = Seed(**self._init_agent(
                 pos + selected_alpha[0] * (I[0] * g_best_pos - I[1] * mean_group_pos)
-            ).model_dump())
+            ).__dict__)
             new_seed_2 = Seed(**self._init_agent(
                 g_best_pos + selected_alpha[1] * (I[2] * mean_group_pos - I[3] * pos)
-            ).model_dump())
+            ).__dict__)
             new_seed_3 = Seed(**self._init_agent(
                 mean_group_pos + selected_alpha[2] * (I[4] * g_best_pos - I[5] * pos)
-            ).model_dump())
-            new_seed_4 = Seed(**self._init_agent().model_dump())
+            ).__dict__)
+            new_seed_4 = Seed(**self._init_agent().__dict__)
             return [new_seed_1, new_seed_2, new_seed_3, new_seed_4]
 
         n_dims = self._task.space_dimension

@@ -51,7 +51,7 @@ class WhalesOptimization(OptimizationAbstract):
                 distance_to_leader = np.abs(leader_position - position)  # Eq. (2.5)
                 position = distance_to_leader * np.exp(l) * np.cos(l * 2 * np.pi) + leader_position
 
-            agent = Whale(**self._init_agent(position).model_dump())
+            agent = Whale(**self._init_agent(position).__dict__)
             return self._greedy_select_agent(whale, agent)
 
         # a decreases linearly from 2 to 0 in Eq. (2.3)

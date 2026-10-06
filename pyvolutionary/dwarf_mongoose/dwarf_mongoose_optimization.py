@@ -29,7 +29,7 @@ class DwarfMongooseOptimization(OptimizationAbstract):
         self._config = DwarfMongooseOptimizationConfig(**parameters)
 
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> DwarfMongoose:
-        return DwarfMongoose(**super()._init_agent(position).model_dump())
+        return DwarfMongoose(**super()._init_agent(position).__dict__)
 
     def optimization_step(self):
         def foraging(idx: int, agent: DwarfMongoose) -> DwarfMongoose:

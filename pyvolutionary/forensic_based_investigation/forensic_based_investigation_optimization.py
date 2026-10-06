@@ -38,7 +38,7 @@ class ForensicBasedInvestigationOptimization(OptimizationAbstract):
             pos_a[n_change] = pos[n_change] + (np.random.normal() - 0.5) * (
                 pos[n_change] - (pos_nb1[n_change] + pos_nb2[n_change]) / 2
             )
-            return self._greedy_select_agent(detective, Detective(**self._init_agent(pos_a).model_dump()))
+            return self._greedy_select_agent(detective, Detective(**self._init_agent(pos_a).__dict__))
 
         def investigation_a2(idx: int, detective: Detective) -> Detective:
             pos = np.array(detective.position)
@@ -53,12 +53,12 @@ class ForensicBasedInvestigationOptimization(OptimizationAbstract):
                 best_pos + pos_r1 + np.random.uniform() * (pos_r2 - pos_r3),
                 pos
             )
-            return self._greedy_select_agent(detective, Detective(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(detective, Detective(**self._init_agent(pos_new).__dict__))
 
         def pursuing_b1(detective: Detective) -> Detective:
             pos = np.array(detective.position)
             pos_new = np.random.uniform() * pos + np.random.uniform() * (best_pos - pos)
-            return self._greedy_select_agent(detective, Detective(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(detective, Detective(**self._init_agent(pos_new).__dict__))
         
         def pursuing_b2(idx: int, detective: Detective) -> Detective:
             pos = np.array(detective.position)
@@ -72,7 +72,7 @@ class ForensicBasedInvestigationOptimization(OptimizationAbstract):
                 pos_b = pos_rr + r * (pos_rr - pos) + r1 * (best_pos - pos_rr)
             else:
                 pos_b = pos + r * (pos - pos_rr) + r1 * (best_pos - pos)
-            return self._greedy_select_agent(detective, Detective(**self._init_agent(pos_b).model_dump()))
+            return self._greedy_select_agent(detective, Detective(**self._init_agent(pos_b).__dict__))
 
         n_dims = self._task.space_dimension
         pop_size = self._config.population_size

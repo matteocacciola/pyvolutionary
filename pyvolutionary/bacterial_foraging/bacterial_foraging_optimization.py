@@ -36,7 +36,7 @@ class BacterialForagingOptimization(OptimizationAbstract):
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Cell:
         agent = super()._init_agent(position)
-        return Cell(**agent.model_dump(), local_best=agent.position.copy(), local_cost=agent.cost)
+        return Cell(**agent.__dict__, local_best=agent.position.copy(), local_cost=agent.cost)
 
     def __clean_population__(self):
         """

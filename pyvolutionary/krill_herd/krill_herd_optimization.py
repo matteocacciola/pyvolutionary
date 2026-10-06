@@ -3,6 +3,8 @@ import numpy as np
 
 from ..helpers import (
     distance,
+    per_row,
+    squared_norms,
     special_agents,
     parse_obj_doc,  # type: ignore
 )
@@ -47,7 +49,7 @@ class KrillHerdOptimization(OptimizationAbstract):
         zeros = np.zeros(self._task.space_dimension).tolist()
 
         return Krill(
-            **agent.model_dump(),
+            **agent.__dict__,
             induced_speed=induced_speed if induced_speed is not None else zeros,
             foraging_speed=foraging_speed if foraging_speed is not None else zeros,
         )
@@ -73,7 +75,7 @@ class KrillHerdOptimization(OptimizationAbstract):
             neighbours_k = (krill.cost - costs[neighbours_idx] + self.EPS) / (g_worst.cost - g_best.cost + self.EPS)
             neighbours_x = (
                 (positions[neighbours_idx] - positions[idx]) + self.EPS
-            ) / (distances_matrix[idx, neighbours_idx] + self.EPS)[:, np.newaxis]
+            ) / per_row(distances_matrix[idx, neighbours_idx] + self.EPS, positions)
             alpha_l = np.sum(neighbours_k * neighbours_x.T)
             alpha_t = 2 * (1 + np.random.random() * (current_cycle + 1) / max_cycles)
             return n_max * (alpha_l + alpha_t) + w_neighbour * krill.induced_speed
@@ -127,7 +129,7 @@ class KrillHerdOptimization(OptimizationAbstract):
         positions = np.array([krill.position for krill in self._population])
         # distances between each pair of krills (Euclidean, as computed by the distance helper)
         distances_matrix = np.array([
-            np.sqrt(np.sum((positions - position) ** 2, axis=1)) for position in positions
+            np.sqrt(squared_norms(positions - position)) for position in positions
         ])
         pos_food = np.sum(
             np.array([np.array(krill.position) / krill.cost for krill in self._population]),

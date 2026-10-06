@@ -37,7 +37,7 @@ class InvasiveWeedOptimization(OptimizationAbstract):
             s = min(int(np.ceil(seed_min + (seed_max - seed_min) * ratio)), int(np.sqrt(pop_size)))
             return [InvasiveWeed(**self._init_agent(
                 np.array(weed.position) + sigma * np.random.normal(0, 1, n_dims)
-            ).model_dump()) for _ in range(0, s)]
+            ).__dict__) for _ in range(0, s)]
 
         # get best and worst Invasive Weeds
         (best, ), (worst, ) = special_agents(self._population, n_best=1, n_worst=1)

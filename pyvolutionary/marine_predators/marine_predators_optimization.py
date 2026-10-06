@@ -53,13 +53,13 @@ class MarinePredatorsOptimization(OptimizationAbstract):
             if np.random.random() < FADS:
                 u = np.where(np.random.random(n_dims) < FADS, 1, 0)
                 pos_new += CF * (lb + np.random.random(n_dims) * bandwidth) * u
-                return self._greedy_select_agent(predator, MarinePredator(**self._init_agent(pos_new).model_dump()))
+                return self._greedy_select_agent(predator, MarinePredator(**self._init_agent(pos_new).__dict__))
             r = np.random.random()
             step_size = (FADS * (1 - r) + r) * (
                 np.array(self._population[per1[idx]].position) - np.array(self._population[per2[idx]].position)
             )
             pos_new += step_size
-            return self._greedy_select_agent(predator, MarinePredator(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(predator, MarinePredator(**self._init_agent(pos_new).__dict__))
 
         epoch = self._current_cycle
         epochs = self._config.max_cycles

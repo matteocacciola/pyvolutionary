@@ -44,7 +44,7 @@ class GreyWolfOptimization(OptimizationAbstract):
             x2 = np.array(self.__beta_wolf.position) - a2 * np.abs(c2 * np.array(self.__beta_wolf.position) - pos)
             x3 = np.array(self.__gamma_wolf.position) - a3 * np.abs(c3 * np.array(self.__gamma_wolf.position) - pos)
             # greedy selection
-            return self._greedy_select_agent(wolf, GreyWolf(**self._init_agent((x1 + x2 + x3) / 3).model_dump()))
+            return self._greedy_select_agent(wolf, GreyWolf(**self._init_agent((x1 + x2 + x3) / 3).__dict__))
 
         # linearly decreased from 2 to 0
         a = 2 * (1 - self._current_cycle / self._config.max_cycles)

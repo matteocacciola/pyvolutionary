@@ -32,7 +32,7 @@ class WarStrategyOptimization(OptimizationAbstract):
         self, position: list[Any] | np.ndarray | None = None, wl: float | None = None, wg: float | None = None
     ) -> Soldier:
         agent = super()._init_agent(position=position)
-        return Soldier(**agent.model_dump(), wl=wl, wg=wg)
+        return Soldier(**agent.__dict__, wl=wl, wg=wg)
 
     def optimization_step(self):
         def evolve(idx: int, soldier: Soldier) -> Soldier:

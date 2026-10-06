@@ -2,6 +2,8 @@ from typing import Any
 import numpy as np
 
 from ..helpers import (
+    per_row,
+    squared_norms,
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
@@ -55,16 +57,16 @@ class GrasshopperOptimization(OptimizationAbstract):
             """
             # vectorized over the grasshoppers of the population: distances and versers of Eq. (2.1)
             diff = np.array(position) - positions
-            dist = np.sqrt(np.sum(diff ** 2, axis=1))
-            versers = diff / (dist + np.finfo(float).eps)[:, np.newaxis]
-            return np.sum(ran * f(2 + np.remainder(dist, 2))[:, np.newaxis] * versers, axis=0)
+            dist = np.sqrt(squared_norms(diff))
+            versers = diff / per_row(dist + np.finfo(float).eps, diff)
+            return np.sum(ran * per_row(f(2 + np.remainder(dist, 2)), diff) * versers, axis=0)
 
         def evolve(grasshopper: Grasshopper) -> Grasshopper:
             sum_grass = s_function(grasshopper.position)
             # Eq. (2.7)
             agent = Grasshopper(**self._init_agent(
                 c * np.random.normal(0, 1, self._task.space_dimension) * sum_grass + best_pos
-            ).model_dump())
+            ).__dict__)
             return self._greedy_select_agent(agent, grasshopper)
 
         # Eq.(2.8)

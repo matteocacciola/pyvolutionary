@@ -41,12 +41,12 @@ class ParticleSwarmOptimization(OptimizationAbstract):
         agent = super()._init_agent(position=position)
 
         if velocity is None:
-            return Particle(**agent.model_dump(), velocity=np.zeros(self._task.space_dimension).tolist())
+            return Particle(**agent.__dict__, velocity=np.zeros(self._task.space_dimension).tolist())
 
         velocity = np.where(
             self._task.continuous_mask, np.clip(velocity, -self.__v, self.__v), velocity
         ).tolist()
-        return Particle(**agent.model_dump(), velocity=velocity)
+        return Particle(**agent.__dict__, velocity=velocity)
 
     def after_initialization(self):
         self.__pbest = self._population.copy()

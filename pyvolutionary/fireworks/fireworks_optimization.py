@@ -50,14 +50,14 @@ class FireworksOptimization(OptimizationAbstract):
             list_idx = np.random.choice(n_dims, round(np.random.uniform() * n_dims), replace=False)
             # one uniform draw per dimension, applied only to the selected dimensions
             pos_new = np.array(firework.position) + selected_mask(list_idx) * Ai * np.random.uniform(-1, 1, n_dims)
-            return Firework(**self._init_agent(pos_new).model_dump())
+            return Firework(**self._init_agent(pos_new).__dict__)
 
         def get_subsparks() -> Firework:
             idx = np.random.randint(0, pop_size)
             list_idx = np.random.choice(n_dims, round(np.random.uniform() * n_dims), replace=False)
             # Gaussian explosion: one normal draw per dimension, applied only to the selected dimensions
             pos_new = np.array(self._population[idx].position) + selected_mask(list_idx) * np.random.normal(0, 1, n_dims)
-            return Firework(**self._init_agent(pos_new).model_dump())
+            return Firework(**self._init_agent(pos_new).__dict__)
 
         def selected_mask(list_idx: np.ndarray) -> np.ndarray:
             mask = np.zeros(n_dims, dtype=int)

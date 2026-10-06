@@ -57,6 +57,6 @@ class AntColonyOptimization(OptimizationAbstract):
         # Generate new ants
         new_ants = [Ant(**self._init_agent(
             list(map(generate_coordinate, range(0, self._task.space_dimension)))
-        ).model_dump()) for _ in range(0, self._config.archive_size)]
+        ).__dict__) for _ in range(0, self._config.archive_size)]
 
         self._extend_and_trim_population(new_ants)

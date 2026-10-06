@@ -75,7 +75,7 @@ class WaterCycleOptimization(OptimizationAbstract):
         def evolve_stream(idx: int, stream: Stream) -> Stream:
             pos = np.array(stream.position)
             pos_new = pos + np.random.uniform() * wc * (np.array(self.__pop_best[idx].position) - pos)
-            return Stream(**self._init_agent(pos_new).model_dump())
+            return Stream(**self._init_agent(pos_new).__dict__)
 
         nsr = self._config.nsr
         wc = self._config.wc
@@ -94,7 +94,7 @@ class WaterCycleOptimization(OptimizationAbstract):
             best_agent_pos, self.__pop_best[idx].position
         ) < self.__ecc or np.random.random() < 0.1]
         for idx in evaporation_indexes:
-            pop_current_best = sort_by_cost(self.__streams[idx] + [Stream(**self._init_agent().model_dump())])
+            pop_current_best = sort_by_cost(self.__streams[idx] + [Stream(**self._init_agent().__dict__)])
             self.__pop_best[idx] = pop_current_best.pop(0)
             self.__streams[idx] = pop_current_best
 

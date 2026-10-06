@@ -66,7 +66,7 @@ class AfricanVultureOptimization(OptimizationAbstract):
             else:  # Exploitation Phase 2
                 pos_new = exploration_position_phase2(rand_pos, position)
             return self._greedy_select_agent(
-                vulture, AfricanVulture(**self._init_agent(pos_new).model_dump())
+                vulture, AfricanVulture(**self._init_agent(pos_new).__dict__)
             )
 
         cycle_ratio = self._current_cycle / self._config.max_cycles

@@ -57,7 +57,7 @@ class HenryGasSolubilityOptimization(OptimizationAbstract):
             pos_new = pos + F * np.random.uniform() * gama * (p_best_pos - pos) + (
                 F * np.random.uniform() * alpha * (S_ij * best_pos - pos)
             )
-            return self._greedy_select_agent(element, Gas(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(element, Gas(**self._init_agent(pos_new).__dict__))
 
         pop_size = len(self._population)
         cycle_ratio = self._current_cycle / self._config.max_cycles
@@ -75,6 +75,6 @@ class HenryGasSolubilityOptimization(OptimizationAbstract):
 
         # Update the position of the worst agents using Eq. 12
         self._population = [self._greedy_select_agent(
-            element, Gas(**self._init_agent().model_dump())
+            element, Gas(**self._init_agent().__dict__)
         ) if idx in pop_idx else element for idx, element in enumerate(self._population)]
         self.after_initialization()

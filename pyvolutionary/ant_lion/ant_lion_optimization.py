@@ -60,7 +60,7 @@ class AntLionOptimization(OptimizationAbstract):
             # RE is the random walk around the elite (the best ant lion so far)
             RE = random_walk_ant_lion(g_best_pos, idx)
             pos_new = (RA + RE) / 2  # Equation(2.13) in the paper
-            return AntLion(**self._init_agent(pos_new).model_dump())
+            return AntLion(**self._init_agent(pos_new).__dict__)
 
         cycle = self._current_cycle
         max_cycles = self._config.max_cycles

@@ -32,7 +32,7 @@ class GerminalCenterOptimization(OptimizationAbstract):
         self, position: list[Any] | np.ndarray | None = None, cc: float | None = None, ls: float | None = None
     ) -> GerminalCenter:
         agent = super()._init_agent(position=position)
-        return GerminalCenter(**agent.model_dump(), cell_counter=cc, life_signal=ls)
+        return GerminalCenter(**agent.__dict__, cell_counter=cc, life_signal=ls)
 
     def optimization_step(self):
         def dark_zone(center: GerminalCenter) -> GerminalCenter:

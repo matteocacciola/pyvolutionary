@@ -33,7 +33,7 @@ class SwarmHillClimbingOptimization(OptimizationAbstract):
             pos = np.array(climber.position)
             c_ss = ss[idx]
             best_local = best_agent([Climber(
-                **self._init_agent(pos + np.random.normal(0, 1, n_dims) * c_ss).model_dump()
+                **self._init_agent(pos + np.random.normal(0, 1, n_dims) * c_ss).__dict__
             ) for _ in range(0, neighbour_size)])
             return self._greedy_select_agent(climber, best_local)
         

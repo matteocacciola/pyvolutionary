@@ -43,11 +43,11 @@ class SiberianTigerOptimization(OptimizationAbstract):
             sf_res = sf(siberian_tiger)
             r1 = np.random.randint(1, 3)
             pos_new = pos + np.random.random() * (sf_res - r1 * pos)  # Eq. 5
-            agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
+            agent = SiberianTiger(**self._init_agent(pos_new).__dict__)
             siberian_tiger = self._greedy_select_agent(siberian_tiger, agent)
             # phase 2: exploitation
             pos_new = self._task.increase_solution(siberian_tiger.position, current_cycle)  # Eq. 7
-            agent = SiberianTiger(**self._init_agent(pos_new).model_dump())
+            agent = SiberianTiger(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(siberian_tiger, agent)
 
         current_cycle = self._current_cycle

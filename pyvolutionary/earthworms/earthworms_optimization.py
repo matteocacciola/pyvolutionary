@@ -60,7 +60,7 @@ class EarthwormsOptimization(OptimizationAbstract):
                 x_child = (
                     r * np.array(self._population[idx2].position) + (1 - r) * np.array(self._population[idx1].position)
                 )
-            return Earthworm(**self._init_agent(beta * np.array(x_t1) + (1 - beta) * np.array(x_child)).model_dump())
+            return Earthworm(**self._init_agent(beta * np.array(x_t1) + (1 - beta) * np.array(x_child)).__dict__)
 
         def cauchy_mutation() -> Earthworm:
             """
@@ -70,7 +70,7 @@ class EarthwormsOptimization(OptimizationAbstract):
             """
             cauchy_w = np.where(np.random.rand() < self._config.prob_mutate, x_mean, best_pos)
             x_t1 = (cauchy_w + best_pos) / 2
-            return Earthworm(**self._init_agent(x_t1).model_dump())
+            return Earthworm(**self._init_agent(x_t1).__dict__)
 
         def find_idx_duplicates(chrome: Earthworm) -> list[int]:
             return [jdx for jdx, c in enumerate(self._population[(idx + 1):], idx + 1) if np.array_equal(
@@ -83,8 +83,15 @@ class EarthwormsOptimization(OptimizationAbstract):
             position: the same result as find_idx_duplicates applied to each chrome, without comparing all the pairs.
             """
             positions = [tuple(chrome.position) for chrome in self._population]
-            if np.isnan(np.array(positions, dtype=float)).any():
-                # NaN never equals NaN in np.array_equal: keep the pairwise comparison
+            # nested positions (e.g. of permutations) are not hashable, and NaN never equals NaN in np.array_equal:
+            # in both cases, keep the pairwise comparison
+            try:
+                for position in positions:
+                    hash(position)
+                use_pairwise = np.isnan(np.array(positions, dtype=float)).any()
+            except (TypeError, ValueError):
+                use_pairwise = True
+            if use_pairwise:
                 return list(chain.from_iterable([find_idx_duplicates(chrome) for chrome in self._population]))
             indexes_by_position: dict[tuple, list[int]] = {}
             for jdx in range(start, len(positions)):
@@ -123,6 +130,6 @@ class EarthwormsOptimization(OptimizationAbstract):
         for jdx in duplicates:
             position_jdx = np.array(self._population[jdx].position)
             position_jdx[dimension_to_change[jdx]] = self._task.uniform_coordinates(dimension_to_change[jdx])
-            self._population[jdx] = Earthworm(**self._init_agent(position_jdx).model_dump())
+            self._population[jdx] = Earthworm(**self._init_agent(position_jdx).__dict__)
 
         self.__dyn_beta *= self._config.gamma

@@ -35,7 +35,7 @@ class SineCosineAlgorithmOptimization(OptimizationAbstract):
             pos_new1 = pos + r1 * np.sin(r2) * np.abs(r3 * best_pos - pos)
             pos_new2 = pos + r1 * np.cos(r2) * np.abs(r3 * best_pos - pos)
             pos_new = np.where(np.random.random(n_dims) < 0.5, pos_new1, pos_new2)
-            return self._greedy_select_agent(Candidate(**self._init_agent(pos_new).model_dump()), candidate)
+            return self._greedy_select_agent(Candidate(**self._init_agent(pos_new).__dict__), candidate)
 
         # Eq 3.4, r1 decreases linearly from "a" to 0
         r1 = 2.0 - (self._current_cycle + 1) * (2.0 / self._config.max_cycles)

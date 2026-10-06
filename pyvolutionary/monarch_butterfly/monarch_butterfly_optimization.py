@@ -51,7 +51,7 @@ class MonarchButterflyOptimization(OptimizationAbstract):
         pop_indices = np.round(n_values * np.random.random(size=self.__np1) + 0.5).astype(int).tolist()
 
         pop1 = [
-            MonarchButterfly(**self._init_agent(self._population[idx].position).model_dump()) for idx in pop_indices
+            MonarchButterfly(**self._init_agent(self._population[idx].position).__dict__) for idx in pop_indices
         ]
 
         # apply the adjusting operator to the worst habitats of the current generation
@@ -67,7 +67,7 @@ class MonarchButterflyOptimization(OptimizationAbstract):
         positions = [self._best_agent.position if idx == -1 else (
             self._population[idx].position + scale * (delta_x - 0.5) * int(np.random.uniform(0.0, 1.0) > self.__bar)
         ) for idx in indices]
-        pop2 = [MonarchButterfly(**self._init_agent(position).model_dump()) for position in positions]
+        pop2 = [MonarchButterfly(**self._init_agent(position).__dict__) for position in positions]
 
         # apply the elitism operator
         self._population = sort_and_trim(pop1 + pop2, self._config.population_size - self._config.keep)

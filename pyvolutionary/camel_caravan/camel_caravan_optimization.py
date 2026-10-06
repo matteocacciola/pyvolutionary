@@ -37,7 +37,7 @@ class CamelCaravanOptimization(OptimizationAbstract):
         agent = super()._init_agent(position=position)
 
         return Camel(
-            **agent.model_dump(),
+            **agent.__dict__,
             endurance=endurance if endurance is not None else self._config.endurance,
             supply=supply if supply is not None else self._config.supply,
             temperature=np.random.uniform(*self._config.temperatures),

@@ -38,7 +38,7 @@ class CuckooSearchOptimization(OptimizationAbstract):
             pos = np.array(cuckoo.position)
             new_agent = Cuckoo(**self._init_agent(
                 pos + 1.0 / np.sqrt(epoch) * np.sign(np.random.random() - 0.5) * levy_step * (pos - best_pos)
-            ).model_dump())
+            ).__dict__)
             return self._greedy_select_agent(new_agent, cuckoo)
 
         epoch = self._current_cycle

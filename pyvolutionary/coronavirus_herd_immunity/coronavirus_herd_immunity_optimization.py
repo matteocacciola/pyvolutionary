@@ -32,7 +32,7 @@ class CoronavirusHerdImmunityOptimization(OptimizationAbstract):
     ) -> Patient:
         agent = super()._init_agent(position)
 
-        return Patient(**agent.model_dump(), status=status, age=age)
+        return Patient(**agent.__dict__, status=status, age=age)
 
     def after_initialization(self):
         infected = int(self._config.C0 * self._config.population_size)

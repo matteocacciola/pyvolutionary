@@ -44,7 +44,7 @@ class ElectromagneticFieldOptimization(OptimizationAbstract):
             if np.random.random() < r_rate:
                 pos_new[np.random.randint(0, n_dims)] = self._task.uniform_coordinates(np.random.randint(0, n_dims))
             # checking whether the generated number is inside boundary or not
-            agent = Electromagnet(**self._init_agent(pos_new).model_dump())
+            agent = Electromagnet(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(electromagnet, agent)
 
         pop_size = self._config.population_size

@@ -55,13 +55,13 @@ class FireHawkOptimization(OptimizationAbstract):
         def move_near(agent: FireHawk, near: FireHawk) -> FireHawk:
             return (FireHawk(**self._init_agent(
                 self._task.correct_solution(np.array(agent.position) + Ir[0] * GB - Ir[1] * np.array(near.position))
-            ).model_dump()))
+            ).__dict__))
 
         def move_firehawk_in_group(agent: FireHawk, to: FireHawk, sub: np.ndarray) -> FireHawk:
             Ir = np.random.uniform(0, 1, size=2)
             return (FireHawk(**self._init_agent(
                 self._task.correct_solution(np.array(agent.position) + Ir[0] * np.array(to.position) - Ir[1] * sub)
-            ).model_dump()))
+            ).__dict__))
 
         def move_group(idx: int, group: list[FireHawk]) -> list[FireHawk]:
             SPl = np.mean([np.array(agent.position) for agent in group], axis=0)

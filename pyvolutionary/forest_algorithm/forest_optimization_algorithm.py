@@ -36,7 +36,7 @@ class ForestOptimizationAlgorithm(OptimizationAbstract):
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Tree:
         agent = super()._init_agent(position)
-        return Tree(**agent.model_dump())
+        return Tree(**agent.__dict__)
 
     def optimization_step(self):
         def local_seeding(tree: Tree) -> Tree:

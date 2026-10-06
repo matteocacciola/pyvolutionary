@@ -35,6 +35,29 @@ def squared_norm(point1: list[float], point2: list[float]):
     return np.sum((np.array(point1) - np.array(point2))**2)
 
 
+def squared_norms(diff: np.ndarray) -> np.ndarray:
+    """
+    Calculate the squared norm of each row of the provided array, i.e. of each agent, over all its coordinates (also
+    when the position of an agent is nested, e.g. for permutation variables). Each value is the same as the one of
+    squared_norm applied to the row.
+    :param diff: the array, with one row per agent
+    :return: the squared norm of each row
+    :rtype: np.ndarray
+    """
+    return np.sum((diff ** 2).reshape(len(diff), -1), axis=1)
+
+
+def per_row(values: np.ndarray, like: np.ndarray) -> np.ndarray:
+    """
+    Reshape a vector with one value per row, so that it broadcasts over the rows of the provided array.
+    :param values: the vector, with one value per row
+    :param like: the array, with one row per agent
+    :return: the reshaped vector
+    :rtype: np.ndarray
+    """
+    return np.reshape(values, (-1,) + (1,) * (np.ndim(like) - 1))
+
+
 def distance(point1: list[float], point2: list[float]):
     """
     Calculate the distance between two points in the space using the Euclidean distance.

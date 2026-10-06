@@ -32,7 +32,7 @@ class SeagullOptimization(OptimizationAbstract):
             C = A * pos  # Eq. 5
             D = np.abs(C + M)  # Eq. 9
             pos_new = r * np.cos(k) * r * np.sin(k) * r * k * D + np.random.normal(0, 1) * best_position  # Eq. 14
-            agent = Seagull(**self._init_agent(pos_new).model_dump())
+            agent = Seagull(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(agent, seagull)
 
         A = self._config.fc - self._current_cycle * self._config.fc / self._config.max_cycles  # Eq. 6

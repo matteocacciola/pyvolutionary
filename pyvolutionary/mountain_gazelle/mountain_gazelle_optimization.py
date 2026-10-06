@@ -75,7 +75,7 @@ class MountainGazelleOptimization(OptimizationAbstract):
             cofi, D = coefficient_vectors(current_position)
             candidates = candidate_positions(cofi, D, current_position)
             # update the new population for the next generation with the calculated candidate positions
-            return [MountainGazelle(**self._init_agent(x).model_dump()) for x in candidates]
+            return [MountainGazelle(**self._init_agent(x).__dict__) for x in candidates]
 
         epoch = self._current_cycle
         n_dims = self._task.space_dimension

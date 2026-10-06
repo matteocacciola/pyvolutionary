@@ -37,7 +37,7 @@ class SuccessHistoryIntelligentOptimization(OptimizationAbstract):
             x2 = b2_pos + (a * 2 * np.random.random(n_dims) - a) * np.abs(np.random.random(n_dims) * b2_pos - pos)
             x3 = b3_pos + (a * 2 * np.random.random(n_dims) - a) * np.abs(np.random.random(n_dims) * b3_pos - pos)
             pos_new = (x1 + x2 + x3) / 3
-            return self._greedy_select_agent(solution, Solution(**self._init_agent(pos_new).model_dump()))
+            return self._greedy_select_agent(solution, Solution(**self._init_agent(pos_new).__dict__))
         
         b1_pos, b2_pos, b3_pos = map(lambda x: np.array(x.position), best_agents(self._population, n_best=3))
         self.__a -= 0.04

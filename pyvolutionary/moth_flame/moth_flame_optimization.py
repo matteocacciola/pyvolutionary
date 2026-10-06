@@ -41,7 +41,7 @@ class MothFlameOptimization(OptimizationAbstract):
             temp_2 = distance_to_flame * np.exp(b * t) * np.cos(t * 2 * np.pi) + np.array(g_best.position)
             list_idx = idx * np.ones(n_dims)
             pos_new = np.where(list_idx < num_flame, temp_1, temp_2)
-            agent = MothFlame(**self._init_agent(pos_new).model_dump())
+            agent = MothFlame(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(moth_flame, agent)
 
         cycle = self._current_cycle

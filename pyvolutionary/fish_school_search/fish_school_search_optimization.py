@@ -35,7 +35,7 @@ class FishSchoolSearchOptimization(OptimizationAbstract):
 
     def _init_agent(self, position: list[Any] | np.ndarray | None = None) -> Fish:
         agent = super()._init_agent(position)
-        return Fish(**agent.model_dump(), weight=self._config.w_scale / 2.0)
+        return Fish(**agent.__dict__, weight=self._config.w_scale / 2.0)
 
     def optimization_step(self):
         def move_individual(fish: Fish) -> Fish:

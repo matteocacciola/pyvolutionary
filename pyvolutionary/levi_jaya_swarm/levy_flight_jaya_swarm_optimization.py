@@ -35,7 +35,7 @@ class LeviFlightJayaSwarmOptimization(OptimizationAbstract):
             L2 = get_levy_flight_step(multiplier=1.0, beta=1.8, case=-1)
             a1 = np.abs(L1) * (g_best_pos - np.abs(position))
             a2 = np.abs(L2) * (g_worst_pos - np.abs(position))
-            agent = Jaya(**self._init_agent(position + a1 - a2).model_dump())
+            agent = Jaya(**self._init_agent(position + a1 - a2).__dict__)
             return self._greedy_select_agent(jaya, agent)
 
         g_best_pos = np.array(self._best_agent.position)

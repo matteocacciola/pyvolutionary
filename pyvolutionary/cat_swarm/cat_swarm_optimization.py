@@ -39,10 +39,10 @@ class CatSwarmOptimization(OptimizationAbstract):
 
         flag = np.random.uniform() < self._config.mixture_ratio if flag is None else flag
         if velocity is None:
-            return Cat(**agent.model_dump(), velocity=self._task.empty_solution(), flag=flag)
+            return Cat(**agent.__dict__, velocity=self._task.empty_solution(), flag=flag)
 
         velocity = self._task.correct_solution(velocity.tolist() if isinstance(velocity, np.ndarray) else velocity)
-        return Cat(**agent.model_dump(), velocity=velocity, flag=flag)
+        return Cat(**agent.__dict__, velocity=velocity, flag=flag)
 
     def optimization_step(self):
         def seeking_clone(c: Cat) -> Cat:
@@ -55,7 +55,7 @@ class CatSwarmOptimization(OptimizationAbstract):
         def seeking_mode(cat: Cat) -> list[float]:
             cloned = [cat.model_copy() for _ in range(smp - 1)] if spc else self._generate_agents(self._config.smp)
             candidates = [cat.model_copy()] if self._config.spc else []
-            candidates += [seeking_clone(Cat(**cat.model_dump())) for cat in cloned]
+            candidates += [seeking_clone(Cat(**cat.__dict__)) for cat in cloned]
             if selected_strategy == 0:  # best fitness-self
                 return best_agent(candidates).position
             if selected_strategy == 1:  # tournament

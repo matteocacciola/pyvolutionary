@@ -64,7 +64,7 @@ class FireflySwarmOptimization(OptimizationAbstract):
                 [self._init_agent(position) for position in weighted_pos] +
                 [self._init_agent() for _ in range(0, pop_size - len(weighted_pos) + 1)]
             )
-            return Firefly(**best_agent(new_agents).model_dump())
+            return Firefly(**best_agent(new_agents).__dict__)
 
         # update alpha parameter. This parameter is used to control the randomness of the movement of the fireflies
         delta = 1.0 - (10.0 ** -4.0 / 0.9) ** (1.0 / self._current_cycle)

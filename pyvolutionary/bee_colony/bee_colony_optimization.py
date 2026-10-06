@@ -40,7 +40,7 @@ class BeeColonyOptimization(OptimizationAbstract):
 
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Bee:
         agent = super()._init_agent(position)
-        return Bee(**agent.model_dump())
+        return Bee(**agent.__dict__)
 
     def _greedy_select_agent(self, agent: Bee, new_agent: Bee) -> Bee:
         """

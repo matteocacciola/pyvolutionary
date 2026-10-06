@@ -39,7 +39,7 @@ class MultiverseOptimization(OptimizationAbstract):
                 )
                 black_hole_pos_2 = best_pos + tdr * np.random.normal(0, 1) * (best_pos - pos)
                 black_hole_pos = np.where(np.random.random(n_dims) < 0.5, black_hole_pos_1, black_hole_pos_2)
-            return self._greedy_select_agent(universe, Universe(**self._init_agent(black_hole_pos).model_dump()))
+            return self._greedy_select_agent(universe, Universe(**self._init_agent(black_hole_pos).__dict__))
 
         epoch = self._current_cycle
         epochs = self._config.max_cycles

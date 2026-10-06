@@ -58,7 +58,7 @@ class BrainStormOptimization(OptimizationAbstract):
                     pos_rand_id1 = np.array(self.__clusters[id1][np.random.randint(0, m_solution)].position)
                     pos_rand_id2 = np.array(self.__clusters[id2][np.random.randint(0, m_solution)].position)
                     pos_new = 0.5 * (pos_rand_id1 + pos_rand_id2) + epsilon * np.random.normal(0, 1, n_dims)
-            agent = Person(**self._init_agent(pos_new).model_dump())
+            agent = Person(**self._init_agent(pos_new).__dict__)
             return agent, cluster_id, location_id
 
         epoch = self._current_cycle
@@ -75,7 +75,7 @@ class BrainStormOptimization(OptimizationAbstract):
 
         epsilon = 1. - 1. * epoch / epochs
         if np.random.uniform() < p1:
-            self.__centers[np.random.randint(0, m_clusters)] = Person(**self._init_agent().model_dump())
+            self.__centers[np.random.randint(0, m_clusters)] = Person(**self._init_agent().__dict__)
 
         new_agents, cluster_ids, location_ids = zip(*[evolve(idx) for idx in range(0, self._config.population_size)])
         for cl_id, loc_id, new_agent in zip(cluster_ids, location_ids, new_agents):
