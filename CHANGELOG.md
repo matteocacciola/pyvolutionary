@@ -41,5 +41,10 @@ These fixes change the results of some algorithms, even with the same seed.
   and bounds of a task are cached: optimizations are 2-5x faster.
 - Random solutions are drawn with a single vectorized operation when all the variables are continuous, and the roulette
   wheel selection no longer builds Python lists at every call.
+- The implementations of the algorithms are optimized without changing their results: the evolution of every algorithm
+  is bit-identical to the previous version for the same seed. Among the largest speedups: Ant Colony 7x, Grasshopper
+  6.6x, Krill Herd 3.6x, Genetic Algorithm 2.8x, Dragonfly 2.6x, Ant Lion 2.5x, Fireworks 2.2x, Imperialist
+  Competitive 1.9x. Krill Herd evaluates the food position once per cycle instead of once per krill.
+- Ant Lion and Fireworks no longer fail on permutation tasks.
 - `HyperTuner` and `Multitask` share a single pool of processes.
 - Greedy selection no longer dispatches trivial work to a pool of workers.
