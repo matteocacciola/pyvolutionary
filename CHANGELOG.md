@@ -14,6 +14,7 @@ These fixes change the results of some algorithms, even with the same seed.
   Golden Jackal, Aquila, Dragonfly, Monarch Butterfly).
 - Water Cycle Optimization sorts the initial population, so that the best agent is the sea and the following ones are
   the rivers; every river gets at least one stream.
+- Firefly Swarm Optimization decays `alpha` as `alpha = (1 - delta) * alpha`: it squared `alpha` at every cycle.
 - Early stopping now stops when the error has not improved by at least `min_delta` for `patience` cycles. Before, it
   never stopped when the error stagnated or got worse.
 - `HyperTuner` ranks the standard deviation (lower is better) and the combined rank correctly for maximization tasks.
@@ -21,6 +22,8 @@ These fixes change the results of some algorithms, even with the same seed.
 ### Fixes
 
 - `optimize()` can be called several times on the same instance: the cycle counter and the error history are reset.
+- Bee Colony and Firefly Swarm optimizations no longer alter their configuration. Bee Colony halved
+  `population_size` at every run, so a reused configuration ended up with an empty colony (or hung with a single bee).
 - In `process` mode, each worker is seeded independently: workers generated identical agents.
 - Results of parallel jobs keep the order of submission.
 - Multi-objective maximization tasks no longer fail.
@@ -36,5 +39,7 @@ These fixes change the results of some algorithms, even with the same seed.
 
 - Solutions are corrected with a single vectorized operation when all the variables are continuous, and the variables
   and bounds of a task are cached: optimizations are 2-5x faster.
+- Random solutions are drawn with a single vectorized operation when all the variables are continuous, and the roulette
+  wheel selection no longer builds Python lists at every call.
 - `HyperTuner` and `Multitask` share a single pool of processes.
 - Greedy selection no longer dispatches trivial work to a pool of workers.

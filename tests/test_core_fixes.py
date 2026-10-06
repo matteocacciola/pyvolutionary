@@ -2,6 +2,10 @@ import math
 import numpy as np
 
 from pyvolutionary import (
+    BeeColonyOptimization,
+    BeeColonyOptimizationConfig,
+    FireflySwarmOptimization,
+    FireflySwarmOptimizationConfig,
     ContinuousMultiVariable,
     DiscreteVariable,
     EarlyStopping,
@@ -177,3 +181,21 @@ def test_water_cycle_with_zero_cost():
     config = WaterCycleOptimizationConfig(population_size=20, fitness_error=None, max_cycles=3, nsr=4, wc=2.0)
     result = WaterCycleOptimization(config).optimize(task)
     assert result.best_solution.cost == 0.0
+
+
+def test_bee_colony_and_firefly_do_not_alter_the_configuration():
+    task = make_task(seed=3)
+    for optimizer_class, config in [
+        (BeeColonyOptimization, BeeColonyOptimizationConfig(
+            population_size=20, fitness_error=None, max_cycles=5, scouting_limit=5
+        )),
+        (FireflySwarmOptimization, FireflySwarmOptimizationConfig(
+            population_size=10, fitness_error=None, max_cycles=5, alpha=0.5, beta_min=0.2, gamma=0.99
+        )),
+    ]:
+        original = config.model_copy()
+        first = optimizer_class(config).optimize(task)
+        second = optimizer_class(config).optimize(task)
+
+        assert config == original
+        assert second.best_solution.cost == first.best_solution.cost

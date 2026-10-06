@@ -301,6 +301,8 @@ def average_fitness(population: list[T]) -> float:
 
 
 def get_partner_index(index: int, num_elements: int) -> int:
+    if num_elements < 2:
+        raise ValueError(f"At least two elements are needed to select a partner. Got {num_elements}")
     while True:
         partner_index = random.randint(0, num_elements - 1)
         if partner_index != index:

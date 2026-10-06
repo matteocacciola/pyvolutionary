@@ -33,8 +33,10 @@ class BeeColonyOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = BeeColonyOptimizationConfig(**parameters)
 
-    def before_initialization(self):
-        self._config.population_size = int(self._config.population_size / 2)
+    def _init_population(self):
+        # half of the colony are employed bees, each one bound to a food source: the population is made of the food
+        # sources (the configuration is not altered, so that it can be reused for further optimizations)
+        self._population = self._generate_agents(int(self._config.population_size / 2))
 
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> Bee:
         agent = super()._init_agent(position)
@@ -77,7 +79,7 @@ class BeeColonyOptimization(OptimizationAbstract):
             selected_bee = self._population[jdx]
             return food_source_dance(idx, selected_bee)
 
-        population_size = self._config.population_size
+        population_size = len(self._population)
         dims = self._task.space_dimension
         phi = np.random.uniform(low=-1, high=1, size=dims)
 

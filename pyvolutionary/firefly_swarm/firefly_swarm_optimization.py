@@ -30,6 +30,11 @@ class FireflySwarmOptimization(OptimizationAbstract):
 
     def __init__(self, config: FireflySwarmOptimizationConfig | None = None, debug: bool | None = False):
         super().__init__(config, debug)
+        self.__alpha: float | None = None
+
+    def before_initialization(self):
+        # alpha decays during the optimization: keep it in the state of the run, not in the configuration
+        self.__alpha = self._config.alpha
 
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = FireflySwarmOptimizationConfig(**parameters)
@@ -63,9 +68,9 @@ class FireflySwarmOptimization(OptimizationAbstract):
 
         # update alpha parameter. This parameter is used to control the randomness of the movement of the fireflies
         delta = 1.0 - (10.0 ** -4.0 / 0.9) ** (1.0 / self._current_cycle)
-        self._config.alpha *= (1 - delta) * self._config.alpha
+        self.__alpha = (1 - delta) * self.__alpha
 
-        alpha = self._config.alpha
+        alpha = self.__alpha
         beta_min = self._config.beta_min
         gamma = self._config.gamma
 
