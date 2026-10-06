@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import pytest
 
 from pyvolutionary import (
     BeeColonyOptimization,
@@ -376,3 +377,22 @@ def test_custom_variable():
     # the position is corrected once ([1, 1]), the objective is evaluated on the solution corrected again ([2, 2])
     assert agent.position == [1.0, 1.0]
     assert evaluated[-1] == [2.0, 2.0]
+
+
+def test_firefly_never_worsens():
+    # a firefly is replaced by its best candidate only if better: its cost never increases from a cycle to the next
+    config = FireflySwarmOptimizationConfig(
+        population_size=10, fitness_error=None, max_cycles=10, alpha=0.2, beta_min=2.0, gamma=0.001
+    )
+    result = FireflySwarmOptimization(config).optimize(make_task(seed=6))
+    for before, after in zip(result.evolution, result.evolution[1:]):
+        assert all(a.cost <= b.cost for b, a in zip(before.agents, after.agents))
+
+
+def test_firefly_mutation_coefficient_is_damped():
+    config = FireflySwarmOptimizationConfig(
+        population_size=10, fitness_error=None, max_cycles=4, alpha=0.2, beta_min=2.0, gamma=0.001, alpha_damp=0.5
+    )
+    optimizer = FireflySwarmOptimization(config)
+    optimizer.optimize(make_task(seed=6))
+    assert optimizer._FireflySwarmOptimization__alpha == pytest.approx(0.2 * 0.5 ** 4)

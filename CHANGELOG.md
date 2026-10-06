@@ -21,7 +21,20 @@ These fixes change the results of some algorithms, even with the same seed.
   Golden Jackal, Aquila, Dragonfly, Monarch Butterfly).
 - Water Cycle Optimization sorts the initial population, so that the best agent is the sea and the following ones are
   the rivers; every river gets at least one stream.
-- Firefly Swarm Optimization decays `alpha` as `alpha = (1 - delta) * alpha`: it squared `alpha` at every cycle.
+- Firefly Swarm Optimization follows the implementation of mealpy (`OriginalFFA`). Before:
+  - the mutation coefficient `alpha` collapsed at the first cycle (to ~1e-4 of its value, and to ~1e-12 at the tenth),
+    since its decay used the current cycle instead of the number of cycles, and it was squared at every cycle;
+  - a firefly was always replaced by its best candidate, even when worse, so good solutions were lost;
+  - each move started from the original position, instead of the one reached by the previous move;
+  - one random candidate more than the population size was generated.
+
+  Now `alpha` is damped by `alpha_damp` at every cycle, a firefly is replaced only by a better candidate, and the
+  attraction is `beta_min * exp(-gamma * r^exponent)` with a random step scaled by `delta`. The new `alpha_damp`
+  (0.99), `delta` (0.05) and `exponent` (2) parameters have mealpy's defaults, and `beta_min` (the base attraction,
+  `beta_base` in mealpy) accepts values up to 3. With the same parameters, the results are as good as mealpy's (median
+  best cost over 10 seeds on a 10-dimensional Sphere: 50.6 vs 48.4 of mealpy and 102 before; on Rastrigin: 71.7 vs 71.1
+  and 93.2 before). Two mealpy bugs are not reproduced: mealpy damps the initial `alpha` (so it stays constant after the
+  first cycle), and compares the best candidate with the firefly after its moves instead of the firefly itself.
 - Imperialist Competitive Optimization:
   - the initial countries are unique, as intended (the check never discarded a duplicate);
   - the revolution exchanges the candidate dimensions with the other ones (it removed the wrong indexes from the
