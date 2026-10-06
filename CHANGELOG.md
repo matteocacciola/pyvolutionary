@@ -15,6 +15,14 @@ These fixes change the results of some algorithms, even with the same seed.
 - Water Cycle Optimization sorts the initial population, so that the best agent is the sea and the following ones are
   the rivers; every river gets at least one stream.
 - Firefly Swarm Optimization decays `alpha` as `alpha = (1 - delta) * alpha`: it squared `alpha` at every cycle.
+- Imperialist Competitive Optimization:
+  - the initial countries are unique, as intended (the check never discarded a duplicate);
+  - the revolution exchanges the candidate dimensions with the other ones (it removed the wrong indexes from the
+    list, and failed with a single dimension), and works on a copy of the colony, which is no longer altered when the
+    new colony is discarded (its cost did not match its representation anymore);
+  - the power of the empires is computed by scaling the costs by their largest magnitude: with negative costs (e.g.
+    of maximization tasks) the weakest empires were the most likely to win, and the weights could overflow. Nothing
+    changes with positive costs.
 - Early stopping now stops when the error has not improved by at least `min_delta` for `patience` cycles. Before, it
   never stopped when the error stagnated or got worse.
 - `HyperTuner` ranks the standard deviation (lower is better) and the combined rank correctly for maximization tasks.

@@ -41,12 +41,16 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
         # Create countries
         k = self._config.number_of_countries
         countries = []
-        i = 0
-        while i < k:
+        # a candidate is discarded when another country has the same representation; a small (e.g. discrete) search
+        # space may have fewer distinct representations than k, so duplicates are accepted after many attempts
+        max_attempts = 100 * k
+        attempts = 0
+        while len(countries) < k:
             candidate = Country(self._init_agent())
-            if (True for elem in countries if np.array_equal(elem.representation, candidate.representation)):
+            attempts += 1
+            is_duplicate = any(np.array_equal(elem.representation, candidate.representation) for elem in countries)
+            if not is_duplicate or attempts > max_attempts:
                 countries.append(candidate)
-                i += 1
 
         self.__countries = countries
 
@@ -62,7 +66,7 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
             self.__empires.append(EmpireClass(ctr))
 
         empires_costs = np.array([np.sum(empire.cost) for empire in self.__empires])
-        p = np.exp(-np.multiply(self._config.alpha_rate, empires_costs) / np.max(empires_costs))
+        p = self._power_weights(empires_costs)
         p = p / np.sum(p)
         for country in candidate_colonies:
             k = random_selection(p)
@@ -70,6 +74,17 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
 
         task_type = self._task.minmax
         self._population = [Transformer.transform(empire, task_type) for empire in self.__empires]
+
+    def _power_weights(self, costs: np.ndarray) -> np.ndarray:
+        """
+        The (not normalized) weights of the empires, i.e. their power: the lower the cost, the higher the weight.
+        The costs are scaled by their largest magnitude: dividing them by the largest cost would invert the weights
+        (and overflow) with negative costs, e.g. of maximization tasks; with positive costs, it is the same.
+        :param costs: the costs of the empires
+        :return: the weights of the empires
+        :rtype: np.ndarray
+        """
+        return np.exp(-np.multiply(self._config.alpha_rate, costs) / np.max(np.abs(costs)))
 
     def __inter_empire_war__(self):
         """
@@ -84,7 +99,7 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
         # the weakest empire is the one with the highest cost
         weakest_empire_index = np.argmax(total_cost)
         weakest_empire = self.__empires[weakest_empire_index]
-        p = np.exp(-np.multiply(self._config.alpha_rate, total_cost) / np.max(total_cost))
+        p = self._power_weights(total_cost)
 
         # the weakest empire has a probability of 0 to win the war
         p[weakest_empire_index] = 0
@@ -131,23 +146,20 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
 
         def revolution(empire: EmpireClass) -> EmpireClass:
             for i, colony in enumerate(empire.colonies):
-                if np.random.random() <= revolution_probability:
-                    # select the colony to exchange with
-                    colony_representation = colony.representation
+                # with a single dimension there is nothing to exchange
+                if dim > 1 and np.random.random() <= revolution_probability:
                     old_cost = colony.cost
-                    number_of_tasks = int(math.ceil(revolution_rate * dim))
+                    # at least one dimension must be left out of the candidates, to exchange with
+                    number_of_tasks = min(int(math.ceil(revolution_rate * dim)), dim - 1)
                     candidates = np.random.choice(dim, number_of_tasks, replace=False)
-                    exchange = list(range(0, dim))
-                    # remove the candidates from the exchange list
-                    for index in candidates:
-                        del exchange[index]
-                    # select the candidates to exchange with
+                    # the dimensions to exchange with are the ones that are not candidates
+                    exchange = [index for index in range(0, dim) if index not in candidates]
                     exchange_candidates = np.random.choice(exchange, number_of_tasks)
-                    new_colony_representation = colony_representation
-                    # exchange the candidates
+                    # exchange the candidates on a copy: the colony is kept as it is if the new one is not better
+                    new_colony_representation = list(colony.representation)
                     for (x, y) in zip(candidates, exchange_candidates):
                         new_colony_representation[x], new_colony_representation[y] = (
-                            colony_representation[y], colony_representation[x]
+                            new_colony_representation[y], new_colony_representation[x]
                         )
                     new_colony = Country(self._init_agent(new_colony_representation))
                     if new_colony.cost < old_cost:

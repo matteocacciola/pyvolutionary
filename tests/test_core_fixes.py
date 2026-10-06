@@ -11,6 +11,8 @@ from pyvolutionary import (
     EarlyStopping,
     GreyWolfOptimization,
     GreyWolfOptimizationConfig,
+    ImperialistCompetitiveOptimization,
+    ImperialistCompetitiveOptimizationConfig,
     Multitask,
     Task,
     TaskType,
@@ -199,3 +201,65 @@ def test_bee_colony_and_firefly_do_not_alter_the_configuration():
 
         assert config == original
         assert second.best_solution.cost == first.best_solution.cost
+
+
+def make_imperialist(**kwargs) -> ImperialistCompetitiveOptimization:
+    config = ImperialistCompetitiveOptimizationConfig(**{
+        "population_size": 5,
+        "fitness_error": None,
+        "max_cycles": 5,
+        "assimilation_rate": 0.4,
+        "revolution_rate": 0.5,
+        "alpha_rate": 0.8,
+        "revolution_probability": 0.9,
+        "number_of_countries": 20,
+        **kwargs,
+    })
+    return ImperialistCompetitiveOptimization(config)
+
+
+def all_countries(optimizer: ImperialistCompetitiveOptimization) -> list:
+    empires = optimizer._ImperialistCompetitiveOptimization__empires
+    return [country for empire in empires for country in [empire.emperor] + empire.colonies]
+
+
+def test_imperialist_initial_countries_are_unique():
+    # 3 x 3 discrete combinations: the 9 countries must be all the different combinations
+    task = Sphere(
+        variables=[DiscreteVariable(name="a", choices=[0, 1, 2]), DiscreteVariable(name="b", choices=[0, 1, 2])], seed=0
+    )
+    optimizer = make_imperialist(population_size=3, number_of_countries=9, max_cycles=1)
+    optimizer._task = task
+    optimizer._init_population()
+    representations = {tuple(c.representation) for c in optimizer._ImperialistCompetitiveOptimization__countries}
+    assert len(representations) == 9
+
+    # more countries than distinct combinations: the initialization still ends
+    optimizer = make_imperialist(population_size=3, number_of_countries=12, max_cycles=1)
+    optimizer._task = task
+    optimizer._init_population()
+    assert len(optimizer._ImperialistCompetitiveOptimization__countries) == 12
+
+
+def test_imperialist_countries_keep_cost_consistent_with_representation():
+    # a rejected revolution must not alter the colony: each cost must match its representation
+    task = make_task(seed=5)
+    optimizer = make_imperialist()
+    optimizer.optimize(task)
+    for country in all_countries(optimizer):
+        assert country.cost == task.solve(country.representation)
+
+
+def test_imperialist_with_one_dimension():
+    task = Sphere(variables=[ContinuousMultiVariable(name="x", lower_bounds=[-10], upper_bounds=[10])], seed=0)
+    result = make_imperialist().optimize(task)
+    assert len(result.evolution) == 6
+
+
+def test_imperialist_power_weights():
+    optimizer = make_imperialist()
+    # the strongest empire (lowest cost) has the highest weight, also with negative costs (e.g. of maximization tasks)
+    for costs in ([10.0, 5.0, 1.0], [-10.0, -5.0, -1.0], [-3.0, 0.5, 4.0]):
+        weights = optimizer._power_weights(np.array(costs))
+        assert np.all(np.isfinite(weights))
+        assert np.argmax(weights) == np.argmin(costs)
