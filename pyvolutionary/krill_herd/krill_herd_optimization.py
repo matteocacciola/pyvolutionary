@@ -63,23 +63,22 @@ class KrillHerdOptimization(OptimizationAbstract):
 
         def induce_neighbours_motion(idx: int, krill: Krill) -> np.ndarray:
             # calculate sense range for selected individual
-            sense_range = np.sum(
-                [distance(krill.position, self._population[i].position) for i in range(0, population_size)]
-            ) / (max_neighbours * population_size)
+            krill_distances = distances_matrix[idx]
+            sense_range = np.sum(krill_distances) / (max_neighbours * population_size)
             # get neighbours
-            neighbours = [agent for jdx, agent in enumerate(self._population) if jdx != idx and sense_range > distance(
-                krill.position, agent.position
-            )]
-            if not neighbours:
-                neighbours = [self._population[np.random.randint(population_size)]]
-            alpha_l = np.sum(np.array([get_k(krill, neighbour) for neighbour in neighbours]) * np.array(
-                [get_x(krill, neighbour) for neighbour in neighbours]
-            ).T)
+            neighbours_idx = [jdx for jdx in range(0, population_size) if jdx != idx and sense_range > krill_distances[jdx]]
+            if not neighbours_idx:
+                neighbours_idx = [np.random.randint(population_size)]
+            # get_k and get_x of the krill with respect to each neighbour, vectorized over the neighbours
+            neighbours_k = (krill.cost - costs[neighbours_idx] + self.EPS) / (g_worst.cost - g_best.cost + self.EPS)
+            neighbours_x = (
+                (positions[neighbours_idx] - positions[idx]) + self.EPS
+            ) / (distances_matrix[idx, neighbours_idx] + self.EPS)[:, np.newaxis]
+            alpha_l = np.sum(neighbours_k * neighbours_x.T)
             alpha_t = 2 * (1 + np.random.random() * (current_cycle + 1) / max_cycles)
             return n_max * (alpha_l + alpha_t) + w_neighbour * krill.induced_speed
 
         def induce_foraging_motion(krill: Krill) -> np.ndarray:
-            temp_krill = self._init_agent(position=pos_food)
             beta_f = 2 * (1 - (current_cycle + 1) / max_cycles) * get_k(krill, temp_krill) * get_x(
                 krill, temp_krill
             ) if g_best.cost < krill.cost else 0
@@ -96,14 +95,14 @@ class KrillHerdOptimization(OptimizationAbstract):
             )
             # crossover
             new_pos = self._task.correct_solution(np.where(
-                [np.random.random() < config_crossover_rate * get_k(krill, g_best) for _ in range(0, dims)],
+                np.random.random(dims) < config_crossover_rate * get_k(krill, g_best),
                 pos,
                 new_pos
             ))
             # mutation
             mutation_rate = config_mutation_rate / (get_k(krill, g_best) + 1e-31)
             new_pos = np.where(
-                [np.random.random() < mutation_rate for _ in range(0, self._task.space_dimension)],
+                np.random.random(self._task.space_dimension) < mutation_rate,
                 new_pos,
                 g_best.position + np.random.random(self._task.space_dimension)
             )
@@ -125,12 +124,19 @@ class KrillHerdOptimization(OptimizationAbstract):
 
         # get food location
         costs = np.array([krill.cost for krill in self._population])
+        positions = np.array([krill.position for krill in self._population])
+        # distances between each pair of krills (Euclidean, as computed by the distance helper)
+        distances_matrix = np.array([
+            np.sqrt(np.sum((positions - position) ** 2, axis=1)) for position in positions
+        ])
         pos_food = np.sum(
             np.array([np.array(krill.position) / krill.cost for krill in self._population]),
             axis=0
         ) / np.sum(1 / costs)
 
         induced_speed = [induce_neighbours_motion(idx, krill) for idx, krill in enumerate(self._population)]
+        # the food is evaluated once: the same position would be evaluated again for each krill
+        temp_krill = self._init_agent(position=pos_food)
         foraging_speed = [induce_foraging_motion(krill) for krill in self._population]
 
         sum_bandwidth = np.sum(self._task.bandwidth())

@@ -77,8 +77,10 @@ class GeneticAlgorithmOptimization(OptimizationAbstract):
             # crossover
             c1, c2 = crossover(i)
             # mutations and store for next generation
-            children.append([1 - bit if np.random.rand() < self.__p_mutation else bit for bit in c1])
-            children.append([1 - bit if np.random.rand() < self.__p_mutation else bit for bit in c2])
+            # one random draw per bit, in the same order as drawing them one at a time
+            for child in (c1, c2):
+                c = np.array(child)
+                children.append(np.where(np.random.rand(len(c)) < self.__p_mutation, 1 - c, c).tolist())
 
         # update population
         self.__bit_genes = [self.__bit_genes[idx].set_bit_string(child) for idx, child in enumerate(children)]

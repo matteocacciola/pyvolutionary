@@ -482,6 +482,14 @@ class Task(BaseModel, ABC):
         return list(self._flat_variables)
 
     @property
+    def all_continuous(self) -> bool:
+        """
+        Whether all the variables of the task are continuous.
+        :rtype: bool
+        """
+        return self.__pydantic_private__["_all_continuous"]
+
+    @property
     def continuous_mask(self) -> np.ndarray:
         """
         The mask of the dimensions of the search space corresponding to continuous variables.
@@ -509,7 +517,8 @@ class Task(BaseModel, ABC):
         # read the private attributes from the underlying dict: pydantic resolves each of them with a slow __getattr__
         private = self.__pydantic_private__
         if private["_all_continuous"]:
-            return np.clip(np.asarray(solution, dtype=float), private["_lb"], private["_ub"]).tolist()
+            # same result as np.clip, without its overhead
+            return np.minimum(np.maximum(np.asarray(solution, dtype=float), private["_lb"]), private["_ub"]).tolist()
         return [v.correct(c) for c, v in zip(solution, private["_flat_variables"])]
 
     def empty_solution(self) -> list[float]:

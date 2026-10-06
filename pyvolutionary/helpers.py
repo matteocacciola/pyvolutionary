@@ -325,6 +325,12 @@ def roulette_wheel_indexes(probabilities: np.ndarray, num: int | None = 1) -> li
         return np.random.choice(k, size=num, replace=False)
 
     p = final_probabilities / np.sum(final_probabilities)
+    if num == 1 and np.all(np.isfinite(p)):
+        # same draw as np.random.choice(k, size=1, p=p) of the legacy (frozen) numpy generator, without the overhead of
+        # its validation: one uniform sample, located in the normalized cumulative distribution
+        cdf = np.cumsum(p)
+        cdf /= cdf[-1]
+        return cdf.searchsorted(np.random.random_sample(1), side="right")
     return np.random.choice(k, size=num, replace=np.count_nonzero(p) < num, p=p)
 
 

@@ -42,24 +42,24 @@ class AntLionOptimization(OptimizationAbstract):
                 return 1 + 1000000 * (cycle / max_cycles)
             return 1
 
-        def random_walk_ant_lion(ant_lion_position: np.ndarray) -> np.ndarray:
-            X = np.array([np.cumsum(2 * (np.random.random(pop_size) > 0.5) - 1) for _ in range(0, n_dims)])
+        def random_walk_ant_lion(ant_lion_position: np.ndarray, idx: int) -> np.ndarray:
+            # one row of random steps per dimension (drawn at once, in the same order as row by row)
+            X = np.cumsum(2 * (np.random.random((n_dims, pop_size)) > 0.5) - 1, axis=1)
             # Move the interval of [lb ub] around the ant lion [lb + ant_lion, ub + ant_lion]. Eq 2.8, 2.9
             lb = lower_bounds * (1 if np.random.random() < 0.5 else -1) + ant_lion_position
             ub = upper_bounds * (1 if np.random.random() < 0.5 else -1) + ant_lion_position
             a = np.min(X, axis=1)
             b = np.max(X, axis=1)
-            return (X - np.reshape(a, (n_dims, 1))) * (
-                np.reshape((ub - lb) / (b - a), (n_dims, 1))
-            ) + np.reshape(lb, (n_dims, 1))
+            # only the idx-th step of the walk is used: normalize just that column
+            return (X[:, idx] - a) * ((ub - lb) / (b - a)) + lb
 
         def new_agent(idx: int) -> AntLion:
             roulette_index, = roulette_wheel_indexes(weights)
             # RA is the random walk around the selected ant lion by roulette wheel
-            RA = random_walk_ant_lion(np.array(self._population[roulette_index].position))
+            RA = random_walk_ant_lion(np.array(self._population[roulette_index].position), idx)
             # RE is the random walk around the elite (the best ant lion so far)
-            RE = random_walk_ant_lion(g_best_pos)
-            pos_new = (RA[:, idx] + RE[:, idx]) / 2  # Equation(2.13) in the paper
+            RE = random_walk_ant_lion(g_best_pos, idx)
+            pos_new = (RA + RE) / 2  # Equation(2.13) in the paper
             return AntLion(**self._init_agent(pos_new).model_dump())
 
         cycle = self._current_cycle

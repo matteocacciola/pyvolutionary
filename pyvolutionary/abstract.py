@@ -67,14 +67,21 @@ class OptimizationAbstract(ABC, Generic[T]):
     def name(self):
         return self.__class__.__name__
 
-    def _fcn(self, x: list[float] | np.ndarray) -> float | list[float]:
+    def _fcn(self, x: list[float] | np.ndarray, corrected: bool = False) -> float | list[float]:
         """
         This method evaluates the objective function.
         :param x: the position to evaluate
+        :param corrected: whether the position has already been corrected by the task
         :return the cost of the position, or the list of costs if the objective function is multi-objective
         :rtype: float | list[float]
         """
-        cost = self._task.solve(x)
+        # correcting an already corrected solution of continuous variables is a no-op (the bounds clip it again to the
+        # same values): skip it, and pass a copy of the position, so that the objective function can not alter it
+        cost = (
+            self._task.objective_function(list(x))
+            if corrected and self._task.all_continuous
+            else self._task.solve(x)
+        )
         if self._task.minmax == TaskType.MIN:
             return cost
         # multi-objective functions return a list of costs: negate each of them
@@ -86,7 +93,7 @@ class OptimizationAbstract(ABC, Generic[T]):
         not provided. The other properties of the agent.
         """
         position = self._task.initial_solution(position)
-        cost = self._fcn(position)
+        cost = self._fcn(position, corrected=True)
         n_weights = len(self._task.objective_weights) if self._task.objective_weights is not None else 1
         n_objectives = len(cost) if isinstance(cost, list) else 1
         if n_weights != n_objectives:
