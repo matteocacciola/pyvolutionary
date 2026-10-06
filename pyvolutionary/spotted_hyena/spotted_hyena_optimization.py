@@ -54,7 +54,7 @@ class SpottedHyenaOptimization(OptimizationAbstract):
                 new_agent = SpottedHyena(**self._init_agent(pos_new).model_dump())
                 return self._greedy_select_agent(agent, new_agent)
             N = get_n()
-            idx_list = np.random.choice(range(0, pop_size), N, replace=False).tolist()
+            idx_list = np.random.choice(pop_size, N, replace=False).tolist()
             circle_list = [circle_list_item(idx_list[j], B, E) for j in range(0, N)]
             pos_new = np.mean(np.array(circle_list), axis=0)
             new_agent = SpottedHyena(**self._init_agent(pos_new).model_dump())

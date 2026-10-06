@@ -118,13 +118,14 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
 
     def optimization_step(self):
         def assimilate_colonies(empire: EmpireClass) -> EmpireClass:
-            empire_representation = empire.emperor.representation
+            empire_representation = np.array(empire.emperor.representation)
             for colony in empire.colonies:
-                candidates = np.random.choice(
-                    range(0, dim), int(np.round(dim * assimilation_rate, decimals=0)), replace=False,
-                )
+                candidates = np.random.choice(dim, n_assimilated, replace=False)
+                # the colony takes the coordinates of the emperor in the candidate dimensions
+                is_candidate = np.zeros(dim, dtype=bool)
+                is_candidate[candidates] = True
                 colony.set_representation(self._init_agent(
-                    [r if i in candidates else colony.representation[i] for i, r in enumerate(empire_representation)]
+                    np.where(is_candidate, empire_representation, colony.representation)
                 ))
             return empire
 
@@ -135,7 +136,7 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
                     colony_representation = colony.representation
                     old_cost = colony.cost
                     number_of_tasks = int(math.ceil(revolution_rate * dim))
-                    candidates = np.random.choice(range(0, dim), number_of_tasks, replace=False)
+                    candidates = np.random.choice(dim, number_of_tasks, replace=False)
                     exchange = list(range(0, dim))
                     # remove the candidates from the exchange list
                     for index in candidates:
@@ -165,6 +166,7 @@ class ImperialistCompetitiveOptimization(OptimizationAbstract):
         revolution_probability = self._config.revolution_probability
         revolution_rate = self._config.revolution_rate
         dim = self._task.space_dimension
+        n_assimilated = int(np.round(dim * assimilation_rate, decimals=0))
 
         # assimilation
         self.__empires = [assimilate_colonies(empire) for empire in self.__empires]

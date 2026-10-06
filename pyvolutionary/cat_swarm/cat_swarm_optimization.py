@@ -47,7 +47,7 @@ class CatSwarmOptimization(OptimizationAbstract):
     def optimization_step(self):
         def seeking_clone(c: Cat) -> Cat:
             pos = np.array(c.position)
-            jdx = np.random.choice(range(0, n_dims), int(cdc * n_dims), replace=False)
+            jdx = np.random.choice(n_dims, int(cdc * n_dims), replace=False)
             pos_new = np.where(np.random.random(n_dims) < 0.5, pos * (1 + srd), pos * (1 - srd))
             pos_new[jdx] = pos[jdx]
             return self._init_agent(pos_new, c.velocity, c.flag)
@@ -60,7 +60,7 @@ class CatSwarmOptimization(OptimizationAbstract):
                 return best_agent(candidates).position
             if selected_strategy == 1:  # tournament
                 k_way = 4
-                idx = np.random.choice(range(0, self._config.smp), k_way, replace=False)
+                idx = np.random.choice(self._config.smp, k_way, replace=False)
                 cats_k_way = [candidates[_] for _ in idx]
                 return best_agent(cats_k_way).position
             if selected_strategy == 2:  # roulette wheel selection

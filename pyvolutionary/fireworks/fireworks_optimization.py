@@ -47,18 +47,22 @@ class FireworksOptimization(OptimizationAbstract):
 
         def explode(firework: Firework) -> Firework:
             Ai = explosion_amplitude * (firework.cost - costs[0] + self.EPS) / (np.sum(costs) - costs[0] + self.EPS)
-            pos_new = firework.position
-            list_idx = np.random.choice(range(0, n_dims), round(np.random.uniform() * n_dims), replace=False)
-            pos_new = [pos_new[i] + int(i in list_idx) * Ai * np.random.uniform(-1, 1) for i in range(0, n_dims)]
+            list_idx = np.random.choice(n_dims, round(np.random.uniform() * n_dims), replace=False)
+            # one uniform draw per dimension, applied only to the selected dimensions
+            pos_new = np.array(firework.position) + selected_mask(list_idx) * Ai * np.random.uniform(-1, 1, n_dims)
             return Firework(**self._init_agent(pos_new).model_dump())
 
         def get_subsparks() -> Firework:
             idx = np.random.randint(0, pop_size)
-            pos_new = self._population[idx].position
-            list_idx = np.random.choice(range(0, n_dims), round(np.random.uniform() * n_dims), replace=False)
-            # Gaussian explosion
-            pos_new = [pos_new[i] + int(i in list_idx) * np.random.normal(0, 1) for i in range(0, n_dims)]
+            list_idx = np.random.choice(n_dims, round(np.random.uniform() * n_dims), replace=False)
+            # Gaussian explosion: one normal draw per dimension, applied only to the selected dimensions
+            pos_new = np.array(self._population[idx].position) + selected_mask(list_idx) * np.random.normal(0, 1, n_dims)
             return Firework(**self._init_agent(pos_new).model_dump())
+
+        def selected_mask(list_idx: np.ndarray) -> np.ndarray:
+            mask = np.zeros(n_dims, dtype=int)
+            mask[list_idx] = 1
+            return mask
 
         sparks_num = self._config.sparks_num
         pop_size = self._config.population_size

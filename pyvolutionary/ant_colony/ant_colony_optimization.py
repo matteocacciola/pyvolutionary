@@ -2,7 +2,7 @@ from typing import Any
 import numpy as np
 
 from ..helpers import (
-    roulette_wheel_indexes,
+    roulette_wheel_sampler,
     parse_obj_doc,  # type: ignore
 )
 from ..abstract import OptimizationAbstract
@@ -35,7 +35,7 @@ class AntColonyOptimization(OptimizationAbstract):
             return zeta * np.sum(np.abs(positions - M), axis=0) / (pop_size - 1)
 
         def generate_coordinate(j: int) -> float:
-            rdx, = roulette_wheel_indexes(weights)
+            rdx = select_ant()
             return float(self._population[rdx].position[j] + np.random.normal() * sigmas[rdx, j])
 
         # compute the selection probability of each ant in the population
@@ -50,6 +50,9 @@ class AntColonyOptimization(OptimizationAbstract):
         zeta = self._config.zeta
 
         sigmas = np.array([compute_sigma(ant) for ant in self._population])
+
+        # the weights do not change while generating the new ants: build the roulette wheel once
+        select_ant = roulette_wheel_sampler(weights)
 
         # Generate new ants
         new_ants = [Ant(**self._init_agent(

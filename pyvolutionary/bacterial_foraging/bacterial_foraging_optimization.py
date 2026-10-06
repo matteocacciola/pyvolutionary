@@ -63,7 +63,7 @@ class BacterialForagingOptimization(OptimizationAbstract):
         if n_agents < 0:
             self._population += [self._init_agent() for _ in range(0, -n_agents)]
         else:
-            list_idx_removed = np.random.choice(range(0, len(self._population)), n_agents, replace=False)
+            list_idx_removed = np.random.choice(len(self._population), n_agents, replace=False)
             for idx in sorted(list_idx_removed, reverse=True):
                 self._population.pop(idx)
 

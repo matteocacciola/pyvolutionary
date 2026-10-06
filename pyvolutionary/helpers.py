@@ -1,5 +1,6 @@
 import math
 import random
+from typing import Callable
 import numpy as np
 from pydantic import BaseModel
 import concurrent.futures as parallel
@@ -332,6 +333,26 @@ def roulette_wheel_indexes(probabilities: np.ndarray, num: int | None = 1) -> li
         cdf /= cdf[-1]
         return cdf.searchsorted(np.random.random_sample(1), side="right")
     return np.random.choice(k, size=num, replace=np.count_nonzero(p) < num, p=p)
+
+
+def roulette_wheel_sampler(probabilities: np.ndarray) -> Callable[[], int]:
+    """
+    Build a function drawing an index by roulette wheel selection, for repeated draws with the same probabilities.
+    Each call is equivalent to roulette_wheel_indexes(probabilities)[0] (same result, same random draws), but the
+    distribution is computed only once.
+    :param probabilities: the probabilities of each element of the population
+    :return: a function returning the selected index at each call
+    :rtype: Callable[[], int]
+    """
+    final_probabilities = np.max(probabilities) - probabilities
+    if not np.any(final_probabilities):
+        return lambda: roulette_wheel_indexes(probabilities)[0]
+    p = final_probabilities / np.sum(final_probabilities)
+    if not np.all(np.isfinite(p)):
+        return lambda: roulette_wheel_indexes(probabilities)[0]
+    cdf = np.cumsum(p)
+    cdf /= cdf[-1]
+    return lambda: cdf.searchsorted(np.random.random_sample(1), side="right")[0]
 
 
 def random_selection(p: list | np.ndarray) -> int:

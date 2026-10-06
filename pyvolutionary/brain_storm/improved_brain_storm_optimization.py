@@ -52,7 +52,7 @@ class ImprovedBrainStormOptimization(OptimizationAbstract):
                     temp_pos = np.array(self.__clusters[cluster_id][location_id].position)
                 pos_new = temp_pos + offset
             else:
-                id1, id2 = np.random.choice(range(0, m_clusters), 2, replace=False)
+                id1, id2 = np.random.choice(m_clusters, 2, replace=False)
                 pos_new = 0.5 * (
                     np.array(self.__centers[id1].position) + np.array(self.__centers[id2].position)
                 ) + epsilon * np.random.normal(0, 1, n_dims)

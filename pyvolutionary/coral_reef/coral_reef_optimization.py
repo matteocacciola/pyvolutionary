@@ -80,7 +80,7 @@ class CoralReefOptimization(OptimizationAbstract):
 
         # Step 1b
         while len(selected_corals) >= 2:
-            id1, id2 = np.random.choice(range(len(selected_corals)), 2, replace=False)
+            id1, id2 = np.random.choice(len(selected_corals), 2, replace=False)
             agent = Coral(**self._init_agent(multi_point_cross(
                 self._population[selected_corals[id1]].position,
                 self._population[selected_corals[id2]].position

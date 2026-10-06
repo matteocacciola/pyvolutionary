@@ -77,6 +77,20 @@ class EarthwormsOptimization(OptimizationAbstract):
                 chrome.position, c.position
             )]
 
+        def find_all_duplicates(start: int) -> list[int]:
+            """
+            For each chrome of the population, in order, the indexes (from start on) of the chromes with the same
+            position: the same result as find_idx_duplicates applied to each chrome, without comparing all the pairs.
+            """
+            positions = [tuple(chrome.position) for chrome in self._population]
+            if np.isnan(np.array(positions, dtype=float)).any():
+                # NaN never equals NaN in np.array_equal: keep the pairwise comparison
+                return list(chain.from_iterable([find_idx_duplicates(chrome) for chrome in self._population]))
+            indexes_by_position: dict[tuple, list[int]] = {}
+            for jdx in range(start, len(positions)):
+                indexes_by_position.setdefault(positions[jdx], []).append(jdx)
+            return list(chain.from_iterable([indexes_by_position.get(position, []) for position in positions]))
+
         alpha = self._config.alpha
         beta = self.__dyn_beta
         n_chromes = self._config.population_size
@@ -104,7 +118,7 @@ class EarthwormsOptimization(OptimizationAbstract):
             self._population[n_chromes - idx - 1] = chrome_keep[idx].model_copy()
 
         # clear duplicates in the population
-        duplicates = list(chain.from_iterable([find_idx_duplicates(chrome) for chrome in self._population]))
+        duplicates = find_all_duplicates(idx + 1)
         dimension_to_change = np.random.randint(0, dims - 1, len(duplicates))
         for jdx in duplicates:
             position_jdx = np.array(self._population[jdx].position)

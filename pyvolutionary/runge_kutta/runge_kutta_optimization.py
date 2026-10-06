@@ -57,7 +57,7 @@ class RungeKuttaOptimization(OptimizationAbstract):
 
             # Search Mechanism (SM) of RUN based on Runge Kutta Method
             SM = runge_kutta(xb, xw, delta_x)
-            L = np.random.choice(range(0, 2), n_dims)
+            L = np.random.choice(2, n_dims)
             xc = L * current_pos + (1 - L) * pos_a  # Eq. 17.3
             xm = L * best_pos + (1 - L) * best_pos  # Eq. 17.4
             r = np.random.choice([1, -1], n_dims)  # An integer number

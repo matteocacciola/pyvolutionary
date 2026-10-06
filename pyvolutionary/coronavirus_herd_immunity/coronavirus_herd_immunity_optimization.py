@@ -36,7 +36,7 @@ class CoronavirusHerdImmunityOptimization(OptimizationAbstract):
 
     def after_initialization(self):
         infected = int(self._config.C0 * self._config.population_size)
-        idx_infected = np.random.choice(range(0, self._config.population_size), infected, replace=False)
+        idx_infected = np.random.choice(self._config.population_size, infected, replace=False)
         self._population = [agent.model_copy(
             update={"status": 1}
         ) if idx in idx_infected else agent for idx, agent in enumerate(self._population)]
