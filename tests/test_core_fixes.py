@@ -28,7 +28,7 @@ from pyvolutionary.enums import ModeSolver
 from pyvolutionary.helpers import (
     best_agent_formatted, distances, get_levy_flight_step, normalize_costs, random_selection
 )
-from pyvolutionary.models import Agent
+from pyvolutionary.models import Agent, Variable
 from tests.fixtures import Rastrigin
 
 
@@ -315,3 +315,64 @@ def test_permutation_variable():
     assert corrected == [1, 3, 0, 2]
     assert task.correct_solution(corrected) == corrected
     assert task.transform_solution(keys) == task.transform_solution(corrected) == {"route": ["c", "a", "d", "b"]}
+
+
+def test_task_follows_its_variables():
+    task = make_task()
+    other = task.model_copy(update={
+        "variables": [ContinuousMultiVariable(name="x", lower_bounds=[0] * 2, upper_bounds=[1] * 2)]
+    })
+    assert other.space_dimension == 2
+    np.testing.assert_array_equal(other.get_bounds()[1], [1, 1])
+    assert other.correct_solution([5, -5]) == [1.0, 0.0]
+    # the original task is left as it is
+    assert task.space_dimension == 5
+    np.testing.assert_array_equal(task.get_bounds()[1], [10] * 5)
+
+
+class Rounded(Variable):
+    """
+    A custom variable whose correction is not idempotent: it must be applied as before, i.e. also when evaluating.
+    """
+    lower_bound: float
+    upper_bound: float
+
+    def get(self):
+        return self
+
+    def randomize(self):
+        return np.random.uniform(self.lower_bound, self.upper_bound, 2)
+
+    def get_bounds(self):
+        return [self.lower_bound] * 2, [self.upper_bound] * 2
+
+    def correct(self, value):
+        return [float(v) + 1 for v in value]
+
+    def decode(self, value):
+        return value
+
+    def size(self):
+        return 2
+
+    def has_children(self):
+        return False
+
+
+def test_custom_variable():
+    evaluated = []
+
+    class Recorder(Task):
+        def objective_function(self, x):
+            evaluated.append(list(x))
+            return float(np.sum(np.square(x)))
+
+    task = Recorder(variables=[Rounded(name="r", lower_bound=0, upper_bound=1)], seed=0)
+    # one value per dimension, also when randomize returns an array
+    assert len(task.empty_solution()) == 2
+    optimizer = GreyWolfOptimization(make_config())
+    optimizer._task = task
+    agent = optimizer._init_agent([0.0, 0.0])
+    # the position is corrected once ([1, 1]), the objective is evaluated on the solution corrected again ([2, 2])
+    assert agent.position == [1.0, 1.0]
+    assert evaluated[-1] == [2.0, 2.0]

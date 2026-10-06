@@ -75,9 +75,12 @@ class OptimizationAbstract(ABC, Generic[T]):
         :return the cost of the position, or the list of costs if the objective function is multi-objective
         :rtype: float | list[float]
         """
-        # correcting an already corrected solution is a no-op for every kind of variable: skip it, and pass a copy of
+        # correcting an already corrected solution is a no-op for the built-in variables: skip it, and pass a copy of
         # the position, so that the objective function can not alter it
-        cost = self._task.objective_function(list(x)) if corrected else self._task.solve(x)
+        if corrected and self._task.idempotent_correction:
+            cost = self._task.objective_function(list(x))
+        else:
+            cost = self._task.solve(x)
         if self._task.minmax == TaskType.MIN:
             return cost
         # multi-objective functions return a list of costs: negate each of them

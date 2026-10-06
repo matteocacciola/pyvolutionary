@@ -59,6 +59,8 @@ These fixes change the results of some algorithms, even with the same seed.
 - `DiscreteMultiVariable` returns its bounds as `(lower bounds, upper bounds)`, as the other variables: a task got
   wrong bounds with two discrete variables, and failed with any other number of them.
 - `transform_solution` decodes a multi-variable of one dimension as a list (it failed).
+- A `Task` follows its variables when they are replaced (`task.variables = ...` or
+  `task.model_copy(update={"variables": ...})`): `space_dimension` and the bounds were left as they were.
 - Energy Valley, Forest and Golden Jackal optimizations no longer fail (or truncate the updates) with integer positions,
   e.g. of discrete or permutation variables.
 - `distances` returns the full matrix of pairwise distances (it dropped the last coordinate).
