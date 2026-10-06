@@ -29,6 +29,10 @@ class NuclearReactionOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = NuclearReactionOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # the fission and the fusion involve two other nuclei
+        return 3
+
     def optimization_step(self):
         def nfi_phase(idx: int, reaction: NuclearReaction) -> NuclearReaction:
             position = np.array(reaction.position)

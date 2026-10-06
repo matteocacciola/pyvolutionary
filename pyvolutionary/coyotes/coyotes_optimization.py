@@ -32,6 +32,10 @@ class CoyotesOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = CoyotesOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # a pack holds num_coyotes coyotes
+        return max(self._config.num_coyotes, 3)
+
     def before_initialization(self):
         self.__n_packs = int(self._config.population_size / self._config.num_coyotes)
         self.__ps = 1. / self._task.space_dimension  # Probability of selecting a dimension

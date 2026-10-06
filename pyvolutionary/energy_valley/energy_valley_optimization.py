@@ -26,6 +26,10 @@ class EnergyValleyOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = EnergyValleyOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # a particle is compared with a team of its nearest particles
+        return 4
+
     def optimization_step(self):
         def evolve(idx: int, particle: Particle) -> list[Particle]:
             pos = np.array(particle.position)

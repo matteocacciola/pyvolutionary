@@ -31,6 +31,10 @@ class EarthwormsOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = EarthwormsOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # the best keep earthworms are kept at each cycle
+        return max(self._config.keep, 2)
+
     def before_initialization(self):
         self.__dyn_beta = self._config.beta
 

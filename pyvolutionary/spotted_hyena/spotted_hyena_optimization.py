@@ -53,7 +53,8 @@ class SpottedHyenaOptimization(OptimizationAbstract):
                 pos_new = np.array(g_best.position) - np.dot(E, D_h)
                 new_agent = SpottedHyena(**self._init_agent(pos_new).__dict__)
                 return self._greedy_select_agent(agent, new_agent)
-            N = get_n()
+            # the circle can not be larger than the population
+            N = min(get_n(), pop_size)
             idx_list = np.random.choice(pop_size, N, replace=False).tolist()
             circle_list = [circle_list_item(idx_list[j], B, E) for j in range(0, N)]
             pos_new = np.mean(np.array(circle_list), axis=0)

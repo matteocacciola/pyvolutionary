@@ -1,7 +1,10 @@
 from typing import Any
 import numpy as np
 
-from ..helpers import parse_obj_doc  # type: ignore
+from ..helpers import (
+    sort_by_cost,
+    parse_obj_doc,  # type: ignore
+)
 from ..abstract import OptimizationAbstract
 from .models import Electromagnet, ElectromagneticFieldOptimizationConfig
 
@@ -30,9 +33,9 @@ class ElectromagneticFieldOptimization(OptimizationAbstract):
     def optimization_step(self):
         def evolve(electromagnet: Electromagnet) -> Electromagnet:
             if np.random.random() < ps_rate:
-                r_idx1 = np.random.randint(0, p_field)  # top
-                r_idx2 = np.random.randint(n_field, pop_size)  # bottom
-                r_idx3 = np.random.randint(n_field1, n_field)  # middle
+                r_idx1 = random_index(0, p_field)  # top
+                r_idx2 = random_index(n_field, pop_size)  # bottom
+                r_idx3 = random_index(n_field1, n_field)  # middle
 
                 pos_new = np.array(self._population[r_idx1].position) + phi * np.random.random() * (
                         best_position - np.array(self._population[r_idx3].position)
@@ -46,6 +49,14 @@ class ElectromagneticFieldOptimization(OptimizationAbstract):
             # checking whether the generated number is inside boundary or not
             agent = Electromagnet(**self._init_agent(pos_new).__dict__)
             return self._greedy_select_agent(electromagnet, agent)
+
+        def random_index(low: int, high: int) -> int:
+            # a field may be empty with a small population: draw from the whole population then
+            return np.random.randint(low, high) if high > low else np.random.randint(0, pop_size)
+
+        # the fields are fractions of the population sorted by cost: positive (the best electromagnets), neutral and
+        # negative (the worst ones)
+        self._population = sort_by_cost(self._population)
 
         pop_size = self._config.population_size
         best_position = np.array(self._best_agent.position)

@@ -28,6 +28,10 @@ class DwarfMongooseOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = DwarfMongooseOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # a mongoose forages with a partner different from itself and the alpha
+        return 3
+
     def _init_agent(self, position: list[float] | np.ndarray | None = None) -> DwarfMongoose:
         return DwarfMongoose(**super()._init_agent(position).__dict__)
 

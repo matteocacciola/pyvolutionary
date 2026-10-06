@@ -68,6 +68,9 @@ class CoralReefOptimization(OptimizationAbstract):
             ))
 
         def multi_point_cross(pos1, pos2) -> list[float]:
+            if len(pos1) < 2:
+                # a single dimension can not be cut in two points: the larva takes it from one of the parents
+                return self._task.correct_solution(pos1 if np.random.random() < 0.5 else pos2)
             p1, p2 = np.random.choice(list(range(0, len(pos1))), 2, replace=False)
             start, end = min(p1, p2), max(p1, p2)
             return self._task.correct_solution(

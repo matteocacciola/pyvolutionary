@@ -409,3 +409,27 @@ def test_fish_school_keeps_the_weights():
     optimizer = FishSchoolSearchOptimization(config)
     optimizer.optimize(make_task(seed=2))
     assert any(fish.weight != config.w_scale / 2.0 for fish in optimizer._population)
+
+
+def test_genetic_algorithm_children_and_odd_population():
+    from pyvolutionary import GeneticAlgorithmOptimization, GeneticAlgorithmOptimizationConfig
+    # the population keeps its (odd) size
+    config = GeneticAlgorithmOptimizationConfig(population_size=7, fitness_error=None, max_cycles=3, px_over=0.9)
+    result = GeneticAlgorithmOptimization(config).optimize(make_task(seed=1))
+    assert all(len(population.agents) == 7 for population in result.evolution)
+
+    # the two children of a pair differ, unless the same parent is selected twice (they were always identical)
+    config = GeneticAlgorithmOptimizationConfig(population_size=20, fitness_error=None, max_cycles=1, px_over=0.999)
+    optimizer = GeneticAlgorithmOptimization(config)
+    optimizer.optimize(make_task(seed=1))
+    genes = [gene.bitstring for gene in optimizer._GeneticAlgorithmOptimization__bit_genes]
+    assert sum(genes[idx] == genes[idx + 1] for idx in range(0, 20, 2)) <= 3
+
+
+def test_clusters_include_every_agent():
+    from pyvolutionary.helpers import split_in_clusters
+    agents = [Agent(position=[float(i)], cost=float(i), fitness=0.0) for i in range(8)]
+    clusters = split_in_clusters(agents, 5)
+    assert [len(c) for c in clusters] == [2, 2, 2, 1, 1]
+    assert [a.cost for c in clusters for a in c] == [float(i) for i in range(8)]
+    assert len(split_in_clusters(agents, 20)) == 8

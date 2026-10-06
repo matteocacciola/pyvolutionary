@@ -111,3 +111,25 @@ def test_reported_costs_are_consistent(algorithm, config):
     for agent in agents:
         assert agent.cost == pytest.approx(task.solve(agent.position), rel=1e-9, abs=1e-9)
     assert result.best_solution.cost == pytest.approx(min(agent.cost for agent in agents), rel=1e-9, abs=1e-9)
+
+
+@pytest.mark.parametrize("algorithm,config", algorithms())
+def test_small_populations_and_dimensions(algorithm, config):
+    # any population from the minimum size of the algorithm on, and a single dimension, work; below the minimum size,
+    # the algorithm refuses the population with a clear message
+    minimum = algorithm(config.model_copy(deep=True))._minimum_population_size()
+    for population_size in (minimum, minimum + 1, 7):
+        for dims in (1, 2):
+            small = config.model_copy(update={"population_size": population_size})
+            task = Rastrigin(
+                variables=[ContinuousMultiVariable(name="x", lower_bounds=[-5] * dims, upper_bounds=[5] * dims)], seed=0
+            )
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                result = algorithm(small).optimize(task)
+            assert is_finite(result)
+    if minimum > 2:
+        with pytest.raises(ValueError, match="needs a population of at least"):
+            algorithm(config.model_copy(update={"population_size": minimum - 1})).optimize(
+                Rastrigin(variables=[ContinuousMultiVariable(name="x", lower_bounds=[-5], upper_bounds=[5])])
+            )

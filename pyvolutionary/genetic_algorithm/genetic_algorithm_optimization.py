@@ -52,8 +52,8 @@ class GeneticAlgorithmOptimization(OptimizationAbstract):
             return self.__bit_genes[selection_ix].bitstring
 
         def crossover(idx: int) -> tuple[list[int], list[int]]:
-            # get selected parents in pairs
-            parent1, parent2 = selected[idx].copy(), selected[idx + 1].copy()
+            # get selected parents in pairs (with an odd population, the last parent mates with the first one)
+            parent1, parent2 = selected[idx].copy(), selected[(idx + 1) % len(selected)].copy()
             # children are copies of parents by default
             child1, child2 = parent1.copy(), parent2.copy()
             # check for recombination
@@ -62,7 +62,7 @@ class GeneticAlgorithmOptimization(OptimizationAbstract):
                 pt = np.random.randint(1, len(parent1) - 2)
                 # perform crossover
                 child1 = parent1[:pt] + parent2[pt:]
-                child2 = parent1[:pt] + parent2[pt:]
+                child2 = parent2[:pt] + parent1[pt:]
             return child1, child2
 
         px_over = self._config.px_over
@@ -82,7 +82,8 @@ class GeneticAlgorithmOptimization(OptimizationAbstract):
                 c = np.array(child)
                 children.append(np.where(np.random.rand(len(c)) < self.__p_mutation, 1 - c, c).tolist())
 
-        # update population
+        # update population (with an odd population, the last pair generates one child more than needed)
+        children = children[:len(self.__bit_genes)]
         self.__bit_genes = [self.__bit_genes[idx].set_bit_string(child) for idx, child in enumerate(children)]
 
         lb, ub = self._task.get_bounds()

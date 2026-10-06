@@ -30,6 +30,10 @@ class SuccessHistoryIntelligentOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = SuccessHistoryIntelligentOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # the agents are guided by the three best ones
+        return 3
+
     def before_initialization(self):
         # the coefficient decays during the run: reset it, so that the same instance can be used several times
         self.__a = 1.5

@@ -29,6 +29,10 @@ class FlowerPollinationAlgorithmOptimization(OptimizationAbstract):
     def set_config_parameters(self, parameters: dict[str, Any]):
         self._config = FlowerPollinationAlgorithmOptimizationConfig(**parameters)
 
+    def _minimum_population_size(self) -> int:
+        # the local pollination mixes two other flowers
+        return 3
+
     def optimization_step(self):
         def evolve(pollinator: Pollinator, idx: int) -> Pollinator:
             position = np.array(pollinator.position)
